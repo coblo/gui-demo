@@ -78,7 +78,8 @@ class Multichain(QWidget):
         self.stream_combo = QComboBox()
         streams = self.connection.liststreams()
         for stream in streams:
-            self.stream_combo.addItem(stream['name'])
+            if stream['subscribed']:
+                self.stream_combo.addItem(stream['name'])
         self.selected_stream = self.stream_combo.currentText()
         self.stream_combo.currentIndexChanged.connect(self.do_stream_change)
         vbox.addWidget(self.stream_combo)

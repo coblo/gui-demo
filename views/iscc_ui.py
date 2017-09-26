@@ -46,6 +46,18 @@ class Iscc(QWidget):
         title_hbox.addWidget(self.title_input)
         main_vbox.addLayout(title_hbox)
 
+        extra_hbox = QHBoxLayout()
+        extra_label = QLabel("Extra:")
+        extra_label.setFixedWidth(self.label_width)
+        extra_hbox.addWidget(extra_label)
+        self.extra_input = QLineEdit()
+        self.extra_input.setFocus()
+        extra_hbox.addWidget(self.extra_input)
+        self.extra_widget = QWidget()
+        self.extra_widget.setLayout(extra_hbox)
+        self.extra_widget.setHidden(True)
+        main_vbox.addWidget(self.extra_widget)
+
         file_hbox = QHBoxLayout()
         file_label = QLabel("File:")
         file_label.setFixedWidth(self.label_width)
@@ -98,7 +110,8 @@ class Iscc(QWidget):
         self.iscc = '{}-{}-{}-{}'.format(meta, content, data, instance)
         bitstring = meta.bitstring + '\n' + content.bitstring + '\n' + data.bitstring + '\n' + instance.bitstring
         self.iscc_label.setText('{} - {} - {} - {}\n\n{}'.format(meta, content, data, instance, bitstring))
-        self.btn_continue.setHidden(not self.check_conflicts())
+        if self.check_conflicts():
+            self.btn_continue.setHidden(False)
 
     def do_select_file(self):
         path = QFileDialog.getOpenFileName()
@@ -131,10 +144,19 @@ class Iscc(QWidget):
         value = json.dumps(meta_data)
         self.main_window.pass_iscc(self.iscc, value)
 
+    def do_add_extra(self):
+        self.extra_widget.setHidden(False)
+        self.dialog.close()
+
+    def do_accept_conflict(self):
+        self.btn_continue.setHidden(False)
+        self.dialog.accept()
+
+
     def check_conflicts(self):
         has_conflicts = False
         heading_font = QFont("Arial", 10)
-        dialog = QDialog()
+        self.dialog = QDialog()
         connection = AuthServiceProxy(
             "http://%s:%s@127.0.0.1:8374" % (rpcuser, rpcpassword))
 
@@ -156,6 +178,8 @@ class Iscc(QWidget):
         other_iscc = connection.liststreamitems('test_iscc')
         for iscc in other_iscc:
             key = iscc['key']
+            if len(key.split('-')) != 4:
+                continue
             if key != self.iscc:
                 for i in range(4):
                     if key.split('-')[i] == self.iscc.split('-')[i]:
@@ -182,10 +206,18 @@ class Iscc(QWidget):
             main_v_box = QVBoxLayout()
             main_v_box.addWidget(scrollarea)
 
-            dialog.setLayout(main_v_box)
-            dialog.setWindowTitle('Conflicts')
-            dialog.exec_()
-            return False
+            button_h_box = QHBoxLayout()
+            btn_add_extra = QPushButton("Add Extra")
+            btn_add_extra.clicked.connect(self.do_add_extra)
+            button_h_box.addWidget(btn_add_extra)
+            btn_accept_conflict = QPushButton("Accept Conflict")
+            btn_accept_conflict.clicked.connect(self.do_accept_conflict)
+            button_h_box.addWidget(btn_accept_conflict)
+            main_v_box.addLayout(button_h_box)
+
+            self.dialog.setLayout(main_v_box)
+            self.dialog.setWindowTitle('Conflicts')
+            self.dialog.exec_()
         else:
             return True
 

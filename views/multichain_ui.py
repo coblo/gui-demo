@@ -170,6 +170,7 @@ class Multichain(QWidget):
                 bottom_line.setFrameShadow(QFrame.Sunken)
                 main_vbox.addWidget(bottom_line)
         tmp = QWidget()
+        tmp.setFixedWidth(382)
         tmp.setLayout(main_vbox)
         self.stream_item_list.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.stream_item_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

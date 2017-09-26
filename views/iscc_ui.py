@@ -141,6 +141,8 @@ class Iscc(QWidget):
 
     def do_continue(self):
         meta_data = {'title': self.title_input.text()}
+        if self.extra_widget.isVisible() and len(self.extra_input.text()) > 0:
+            meta_data['extra'] = self.extra_input.text()
         value = json.dumps(meta_data)
         self.main_window.pass_iscc(self.iscc, value)
 

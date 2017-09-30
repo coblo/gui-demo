@@ -39,10 +39,27 @@ class RpcClient:
         if result is not None:
             return result.json()
 
+    def getmultibalances(self) -> Optional[list]:
+        result = self._call('getmultibalances')
+        if result is not None:
+            data = result.json()['result']
+            address_balances = []
+            for address in data:
+                if address == 'total':
+                    continue
+                for detail in data[address]:
+                    if detail['assetref'] == "":
+                        balance = detail['qty']
+                        address_balances.append(
+                            (address, balance)
+                        )
+            return address_balances
+
     def stop(self) -> Optional[str]:
         result = self._call('stop')
         if result is not None:
             return result.json()['result']
+
 
     ####################
     # Internal helpers #
@@ -67,6 +84,7 @@ client = RpcClient('localhost', 8374, rpcuser, rpcpassword, use_ssl=False)
 
 if __name__ == '__main__':
     from pprint import pprint
-    print(client.getbalance())
-    pprint(client.getblockchaininfo())
-    pprint(client.getinfo())
+    # print(client.getbalance())
+    # pprint(client.getblockchaininfo())
+    # pprint(client.getinfo())
+    pprint(client.getmultibalances())

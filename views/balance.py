@@ -32,8 +32,8 @@ class BalanceUpdater(QtCore.QThread):
 
 class BalanceWidget(QtWidgets.QWidget):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setObjectName('BalanceWidget')
         # self.setWindowTitle('Balance')
         self.balance = QtWidgets.QLabel('???.??')

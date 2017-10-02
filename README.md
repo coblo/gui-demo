@@ -6,4 +6,4 @@ Setup:
 - copy config.example.py and rename it to config.py
 - adjust config
 - start Multichain Node
-- run views\multichain.py
+- run main.py

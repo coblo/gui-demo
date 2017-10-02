@@ -8,16 +8,19 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from views.rpc import client
 
 
+UNKNOWN_BALANCE = '???.??'
+
+
 class BalanceUpdater(QtCore.QThread):
     """
     A separate thread that polls the node for balance updates.
     """
 
-    # Signals
-    new_balance = QtCore.pyqtSignal(str)
+    balance_changed = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
         super(BalanceUpdater, self).__init__(parent)
+        self.last_balance = UNKNOWN_BALANCE
 
     def __del__(self):
         self.wait()
@@ -25,21 +28,25 @@ class BalanceUpdater(QtCore.QThread):
     def run(self):
         while True:
             balance = client.getbalance()
-            balance = '???.??' if balance is None else str(balance)
-            self.new_balance.emit(balance)
-            time.sleep(1)
+            balance = self.UNKNOWN_BALANCE if balance is None else str(balance)
+            if balance != self.last_balance:
+                self.balance_changed.emit(balance)
+                self.last_balance = balance
+                time.sleep(1)
 
 
 class BalanceWidget(QtWidgets.QWidget):
+    """
+    A reusable styled widget that shows the current total wallet balance.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName('BalanceWidget')
-        # self.setWindowTitle('Balance')
-        self.balance = QtWidgets.QLabel('???.??')
+        self.balance = QtWidgets.QLabel(UNKNOWN_BALANCE)
         self.setup_ui()
         self.balance_updater = BalanceUpdater(self)
-        self.balance_updater.new_balance.connect(self.on_new_balance)
+        self.balance_updater.balance_changed.connect(self.on_balance_changed)
         self.balance_updater.start()
 
     def setup_ui(self):
@@ -94,8 +101,8 @@ class BalanceWidget(QtWidgets.QWidget):
 
         self.setLayout(main_layout)
 
-    @QtCore.pyqtSlot(str, name='new_balance')
-    def on_new_balance(self, balance):
+    @QtCore.pyqtSlot(str, name='balance_changed')
+    def on_balance_changed(self, balance):
         self.balance.setText(balance)
 
 

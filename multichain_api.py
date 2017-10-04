@@ -50,3 +50,36 @@ class Multichain_Api():
                 'amount': transaction['balance']['amount']
             })
         return transaction_list
+
+    def is_admin(self):
+        is_admin = False
+        addresses = self.connection.listaddresses()
+        permissions = self.connection.listpermissions("admin")
+        for permission in permissions:
+            if permission["address"] in addresses:
+                is_admin = True
+        return is_admin
+
+    def get_miner_info(self):
+        miners = self.connection.listpermissions("mine")
+        active_miners = []
+        actual_block = self.connection.getblockchaininfo()['blocks'] - 1
+        # we watch the last 7 * amount of miners blocks for active miner
+        last_blocks = self.connection.listblocks("{}-{}".format(actual_block - (7 * len(miners)), actual_block))
+        for block in last_blocks:
+            address = block['miner']
+            if address not in active_miners:
+                active_miners.append(address)
+        return {
+            "miners": miners,
+            "active": len(miners) / len(active_miners)
+        }
+
+    def get_admin_info(self):
+        admins = self.connection.listpermissions("admin")
+        active_admins = admins # todo: implement when we have requests
+
+        return {
+            "admins": admins,
+            "active": len(admins) / len(active_admins)
+        }

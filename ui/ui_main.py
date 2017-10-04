@@ -54,6 +54,7 @@ class Ui_Main(QWidget):
         self.setGeometry(100, 100, 900, 600)
         self.setWindowTitle('Content Blockchain')
         self.setWindowState(Qt.WindowMaximized)
+        self.setStyleSheet("background-color: #fff;")
         self.show()
 
     def init_sidebar_UI(self):

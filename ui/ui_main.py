@@ -4,7 +4,10 @@
 """Main UI"""
 from functools import partial
 
+from PyQt5.QtWidgets import QStackedWidget
+
 from ui.ui_wallet import Ui_Wallet
+from ui.ui_community import Ui_Community
 from ui.pyqt_elements import get_hline, get_vline
 
 from PyQt5.QtGui import QFont
@@ -22,7 +25,7 @@ class Ui_Main(QWidget):
             },
             {
                 'title': 'Community',
-                'template': QVBoxLayout()
+                'template': Ui_Community()
             }
         ]
         self.view = 0
@@ -40,7 +43,11 @@ class Ui_Main(QWidget):
 
         # content window
         self.vbox_content = QVBoxLayout()
-        self.vbox_content.addLayout(self.views[self.view]['template'])
+        self.stack_widget = QStackedWidget()
+        for view in self.views:
+            self.stack_widget.addWidget(view['template'])
+        self.stack_widget.setCurrentIndex(self.view)
+        self.vbox_content.addWidget(self.stack_widget, alignment=Qt.AlignTop)
         hbox_main.addLayout(self.vbox_content, 1)
 
         self.setLayout(hbox_main)
@@ -70,5 +77,6 @@ class Ui_Main(QWidget):
         return vbox_sidebar
 
     def do_change_view(self, new_view):
-        # todo
-        pass
+        if new_view != self.view:
+            self.stack_widget.setCurrentIndex(new_view)
+            self.view = new_view

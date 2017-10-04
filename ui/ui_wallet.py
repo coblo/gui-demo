@@ -5,13 +5,13 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QSizePolicy, QTableWidget, \
-    QTableWidgetItem
+    QTableWidgetItem, QWidget
 
 from multichain_api import Multichain_Api
 from ui.pyqt_elements import get_hline, get_vline
 
 
-class Ui_Wallet(QVBoxLayout):
+class Ui_Wallet(QWidget):
     def __init__(self):
         super().__init__()
         self.font_heading = QFont("Arial", 20)
@@ -19,6 +19,7 @@ class Ui_Wallet(QVBoxLayout):
         self.init_main_ui()
 
     def init_main_ui(self):
+        vbox_main = QVBoxLayout()
         hbox_title = QHBoxLayout()
         label_heading = QLabel("Wallet")
         label_heading.setFont(QFont("Arial", 28))
@@ -26,19 +27,21 @@ class Ui_Wallet(QVBoxLayout):
         label_balance = QLabel("Total Balance: {} Koin".format(self.multichain.get_balance()))
         label_balance.setFont(QFont("Arial", 12))
         hbox_title.addWidget(label_balance, alignment=Qt.AlignRight)
-        self.addLayout(hbox_title)
+        vbox_main.addLayout(hbox_title)
 
         hbox_top = QHBoxLayout()
         hbox_top.addLayout(self.init_addresses_ui(), 1)
         hbox_top.addWidget(get_vline())
         hbox_top.addLayout(self.init_send_ui(), 1)
-        self.addLayout(hbox_top, 1)
+        vbox_main.addLayout(hbox_top, 1)
 
-        self.addWidget(get_hline())
+        vbox_main.addWidget(get_hline())
 
-        self.addLayout(self.init_history_ui(), 1)
+        vbox_main.addLayout(self.init_history_ui(), 1)
 
-        self.addStretch(1)
+        vbox_main.addStretch(1)
+
+        self.setLayout(vbox_main)
 
     def init_addresses_ui(self):
         vbox_addresses = QVBoxLayout()

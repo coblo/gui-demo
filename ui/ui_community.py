@@ -28,4 +28,6 @@ class Ui_Community(QWidget):
         hbox_title.addWidget(label_balance, alignment=Qt.AlignRight)
         vbox_main.addLayout(hbox_title)
 
+        vbox_main.addStretch(1)
+
         self.setLayout(vbox_main)

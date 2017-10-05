@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QStackedWidget
 
 from ui.ui_wallet import Ui_Wallet
 from ui.ui_community import Ui_Community
+from ui.ui_request_privileges import Ui_Request_Privileges
 from ui.pyqt_elements import get_hline, get_vline
 
 from PyQt5.QtGui import QFont
@@ -25,7 +26,12 @@ class Ui_Main(QWidget):
             },
             {
                 'title': 'Community',
-                'template': Ui_Community()
+                'template': Ui_Community(self)
+            },
+            {
+                'title': 'Request Privileges',
+                'parent': 'Community',
+                'template': Ui_Request_Privileges(self)
             }
         ]
         self.view = 0
@@ -67,11 +73,12 @@ class Ui_Main(QWidget):
 
         vbox_sidebar.addWidget(get_hline())
         for index, view in enumerate(self.views):
-            button_menu = QPushButton(view['title'])
-            button_menu.clicked.connect(partial(self.do_change_view, index))
-            button_menu.setFont(QFont("Arial", 20))
-            vbox_sidebar.addWidget(button_menu, alignment=Qt.AlignLeft)
-            vbox_sidebar.addWidget(get_hline())
+            if 'parent' not in view:
+                button_menu = QPushButton(view['title'])
+                button_menu.clicked.connect(partial(self.do_change_view, index))
+                button_menu.setFont(QFont("Arial", 20))
+                vbox_sidebar.addWidget(button_menu, alignment=Qt.AlignLeft)
+                vbox_sidebar.addWidget(get_hline())
 
         vbox_sidebar.addStretch(1)
 

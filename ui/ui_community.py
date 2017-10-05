@@ -4,16 +4,15 @@
 """Community UI"""
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget
-from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QPushButton
 
 from multichain_api import Multichain_Api
 
 
 class Ui_Community(QWidget):
-    def __init__(self):
+    def __init__(self, main_view):
         super().__init__()
-        self.font_heading = QFont("Arial", 20)
+        self.main_view = main_view
         self.font_l = QFont("Arial", 16)
         self.font_s = QFont("Arial", 12)
         self.multichain = Multichain_Api()
@@ -27,7 +26,7 @@ class Ui_Community(QWidget):
         label_heading.setFont(QFont("Arial", 28))
         hbox_title.addWidget(label_heading, alignment=Qt.AlignLeft)
         label_balance = QLabel("Total Balance: {} Koin".format(self.multichain.get_balance()))
-        label_balance.setFont(QFont("Arial", 12))
+        label_balance.setFont(self.font_s)
         hbox_title.addWidget(label_balance, alignment=Qt.AlignRight)
         vbox_main.addLayout(hbox_title)
 
@@ -102,8 +101,12 @@ class Ui_Community(QWidget):
 
         button_request = QPushButton("Request Privileges from Community")
         button_request.setFont(self.font_l)
-        layout_privileges.addWidget(button_request)
+        button_request.clicked.connect(self.do_request)
+        layout_privileges.addWidget(button_request, alignment=Qt.AlignRight)
 
         widget_privileges.setLayout(layout_privileges)
         widget_privileges.setFixedWidth(600)
         return widget_privileges
+
+    def do_request(self):
+        self.main_view.do_change_view(2)

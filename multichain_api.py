@@ -52,11 +52,11 @@ class Multichain_Api():
         return transaction_list
 
     def is_admin(self):
-        addresses = [entry['address'] for entry in self.connection.listaddresses()]
+        addresses = self.connection.getaddresses()
         return len(self.connection.listpermissions("admin", addresses)) > 0
 
     def is_miner(self):
-        addresses = [entry['address'] for entry in self.connection.listaddresses()]
+        addresses = self.connection.getaddresses()
         return len(self.connection.listpermissions("mine", addresses)) > 0
 
     def get_miner_info(self):
@@ -82,3 +82,10 @@ class Multichain_Api():
             "admins": admins,
             "active": len(admins) / len(active_admins)
         }
+
+    def get_actual_hash(self):
+        actual_block = self.connection.getblockchaininfo()['blocks'] - 1
+        return self.connection.getblockhash(actual_block)
+
+    def get_address(self):
+        return self.connection.getaddresses()[0]

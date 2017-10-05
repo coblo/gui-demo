@@ -33,7 +33,7 @@ class Ui_Community(QWidget):
 
         vbox_main.addStretch(1)
 
-        vbox_main.addWidget(self.widget_administrate_community(is_admin=self.multichain.is_admin()), alignment=Qt.AlignCenter)
+        vbox_main.addWidget(self.widget_administrate_community(), alignment=Qt.AlignCenter)
 
         vbox_main.addStretch(1)
 
@@ -45,33 +45,35 @@ class Ui_Community(QWidget):
 
         self.setLayout(vbox_main)
 
-    def widget_administrate_community(self, is_admin):
+    def widget_administrate_community(self):
         widget_administrate = QWidget()
         layout_administrate = QVBoxLayout()
 
         hbox_active_validators = QHBoxLayout()
-        label_active_validators = QLabel("{}% of validators are active".format(int(self.multichain.get_miner_info()['active'] * 100)))
+        label_active_validators = QLabel(
+            "{}% of validators are active".format(int(self.multichain.get_miner_info()['active'] * 100)))
         label_active_validators.setFont(self.font_l)
         hbox_active_validators.addWidget(label_active_validators, alignment=Qt.AlignLeft)
-        button_active_validators = QPushButton("Watch Validators")
+        button_active_validators = QPushButton("{} Validators".format("Review" if self.multichain.is_admin() else "Watch"))
         button_active_validators.setFixedWidth(200)
         button_active_validators.setFont(self.font_l)
         hbox_active_validators.addWidget(button_active_validators, alignment=Qt.AlignRight)
         layout_administrate.addLayout(hbox_active_validators)
 
         hbox_active_guardians = QHBoxLayout()
-        label_active_guardians = QLabel("{}% of guardians are active".format(int(self.multichain.get_admin_info()['active'] * 100)))
+        label_active_guardians = QLabel(
+            "{}% of guardians are active".format(int(self.multichain.get_admin_info()['active'] * 100)))
         label_active_guardians.setFont(self.font_l)
         hbox_active_guardians.addWidget(label_active_guardians, alignment=Qt.AlignLeft)
-        button_active_guardians = QPushButton("Watch Guardians")
+        button_active_guardians = QPushButton("{} Guardians".format("Review" if self.multichain.is_admin() else "Watch"))
         button_active_guardians.setFixedWidth(200)
         button_active_guardians.setFont(self.font_l)
         hbox_active_guardians.addWidget(button_active_guardians, alignment=Qt.AlignRight)
         layout_administrate.addLayout(hbox_active_guardians)
 
-        if is_admin:
+        if self.multichain.is_admin():
             hbox_nodes_waiting = QHBoxLayout()
-            label_nodes_waiting = QLabel("{}% of guardians are active".format(0)) # todo
+            label_nodes_waiting = QLabel("{} nodes waiting for permissions".format(0))  # todo
             label_nodes_waiting.setFont(self.font_l)
             hbox_nodes_waiting.addWidget(label_nodes_waiting, alignment=Qt.AlignLeft)
             button_nodes_waiting = QPushButton("Approve Requests")
@@ -86,9 +88,21 @@ class Ui_Community(QWidget):
 
     def widget_privileges(self):
         widget_privileges = QWidget()
-        layout_privileges = QVBoxLayout()
+        layout_privileges = QHBoxLayout()
 
-        # todo
+        layout_status = QVBoxLayout()
+        label_validator = QLabel("You are a validator: {}".format("✔" if self.multichain.is_miner() else "✖"))
+        label_validator.setFont(self.font_s)
+        layout_status.addWidget(label_validator, alignment=Qt.AlignLeft)
+        label_guardian = QLabel("You are a guardian: {}".format("✔" if self.multichain.is_admin() else "✖"))
+        label_guardian.setFont(self.font_s)
+        layout_status.addWidget(label_guardian, alignment=Qt.AlignLeft)
+
+        layout_privileges.addLayout(layout_status)
+
+        button_request = QPushButton("Request Privileges from Community")
+        button_request.setFont(self.font_l)
+        layout_privileges.addWidget(button_request)
 
         widget_privileges.setLayout(layout_privileges)
         widget_privileges.setFixedWidth(600)

@@ -52,13 +52,12 @@ class Multichain_Api():
         return transaction_list
 
     def is_admin(self):
-        is_admin = False
-        addresses = self.connection.listaddresses()
-        permissions = self.connection.listpermissions("admin")
-        for permission in permissions:
-            if permission["address"] in addresses:
-                is_admin = True
-        return is_admin
+        addresses = [entry['address'] for entry in self.connection.listaddresses()]
+        return len(self.connection.listpermissions("admin", addresses)) > 0
+
+    def is_miner(self):
+        addresses = [entry['address'] for entry in self.connection.listaddresses()]
+        return len(self.connection.listpermissions("mine", addresses)) > 0
 
     def get_miner_info(self):
         miners = self.connection.listpermissions("mine")

@@ -71,7 +71,7 @@ class Multichain_Api():
                 active_miners.append(address)
         return {
             "miners": miners,
-            "active": len(miners) / len(active_miners)
+            "active": len(active_miners) / len(miners)
         }
 
     def get_admin_info(self):
@@ -80,7 +80,7 @@ class Multichain_Api():
 
         return {
             "admins": admins,
-            "active": len(admins) / len(active_admins)
+            "active": len(active_admins) / len(admins)
         }
 
     def get_actual_hash(self):
@@ -89,3 +89,6 @@ class Multichain_Api():
 
     def get_address(self):
         return self.connection.getaddresses()[0]
+
+    def publish(self, stream, key, data):
+        self.connection.publish(stream, key, data)

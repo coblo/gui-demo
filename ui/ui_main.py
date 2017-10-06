@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QStackedWidget
 from ui.ui_wallet import Ui_Wallet
 from ui.ui_community import Ui_Community
 from ui.ui_request_privileges import Ui_Request_Privileges
+from ui.ui_review_requests import Ui_Review_Requests
 from ui.pyqt_elements import get_hline, get_vline
 
 from PyQt5.QtGui import QFont
@@ -32,6 +33,11 @@ class Ui_Main(QWidget):
                 'title': 'Request Privileges',
                 'parent': 'Community',
                 'template': Ui_Request_Privileges(self)
+            },
+            {
+                'title': 'Review Requests',
+                'parent': 'Community',
+                'template': Ui_Review_Requests(self)
             }
         ]
         self.view = 0

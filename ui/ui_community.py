@@ -76,6 +76,7 @@ class Ui_Community(QWidget):
             label_nodes_waiting.setFont(self.font_l)
             hbox_nodes_waiting.addWidget(label_nodes_waiting, alignment=Qt.AlignLeft)
             button_nodes_waiting = QPushButton("Approve Requests")
+            button_nodes_waiting.clicked.connect(self.do_show_request)
             button_nodes_waiting.setFixedWidth(200)
             button_nodes_waiting.setFont(self.font_l)
             hbox_nodes_waiting.addWidget(button_nodes_waiting, alignment=Qt.AlignRight)
@@ -110,3 +111,6 @@ class Ui_Community(QWidget):
 
     def do_request(self):
         self.main_view.do_change_view(2)
+
+    def do_show_request(self):
+        self.main_view.do_change_view(3)

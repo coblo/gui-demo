@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Request Privileges UI"""
-import base64
 import codecs
-import io
 import json
 import os
 import time
@@ -183,3 +181,4 @@ class Ui_Request_Privileges(QWidget):
         data_hex = codecs.encode(json.dumps(data).encode('utf-8'), 'hex')
 
         self.multichain.publish(stream='privilege-requests', key=key, data=data_hex.decode('ascii'))
+        #todo leave screen

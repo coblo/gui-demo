@@ -92,3 +92,8 @@ class Multichain_Api():
 
     def publish(self, stream, key, data):
         self.connection.publish(stream, key, data)
+
+    def get_stream_items(self, stream):
+        return self.connection.liststreamitems(stream)
+
+    #todo: main address in runtime params

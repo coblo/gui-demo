@@ -4,7 +4,7 @@
 import sys
 import time
 import traceback
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
 from views.rpc import client
 
 
@@ -42,6 +42,7 @@ class BalanceWidget(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.sound = QtMultimedia.QSound('resources/money.wav')
         self.setObjectName('BalanceWidget')
         self.balance = QtWidgets.QLabel(UNKNOWN_BALANCE)
         self.setup_ui()
@@ -104,6 +105,7 @@ class BalanceWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot(str, name='balance_changed')
     def on_balance_changed(self, balance):
         self.balance.setText(balance)
+        self.sound.play()
 
 
 if __name__ == '__main__':

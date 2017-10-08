@@ -24,42 +24,59 @@ class RpcClient:
     # RPC API methods #
     ###################
 
+    def getaddresses(self, verbose=False):
+        return self._call('getaddresses', verbose)
+
+    def getaddressbalances(self, address, minconf=1, includelocked=False):
+        return self._call('getaddressbalances', address, minconf, includelocked)
+
     def getbalance(self) -> Optional[float]:
-        result = self._call('getbalance')
-        if result is not None:
-            return result.json()['result']
+        return self._call('getbalance')['result']
 
     def getblockchaininfo(self) -> Optional[dict]:
-        result = self._call('getblockchaininfo')
-        if result is not None:
-            return result.json()
+        return self._call('getblockchaininfo')
+
+    def getblockchainparams(self):
+        return self._call('getblockchainparams')
 
     def getinfo(self) -> Optional[dict]:
-        result = self._call('getinfo')
-        if result is not None:
-            return result.json()
+        return self._call('getinfo')
 
     def getmultibalances(self) -> Optional[list]:
         result = self._call('getmultibalances')
-        if result is not None:
-            data = result.json()['result']
-            address_balances = []
-            for address in data:
-                if address == 'total':
-                    continue
-                for detail in data[address]:
-                    if detail['assetref'] == "":
-                        balance = detail['qty']
-                        address_balances.append(
-                            (address, balance)
-                        )
-            return address_balances
+        data = result['result']
+        address_balances = []
+        for address in data:
+            if address == 'total':
+                continue
+            for detail in data[address]:
+                if detail['assetref'] == "":
+                    balance = detail['qty']
+                    address_balances.append(
+                        (address, balance)
+                    )
+        return address_balances
+
+    def getnewaddress(self):
+        return self._call('getnewaddress')
+
+    def getruntimeparams(self):
+        return self._call('getruntimeparams')
+
+    def listaddresses(self, addresses='*', verbose=False, count=100, start=0):
+        return self._call('listaddresses', addresses, verbose, count, start)
+
+    def listpermissions(self, permissions='*', addresses='*', verbose=False):
+        return self._call('listpermissions', permissions, addresses, verbose)
+
+    def listwallettransactions(self, count=10, skip=0, include_watch_only=False, verbose=False):
+        return self._call('listwallettransactions', count, skip, include_watch_only, verbose)
 
     def stop(self) -> Optional[str]:
-        result = self._call('stop')
-        if result is not None:
-            return result.json()['result']
+        result = self._call('stop')['result']
 
+    def validateaddress(self, address):
+        return self._call('validateaddress', address)
 
     ####################
     # Internal helpers #
@@ -70,21 +87,26 @@ class RpcClient:
         url = '{}:{}@{}:{}'.format(self.user, self.pwd, self.host, self.port)
         return 'https://' + url if self.use_ssl else 'http://' + url
 
-    def _call(self, method, params=None) -> Optional[requests.Response]:
-        params = [] if params is None else params
-        payload = {"method": method, "params": params}
-        try:
-            response = requests.post(self._url, json=payload, verify=False)
-        except requests.exceptions.RequestException as e:
-            response = None
-            log.error(e)
-        return response
+    def _call(self, method, *args) -> Optional[requests.Response]:
+        payload = {"id": method, "method": method, "params": args}
+        return requests.post(self._url, json=payload, verify=False).json()
+
 
 client = RpcClient('localhost', 8374, rpcuser, rpcpassword, use_ssl=False)
 
 if __name__ == '__main__':
     from pprint import pprint
-    # print(client.getbalance())
+    # pprint(client.getaddresses(verbose=True))
+    # pprint(client.getbalance())
     # pprint(client.getblockchaininfo())
+    # pprint(client.getblockchainparams())
     # pprint(client.getinfo())
-    pprint(client.getmultibalances())
+    # pprint(client.getmultibalances())
+    # pprint(client.listwallettransactions(1, verbose=True))
+    ## pprint(client.getnewaddress())
+    # pprint(client.getruntimeparams())
+    # pprint(client.listaddresses(verbose=True))
+    # pprint(client.validateaddress('1X8meKHXVUpsvgim3q7BJ24Xz7ymSDJnriqt7B'))
+    pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))
+    # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
+

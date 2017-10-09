@@ -102,3 +102,5 @@ ENV/
 /config.py
 /runchain.bat
 /.idea
+/app/ui/wallet_history.py
+/app/ui/wallet_send.py

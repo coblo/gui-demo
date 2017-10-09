@@ -4,7 +4,11 @@
 import qdarkstyle
 import sys
 import traceback
+import config
 from PyQt5 import QtWidgets
+
+from app.widgets.wallet_send import WalletSend
+from app.widgets.wallet_history import WalletHistory
 from app.ui.main import Ui_MainWindow
 
 
@@ -14,6 +18,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.btn_group_nav.buttonClicked.connect(self.on_nav_change)
+        self.layout_wallet_send.addWidget(WalletSend(self))
+        self.layout_wallet_history.addWidget(WalletHistory(self))
 
     def on_nav_change(self, btn):
         name = btn.objectName()
@@ -36,4 +42,8 @@ def main():
 
 if __name__ == '__main__':
     sys.excepthook = traceback.print_exception
+    if config.debug_mode:
+        import compile_ui
+        compile_ui.ui()
+        compile_ui.resource()
     main()

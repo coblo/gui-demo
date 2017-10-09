@@ -4,12 +4,11 @@
 import qdarkstyle
 import sys
 import traceback
-import config
 from PyQt5 import QtWidgets
 
+from app.ui.main import Ui_MainWindow
 from app.widgets.wallet_send import WalletSend
 from app.widgets.wallet_history import WalletHistory
-from app.ui.main import Ui_MainWindow
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -42,8 +41,4 @@ def main():
 
 if __name__ == '__main__':
     sys.excepthook = traceback.print_exception
-    if config.debug_mode:
-        import compile_ui
-        compile_ui.ui()
-        compile_ui.resource()
     main()

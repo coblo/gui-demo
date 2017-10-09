@@ -281,7 +281,7 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="page_wallet">
-       <layout class="QVBoxLayout" name="layout_page_wallet" stretch="0,0,1">
+       <layout class="QVBoxLayout" name="layout_page_wallet" stretch="0,1">
         <property name="spacing">
          <number>12</number>
         </property>
@@ -297,102 +297,6 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item>
-         <layout class="QHBoxLayout" name="layout_wallet_header">
-          <property name="spacing">
-           <number>20</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="label_wallet_title">
-            <property name="font">
-             <font>
-              <pointsize>24</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Wallet</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="spacer_wallet_header">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="layout_wallet_address">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_wallet_address_title">
-              <property name="text">
-               <string>Main Address</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_wallet_address">
-              <property name="font">
-               <font>
-                <pointsize>12</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>00000000000000000000000</string>
-              </property>
-              <property name="scaledContents">
-               <bool>false</bool>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="layout_wallet_balance">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_wallet_balance_title">
-              <property name="text">
-               <string>Total Balance</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_wallet_balance">
-              <property name="font">
-               <font>
-                <pointsize>12</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>0,00 CHM</string>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </item>
         <item>
          <widget class="QFrame" name="frame_wallet_send">
           <property name="frameShape">

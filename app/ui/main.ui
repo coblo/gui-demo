@@ -355,7 +355,20 @@
        </layout>
       </widget>
       <widget class="QWidget" name="page_privilege_requests">
-       <layout class="QVBoxLayout" name="verticalLayout_6"/>
+       <layout class="QVBoxLayout" name="layout_privilege_request">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
       </widget>
      </widget>
     </item>

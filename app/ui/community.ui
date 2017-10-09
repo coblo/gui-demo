@@ -22,6 +22,18 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="layout_widget_community">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QLabel" name="label_heading_community">
      <property name="sizePolicy">
@@ -199,7 +211,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="label_is_guardian">
               <property name="text">
                <string>No</string>
               </property>

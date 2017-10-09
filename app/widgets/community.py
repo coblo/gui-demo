@@ -4,10 +4,11 @@ from app.backend.api import Api
 
 
 class Community(QWidget, Ui_widget_community):
-    def __init__(self, parent):
+    def __init__(self, parent, change_stack_index):
         super().__init__(parent)
         self.api = Api()
         self.setupUi(self)
+        self.btn_request_privileges.clicked.connect(lambda: change_stack_index(2))
         if self.api.is_admin():
             self.btn_validator_active.setText('Review Existing Validators')
             self.btn_gaurdian_active.setText('Review Existing Guardians')

@@ -5,7 +5,9 @@ import sys
 import time
 import traceback
 from PyQt5 import QtCore, QtGui, QtWidgets
-from views.rpc import client
+from app.resources import resources_rc
+
+from app.backend.rpc import client
 
 
 class AddressUpdater(QtCore.QThread):
@@ -76,8 +78,8 @@ class AddressesWidget(QtWidgets.QWidget):
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
-    QtGui.QFontDatabase.addApplicationFont('resources/DroidSans-Bold.ttf')
-    QtGui.QFontDatabase.addApplicationFont('resources/DroidSans-Regular.ttf')
+    QtGui.QFontDatabase.addApplicationFont(':/fonts/DroidSans-Bold.ttf.ttf')
+    QtGui.QFontDatabase.addApplicationFont(':/fonts/DroidSans-Regular.ttf')
     window = AddressesWidget()
     window.show()
     sys.excepthook = traceback.print_exception

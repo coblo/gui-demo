@@ -1,0 +1,17 @@
+<RCC>
+	<qresource prefix="audio">
+		<file>money.wav</file>
+	</qresource>
+	<qresource prefix="fonts">
+		<file>DroidSans-Bold.ttf</file>
+		<file>DroidSans-Regular.ttf</file>
+	</qresource>
+	<qresource prefix="images">
+		<file>cog_white.svg</file>
+		<file>cog_black.svg</file>
+		<file>users_white.svg</file>
+		<file>users_black.svg</file>
+		<file>money_white.svg</file>
+		<file>money_black.svg</file>
+	</qresource>
+</RCC>

@@ -5,8 +5,9 @@ import sys
 import time
 import traceback
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
-from views.rpc import client
+from app.resources import resources_rc
 
+from app.backend.rpc import client
 
 UNKNOWN_BALANCE = '???.??'
 
@@ -42,7 +43,7 @@ class BalanceWidget(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.sound = QtMultimedia.QSound('resources/money.wav')
+        self.sound = QtMultimedia.QSound(':/audio/money.wav')
         self.setObjectName('BalanceWidget')
         self.balance = QtWidgets.QLabel(UNKNOWN_BALANCE)
         self.setup_ui()
@@ -54,25 +55,25 @@ class BalanceWidget(QtWidgets.QWidget):
         self.setAutoFillBackground(False)
         self.setStyleSheet("""
             QWidget {
+                font-family: Droid Sans;
                 background-color: #333745;
                 color: white;
-                font-family: Droid Sans;               
             }
             #LabelBalance {
                 color: grey;
                 font-size: 13px;
-                font-weight: 400;
+                font-weight: 300;
             }
             #LabelBalanceAmount {
                 color: white;
                 font-size: 36px;
-                font-weight: 700;
+                font-weight: bold;
             }
             #LabelCurrency {
                 color: grey;
                 font-size: 13px;
-                font-weight:400;
                 margin-top: 2px;
+                font-weight: 300;
             }
         """)
 
@@ -109,9 +110,11 @@ class BalanceWidget(QtWidgets.QWidget):
 
 
 if __name__ == '__main__':
+
     app = QtWidgets.QApplication(sys.argv)
-    QtGui.QFontDatabase.addApplicationFont('resources/DroidSans-Bold.ttf')
-    QtGui.QFontDatabase.addApplicationFont('resources/DroidSans-Regular.ttf')
+    QtGui.QFontDatabase.addApplicationFont(':/fonts/DroidSans-Bold.ttf.ttf')
+    QtGui.QFontDatabase.addApplicationFont(':/fonts/DroidSans-Regular.ttf')
+
     window = BalanceWidget()
     window.show()
     sys.excepthook = traceback.print_exception

@@ -177,22 +177,6 @@
             </attribute>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="btn_nav_settings">
-            <property name="text">
-             <string>Settings</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btn_group_nav</string>
-            </attribute>
-           </widget>
-          </item>
          </layout>
         </widget>
        </item>
@@ -278,7 +262,7 @@
     <item>
      <widget class="QStackedWidget" name="stack_content">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_wallet">
        <layout class="QVBoxLayout" name="layout_page_wallet" stretch="0,0,1">
@@ -444,26 +428,30 @@
        </layout>
       </widget>
       <widget class="QWidget" name="page_community">
-       <layout class="QVBoxLayout" name="verticalLayout_5">
+       <layout class="QVBoxLayout" name="layout_community">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
-         <widget class="QLabel" name="label_title_community">
+         <widget class="QLabel" name="label">
           <property name="text">
-           <string>Community</string>
+           <string/>
           </property>
          </widget>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="page_settings">
-       <layout class="QVBoxLayout" name="verticalLayout_6">
-        <item>
-         <widget class="QLabel" name="label_title_settings">
-          <property name="text">
-           <string>Settings</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <widget class="QWidget" name="page_privilege_requests">
+       <layout class="QVBoxLayout" name="verticalLayout_6"/>
       </widget>
      </widget>
     </item>
@@ -485,7 +473,6 @@
   <tabstop>btn_get_coins</tabstop>
   <tabstop>btn_nav_wallet</tabstop>
   <tabstop>btn_nav_community</tabstop>
-  <tabstop>btn_nav_settings</tabstop>
  </tabstops>
  <resources/>
  <connections/>

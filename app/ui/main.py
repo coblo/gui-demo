@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\titusz\Code\gui-demo\app/ui\main.ui'
+# Form implementation generated from reading ui file 'C:\Users\Patricia\Desktop\GUI COBLO\gui-demo\app/ui\main.ui'
 #
 # Created by: PyQt5 UI code generator 5.9
 #
@@ -80,12 +80,6 @@ class Ui_MainWindow(object):
         self.btn_nav_community.setObjectName("btn_nav_community")
         self.btn_group_nav.addButton(self.btn_nav_community)
         self.verticalLayout.addWidget(self.btn_nav_community)
-        self.btn_nav_settings = QtWidgets.QPushButton(self.frame_sidebar_nav)
-        self.btn_nav_settings.setCheckable(True)
-        self.btn_nav_settings.setChecked(False)
-        self.btn_nav_settings.setObjectName("btn_nav_settings")
-        self.btn_group_nav.addButton(self.btn_nav_settings)
-        self.verticalLayout.addWidget(self.btn_nav_settings)
         self.layout_frame_sidebar.addWidget(self.frame_sidebar_nav, 0, QtCore.Qt.AlignTop)
         spacerItem = QtWidgets.QSpacerItem(0, 1600000, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.layout_frame_sidebar.addItem(spacerItem)
@@ -190,22 +184,20 @@ class Ui_MainWindow(object):
         self.stack_content.addWidget(self.page_wallet)
         self.page_community = QtWidgets.QWidget()
         self.page_community.setObjectName("page_community")
-        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.page_community)
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.label_title_community = QtWidgets.QLabel(self.page_community)
-        self.label_title_community.setObjectName("label_title_community")
-        self.verticalLayout_5.addWidget(self.label_title_community)
+        self.layout_community = QtWidgets.QVBoxLayout(self.page_community)
+        self.layout_community.setContentsMargins(0, 0, 0, 0)
+        self.layout_community.setObjectName("layout_community")
+        self.label = QtWidgets.QLabel(self.page_community)
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.layout_community.addWidget(self.label)
         self.stack_content.addWidget(self.page_community)
-        self.page_settings = QtWidgets.QWidget()
-        self.page_settings.setObjectName("page_settings")
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.page_settings)
+        self.page_privilege_requests = QtWidgets.QWidget()
+        self.page_privilege_requests.setObjectName("page_privilege_requests")
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.page_privilege_requests)
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
-        self.label_title_settings = QtWidgets.QLabel(self.page_settings)
-        self.label_title_settings.setObjectName("label_title_settings")
-        self.verticalLayout_6.addWidget(self.label_title_settings)
-        self.stack_content.addWidget(self.page_settings)
+        self.stack_content.addWidget(self.page_privilege_requests)
         self.layout_main.addWidget(self.stack_content)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -217,11 +209,10 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.stack_content.setCurrentIndex(0)
+        self.stack_content.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.btn_get_coins, self.btn_nav_wallet)
         MainWindow.setTabOrder(self.btn_nav_wallet, self.btn_nav_community)
-        MainWindow.setTabOrder(self.btn_nav_community, self.btn_nav_settings)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -230,13 +221,10 @@ class Ui_MainWindow(object):
         self.btn_get_coins.setText(_translate("MainWindow", "Get Coins Now"))
         self.btn_nav_wallet.setText(_translate("MainWindow", "Wallet"))
         self.btn_nav_community.setText(_translate("MainWindow", "Community"))
-        self.btn_nav_settings.setText(_translate("MainWindow", "Settings"))
         self.label_blockchain_sync.setText(_translate("MainWindow", "Blockchain sync"))
         self.label_wallet_title.setText(_translate("MainWindow", "Wallet"))
         self.label_wallet_address_title.setText(_translate("MainWindow", "Main Address"))
         self.label_wallet_address.setText(_translate("MainWindow", "00000000000000000000000"))
         self.label_wallet_balance_title.setText(_translate("MainWindow", "Total Balance"))
         self.label_wallet_balance.setText(_translate("MainWindow", "0,00 CHM"))
-        self.label_title_community.setText(_translate("MainWindow", "Community"))
-        self.label_title_settings.setText(_translate("MainWindow", "Settings"))
 

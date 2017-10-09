@@ -30,8 +30,8 @@ class RpcClient:
     def getaddressbalances(self, address, minconf=1, includelocked=False):
         return self._call('getaddressbalances', address, minconf, includelocked)
 
-    def getbalance(self) -> Optional[float]:
-        return self._call('getbalance')['result']
+    def getbalance(self):
+        return self._call('getbalance')
 
     def getblockchaininfo(self) -> Optional[dict]:
         return self._call('getblockchaininfo')
@@ -104,9 +104,9 @@ if __name__ == '__main__':
     # pprint(client.getmultibalances())
     # pprint(client.listwallettransactions(1, verbose=True))
     ## pprint(client.getnewaddress())
-    # pprint(client.getruntimeparams())
+    pprint(client.getruntimeparams())
     # pprint(client.listaddresses(verbose=True))
     # pprint(client.validateaddress('1X8meKHXVUpsvgim3q7BJ24Xz7ymSDJnriqt7B'))
-    pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))
+    # pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))
     # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
 

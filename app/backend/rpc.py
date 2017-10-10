@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from decimal import Decimal
 import logging
 import requests
 from config import rpcuser, rpcpassword
@@ -72,6 +73,13 @@ class RpcClient:
     def listwallettransactions(self, count=10, skip=0, include_watch_only=False, verbose=False):
         return self._call('listwallettransactions', count, skip, include_watch_only, verbose)
 
+    def send(self, address, amount, comment=None, comment_to=None):
+        """
+        Note: 'comment' fields are local to the node and not
+        publicly embedded in the blockchain transaction.
+        """
+        return self._call('send', address, amount, comment, comment_to)
+
     def stop(self) -> Optional[str]:
         result = self._call('stop')['result']
 
@@ -88,9 +96,10 @@ class RpcClient:
         return 'https://' + url if self.use_ssl else 'http://' + url
 
     def _call(self, method, *args) -> Optional[requests.Response]:
+        args = [arg for arg in args if arg is not None]
         payload = {"id": method, "method": method, "params": args}
-        return requests.post(self._url, json=payload, verify=False).json()
-
+        response = requests.post(self._url, json=payload, verify=False)
+        return response.json(parse_float=Decimal)
 
 client = RpcClient('localhost', 8374, rpcuser, rpcpassword, use_ssl=False)
 
@@ -102,9 +111,9 @@ if __name__ == '__main__':
     # pprint(client.getblockchainparams())
     # pprint(client.getinfo())
     # pprint(client.getmultibalances())
-    # pprint(client.listwallettransactions(1, verbose=True))
-    ## pprint(client.getnewaddress())
-    pprint(client.getruntimeparams())
+    # pprint(client.listwallettransactions(1, verbose=False))
+    # pprint(client.getnewaddress())
+    # pprint(client.getruntimeparams())
     # pprint(client.listaddresses(verbose=True))
     # pprint(client.validateaddress('1X8meKHXVUpsvgim3q7BJ24Xz7ymSDJnriqt7B'))
     # pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))

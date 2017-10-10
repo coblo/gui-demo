@@ -3,10 +3,10 @@ from app.ui.community import Ui_widget_community
 
 
 class Community(QWidget, Ui_widget_community):
-    def __init__(self, parent, change_stack_index):
+    def __init__(self, parent):
         super().__init__(parent)
         self.setupUi(self)
-        self.btn_request_privileges.clicked.connect(lambda: change_stack_index(2))
+        self.btn_request_privileges.clicked.connect(lambda: parent.change_stack_index(2))
         self.updater = parent.updater
         self.updater.permissions_changed.connect(self.on_permissions_changed)
 

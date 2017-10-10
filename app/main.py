@@ -36,7 +36,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.layout_page_wallet.insertWidget(0, WalletHeader(self))
         self.layout_wallet_send.addWidget(WalletSend(self))
         self.layout_wallet_history.addWidget(WalletHistory(self))
-        self.layout_community.addWidget(Community(self, self.change_stack_index))
+        self.layout_community.addWidget(Community(self))
         self.layout_privilege_request.addWidget(CreatePrivilegeRequest(self, self.change_stack_index))
 
         self.updater.start()

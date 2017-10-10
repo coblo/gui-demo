@@ -9,7 +9,6 @@ class WalletHeader(QtWidgets.QWidget, Ui_widget_wallet_header):
         self.updater = parent.updater
         self.updater.balance_changed.connect(self.on_balance_changed)
         self.updater.address_changed.connect(self.on_address_changed)
-        self.updater.start()
 
     def on_balance_changed(self, balance):
         print('Balance Changed')

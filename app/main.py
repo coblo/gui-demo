@@ -39,6 +39,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.layout_community.addWidget(Community(self, self.change_stack_index))
         self.layout_privilege_request.addWidget(CreatePrivilegeRequest(self, self.change_stack_index))
 
+        self.updater.start()
+
     def on_nav_change(self, btn):
         name = btn.objectName()
         if name == 'btn_nav_wallet':

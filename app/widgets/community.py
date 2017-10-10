@@ -9,13 +9,25 @@ class Community(QWidget, Ui_widget_community):
         self.api = Api()
         self.setupUi(self)
         self.btn_request_privileges.clicked.connect(lambda: change_stack_index(2))
-        # if self.api.is_admin():
-        #     self.btn_validator_active.setText('Review Existing Validators')
-        #     self.btn_gaurdian_active.setText('Review Existing Guardians')
-        #     self.label_is_guardian.setText('Yes')
-        # else:
-        #     self.widget_privilege_requests.setHidden(True)
-        # if self.api.is_admin() and self.api.is_miner():
-        #     self.btn_request_privileges.setHidden(True)
-        # if self.api.is_miner():
-        #     self.label_is_validator.setText('Yes')
+        self.updater = parent.updater
+        self.updater.permissions_changed.connect(self.on_permissions_changed)
+
+    def on_permissions_changed(self, perms):
+
+        if 'admin' in perms:
+            self.btn_validator_active.setText('Review Existing Validators')
+            self.btn_gaurdian_active.setText('Review Existing Guardians')
+            self.label_is_guardian.setText('Yes')
+        else:
+            self.widget_privilege_requests.setHidden(True)
+            self.label_is_guardian.setText('No')
+
+        if 'admin' in perms and 'mine' in perms:
+            self.btn_request_privileges.setHidden(True)
+        else:
+            self.btn_request_privileges.setHidden(False)
+
+        if 'mine' in perms:
+            self.label_is_validator.setText('Yes')
+        else:
+            self.label_is_validator.setText('No')

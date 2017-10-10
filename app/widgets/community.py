@@ -1,12 +1,10 @@
 from PyQt5.QtWidgets import QWidget
 from app.ui.community import Ui_widget_community
-from app.backend.api import Api
 
 
 class Community(QWidget, Ui_widget_community):
     def __init__(self, parent, change_stack_index):
         super().__init__(parent)
-        self.api = Api()
         self.setupUi(self)
         self.btn_request_privileges.clicked.connect(lambda: change_stack_index(2))
         self.updater = parent.updater

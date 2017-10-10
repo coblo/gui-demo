@@ -6,6 +6,7 @@ import sys
 import traceback
 from PyQt5 import QtWidgets
 from app.backend.api import Api
+from app.backend.updater import Updater
 
 from app.ui.main import Ui_MainWindow
 from app.widgets.skills import WidgetSkills
@@ -22,6 +23,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.api = Api()
+
+        self.updater = Updater()
 
         # Sidebar
         self.btn_group_nav.buttonClicked.connect(self.on_nav_change)

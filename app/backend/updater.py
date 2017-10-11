@@ -16,6 +16,7 @@ class Updater(QtCore.QThread):
     balance_changed = QtCore.pyqtSignal(float)
     address_changed = QtCore.pyqtSignal(str)
     permissions_changed = QtCore.pyqtSignal(list)
+    transactions_changed = QtCore.pyqtSignal(list)
     api = Api()
 
     def __init__(self, parent=None):
@@ -23,6 +24,7 @@ class Updater(QtCore.QThread):
         self.last_balance = UNKNOWN_BALANCE
         self.last_address = UNKNOWN_ADDRESS
         self.last_permissions = []
+        self.last_transactions = []
 
     def __del__(self):
         self.wait()
@@ -47,6 +49,7 @@ class Updater(QtCore.QThread):
                 self.last_address = address
 
             self.update_permissions()
+            self.update_transaction()
 
             time.sleep(self.UPDATE_INTERVALL)
 
@@ -62,3 +65,9 @@ class Updater(QtCore.QThread):
         if perms != self.last_permissions:
             self.permissions_changed.emit(perms)
             self.last_permissions = perms
+
+    def update_transaction(self):
+        transactions = self.api.get_transactions()
+        if transactions != self.last_transactions:
+            self.transactions_changed.emit(transactions)
+            self.last_transactions = transactions

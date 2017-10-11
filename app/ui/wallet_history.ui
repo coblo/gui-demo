@@ -50,6 +50,9 @@
           <pointsize>10</pointsize>
          </font>
         </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>

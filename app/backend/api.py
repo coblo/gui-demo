@@ -96,5 +96,6 @@ class Api:
                         'confirmed': confirmed,
                         'data': ["{}".format(dt), description, "{0:.2f}".format(amount), "{0:.2f}".format(balance)]
                     })
+            transactions.reverse()
             return transactions
         return False

@@ -44,7 +44,13 @@
        <number>9</number>
       </property>
       <item>
-       <widget class="QTableView" name="table_wallet_history"/>
+       <widget class="QTableView" name="table_wallet_history">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

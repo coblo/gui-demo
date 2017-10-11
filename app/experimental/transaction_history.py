@@ -4,7 +4,8 @@ txs = client.listwallettransactions(10000000)
 
 balance = 0
 for tx in txs['result']:
-    dt = datetime.fromtimestamp(tx['timereceived'])
+    txid = tx['txid']
+    dt = datetime.fromtimestamp(tx['time'])
     description = tx.get('comment', '')
     perm = tx['permissions']
     if perm:
@@ -19,4 +20,4 @@ for tx in txs['result']:
     amount = tx['balance']['amount']
     balance += amount
     perm = tx['permissions']
-    print(dt, description, amount, balance)
+    print(txid, dt, description, amount, balance)

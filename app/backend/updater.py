@@ -51,10 +51,10 @@ class Updater(QtCore.QThread):
             time.sleep(self.UPDATE_INTERVALL)
 
     def update_permissions(self):
+        perms = []
         try:
             address = client.getruntimeparams()['result']['handshakelocal']
             resp = client.listpermissions('mine,admin,create,issue', address)
-            perms = []
             for entry in resp['result']:
                 perms.append(entry['type'])
         except Exception:

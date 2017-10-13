@@ -1,5 +1,3 @@
-import operator
-
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QHeaderView, QWidget
@@ -15,26 +13,23 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
         self.updater.transactions_changed.connect(self.on_transactions_changed)
 
     def on_transactions_changed(self, transactions):
-        data = [transaction['data'] for transaction in transactions]
-        unconfirmed = [index for index, transaction in enumerate(transactions) if not transaction['confirmed']]
-        table_model = TransactionHistoryTableModel(['Date', 'Description', 'Amount', 'Balance'], transactions, unconfirmed=unconfirmed)
+        table_model = TransactionHistoryTableModel(['Date', 'Description', 'Amount', 'Balance'], transactions)
         self.table_wallet_history.setModel(table_model)
         header = self.table_wallet_history.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        # todo: amount red or green
 
 
 class TransactionHistoryTableModel(QAbstractTableModel):
 
-    def __init__(self, header, transactions, parent=None, unconfirmed=None):
+    def __init__(self, header, transactions, parent=None):
         super().__init__()
         self.header = header
         self.transactions = transactions
         self.data = [transaction['data'] for transaction in transactions]
-        self.unconfirmed = unconfirmed
+        self.unconfirmed = [index for index, transaction in enumerate(transactions) if not transaction['confirmed']]
 
     def rowCount(self, parent=None, *args, **kwargs):
         return len(self.data)
@@ -65,8 +60,9 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def sort(self, p_int, order=None):
         self.layoutAboutToBeChanged.emit()
-        self.data = sorted(self.data, key=operator.itemgetter(p_int))
-        if order == Qt.DescendingOrder:
-            self.data.reverse()
+        if p_int in [2, 3]:
+            self.data = sorted(self.data, key=lambda x: float(x[p_int]), reverse=(order == Qt.DescendingOrder))
+        else:
+            self.data = sorted(self.data, key=lambda x: x[p_int], reverse=(order == Qt.DescendingOrder))
         self.unconfirmed = [self.data.index(transaction['data']) for transaction in self.transactions if not transaction['confirmed']]
         self.layoutChanged.emit()

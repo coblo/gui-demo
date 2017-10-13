@@ -1,7 +1,8 @@
+import operator
+
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt5.QtWidgets import QHeaderView, QWidget
 
-from app.backend.updater import Updater
 from app.ui.wallet_history import Ui_widget_wallet_history
 
 
@@ -23,7 +24,6 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         # todo: transaction red when not confirmed
         # todo: amount red or green
-        # todo: sorting (initial last transaction first)
 
 
 class TransactionHistoryTableModel(QAbstractTableModel):
@@ -52,3 +52,10 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         elif role == Qt.TextAlignmentRole and index.column() != 1:
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
         return None
+
+    def sort(self, p_int, order=None):
+        self.layoutAboutToBeChanged.emit()
+        self.data = sorted(self.data, key=operator.itemgetter(p_int))
+        if order == Qt.DescendingOrder:
+            self.data.reverse()
+        self.layoutChanged.emit()

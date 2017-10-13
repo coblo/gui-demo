@@ -54,8 +54,13 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             return QVariant(self.arraydata[index.row()][index.column()])
         elif role == Qt.TextAlignmentRole and index.column() != 1:
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
-        elif role == Qt.ForegroundRole and index.row() in self.unconfirmed:
-            return QVariant(QColor(Qt.red))
+        elif role == Qt.ForegroundRole:
+            if index.column() == 2 and float(self.data[index.row()][2]) > 0:
+                return QVariant(QColor(Qt.green))
+            if index.column() == 2 and float(self.data[index.row()][2]) < 0:
+                return QVariant(QColor(Qt.red))
+            elif index.row() in self.unconfirmed:
+                return QVariant(QColor(Qt.red))
         return None
 
     def sort(self, p_int, order=None):

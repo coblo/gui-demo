@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from collections import namedtuple
 from datetime import datetime
 
 from .rpc import client
@@ -90,12 +91,14 @@ class Api:
 
                     amount = tx['balance']['amount']
                     balance += amount
-                    confirmed = tx['confirmations'] > 0
-                    transactions.append({
-                        'txid': txid,
-                        'confirmed': confirmed,
-                        'data': [dt, description, amount, balance]
-                    })
+                    confirmations = tx['confirmations']
+                    transactions.append(
+                        Transaction(dt, description, amount, balance, confirmations, txid)
+                    )
             transactions.reverse()
             return transactions
         return False
+
+
+class Transaction(namedtuple('Transaction', 'datetime description amount balance confirmations txid')):
+    pass

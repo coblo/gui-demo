@@ -1,3 +1,4 @@
+from datetime import datetime
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QHeaderView, QWidget
@@ -53,23 +54,22 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             value = tx[col]
             if isinstance(value, Decimal):
-                return str(value.quantize(Decimal('.01'), rounding=ROUND_DOWN))
-            return str(value)
+                display = str(value.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+                return '+' + display if value > 0 else display
+            elif isinstance(value, datetime):
+                if tx.confirmations == 0:
+                    return 'Unconfirmed'
+                else:
+                    return value.strftime("%Y-%m-%d %H:%M")
+            else:
+                return str(value)
         if role == Qt.ToolTipRole and col in (self.AMOUNT, self.BALANCE):
             return str(tx[col])
-        elif role == Qt.TextAlignmentRole and col != self.DESCRIPTION:
+        elif role == Qt.TextAlignmentRole and col not in (self.DESCRIPTION, self.DATETIME):
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
         elif role == Qt.ForegroundRole:
-            if col == self.AMOUNT and tx.amount > 0:
-                return QVariant(QColor(Qt.green))
             if col == self.AMOUNT and tx.amount < 0:
                 return QVariant(QColor(Qt.red))
-        elif role == Qt.BackgroundColorRole:
-            if tx.confirmations == 0:
-                return QVariant(QColor(Qt.red))
-            elif 1 <= tx.confirmations <= 3:
-                return QVariant(QColor(Qt.yellow))
-            return QVariant(QColor(Qt.white))
         return None
 
     def sort(self, p_int, order=None):

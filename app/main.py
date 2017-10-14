@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """Application Main Window and Entry Point"""
-
 import sys
+import locale
 import traceback
 from PyQt5 import QtWidgets
 from app.backend.api import Api
@@ -54,6 +54,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
+    locale.setlocale(locale.LC_ALL, '')
     window = MainWindow()
 
     # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())

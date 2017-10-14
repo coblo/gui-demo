@@ -3,7 +3,6 @@ from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QHeaderView, QWidget
 from decimal import Decimal, ROUND_DOWN
-
 from app.ui.wallet_history import Ui_widget_wallet_history
 
 
@@ -54,8 +53,9 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             value = tx[col]
             if isinstance(value, Decimal):
-                display = str(value.quantize(Decimal('.01'), rounding=ROUND_DOWN))
-                return '+' + display if value > 0 else display
+                normalized = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+                display = "{0:n}".format(normalized)
+                return '+' + display if value > 0 and col == self.AMOUNT else display
             elif isinstance(value, datetime):
                 if tx.confirmations == 0:
                     return 'Unconfirmed'
@@ -64,7 +64,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             else:
                 return str(value)
         if role == Qt.ToolTipRole and col in (self.AMOUNT, self.BALANCE):
-            return str(tx[col])
+            return "{0:n}".format(tx[col])
         elif role == Qt.TextAlignmentRole and col not in (self.DESCRIPTION, self.DATETIME):
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
         elif role == Qt.ForegroundRole:

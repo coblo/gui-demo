@@ -14,7 +14,9 @@ class WalletHeader(QtWidgets.QWidget, Ui_widget_wallet_header):
         self.updater.address_changed.connect(self.on_address_changed)
 
     def on_balance_changed(self, balance):
-        self.label_wallet_balance.setText(str(balance))
+        display = "{0:n}".format(balance.normalize()) if balance is not ' ' else balance
+        display += ' CHM'
+        self.label_wallet_balance.setText(display)
 
     def on_address_changed(self, address):
         self.label_wallet_address.setText(address)

@@ -94,7 +94,7 @@ class Api:
                     transactions.append({
                         'txid': txid,
                         'confirmed': confirmed,
-                        'data': ["{}".format(dt), description, "{0:.2f}".format(amount), "{0:.2f}".format(balance)]
+                        'data': [dt, description, amount, balance]
                     })
             transactions.reverse()
             return transactions

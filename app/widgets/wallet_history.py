@@ -45,8 +45,6 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
             return self.data[index.row()][index.column()]
-        if role == Qt.DisplayRole:
-            return QVariant(self.arraydata[index.row()][index.column()])
         elif role == Qt.TextAlignmentRole and index.column() != 1:
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
         elif role == Qt.ForegroundRole:

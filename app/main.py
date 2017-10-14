@@ -31,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.widget_skills = WidgetSkills(self)
         self.layout_frame_sidebar.insertWidget(4, self.widget_skills)
 
-        # Conent
+        # Content
         self.stack_content.setCurrentIndex(0)
         self.layout_page_wallet.insertWidget(0, WalletHeader(self))
         self.layout_wallet_send.addWidget(WalletSend(self))

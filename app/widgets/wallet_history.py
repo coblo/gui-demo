@@ -58,11 +58,11 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     def sort(self, p_int, order=None):
         self.layoutAboutToBeChanged.emit()
         if p_int == 2:
-            self.data = sorted(self.data, key=lambda x: abs(float(x[p_int])), reverse=(order == Qt.DescendingOrder))
+            self.data.sort(key=lambda x: abs(float(x[p_int])), reverse=(order == Qt.DescendingOrder))
         elif p_int == 3:
-            self.data = sorted(self.data, key=lambda x: float(x[p_int]), reverse=(order == Qt.DescendingOrder))
+            self.data.sort(key=lambda x: float(x[p_int]), reverse=(order == Qt.DescendingOrder))
         else:
-            self.data = sorted(self.data, key=lambda x: x[p_int], reverse=(order == Qt.DescendingOrder))
+            self.data.sort(key=lambda x: x[p_int], reverse=(order == Qt.DescendingOrder))
         self.unconfirmed = [self.data.index(transaction['data']) for transaction in self.transactions if not transaction['confirmed']]
         self.layoutChanged.emit()
 

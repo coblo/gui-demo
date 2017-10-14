@@ -43,20 +43,8 @@ class RpcClient:
     def getinfo(self) -> Optional[dict]:
         return self._call('getinfo')
 
-    def getmultibalances(self) -> Optional[list]:
-        result = self._call('getmultibalances')
-        data = result['result']
-        address_balances = []
-        for address in data:
-            if address == 'total':
-                continue
-            for detail in data[address]:
-                if detail['assetref'] == "":
-                    balance = detail['qty']
-                    address_balances.append(
-                        (address, balance)
-                    )
-        return address_balances
+    def getmultibalances(self, addresses='*', assets='*', minconf=0, includeWatchOnly=False, includeLocked=False):
+        return self._call('getmultibalances', addresses, assets, minconf, includeWatchOnly, includeLocked )
 
     def getnewaddress(self):
         return self._call('getnewaddress')
@@ -101,12 +89,14 @@ class RpcClient:
         response = requests.post(self._url, json=payload, verify=False)
         return response.json(parse_float=Decimal)
 
+
 client = RpcClient('localhost', 8374, rpcuser, rpcpassword, use_ssl=False)
+
 
 if __name__ == '__main__':
     from pprint import pprint
     # pprint(client.getaddresses(verbose=True))
-    # pprint(client.getbalance())
+    pprint(client.getbalance())
     # pprint(client.getblockchaininfo())
     # pprint(client.getblockchainparams())
     # pprint(client.getinfo())
@@ -118,4 +108,6 @@ if __name__ == '__main__':
     # pprint(client.validateaddress('1X8meKHXVUpsvgim3q7BJ24Xz7ymSDJnriqt7B'))
     # pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))
     # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
+    # pprint(client.getmultibalances())
+
 

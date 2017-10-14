@@ -2,6 +2,9 @@
 """Background Updater Thread"""
 import time
 from PyQt5 import QtCore
+
+from decimal import Decimal
+
 from app.backend.api import Api
 from app.backend.rpc import client
 
@@ -13,7 +16,7 @@ class Updater(QtCore.QThread):
 
     UPDATE_INTERVALL = 3
 
-    balance_changed = QtCore.pyqtSignal(float)
+    balance_changed = QtCore.pyqtSignal(Decimal)
     address_changed = QtCore.pyqtSignal(str)
     permissions_changed = QtCore.pyqtSignal(list)
     transactions_changed = QtCore.pyqtSignal(list)

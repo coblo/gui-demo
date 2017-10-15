@@ -83,6 +83,7 @@ class Updater(QtCore.QThread):
 
     def update_chainstatus(self):
         chain_info = client.getblockchaininfo()['result']
-        self.chainstatus_changed.emit(chain_info)
+        if chain_info:
+            self.chainstatus_changed.emit(chain_info)
 
 

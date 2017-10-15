@@ -25,6 +25,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.api = Api()
 
         self.updater = Updater()
+        self.updater.chainstatus_changed.connect(self.on_chainstatus_changed)
 
         # Sidebar
         self.btn_group_nav.buttonClicked.connect(self.on_nav_change)
@@ -50,6 +51,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def change_stack_index(self, new_index):
         self.stack_content.setCurrentIndex(new_index)
+
+    def on_chainstatus_changed(self, data):
+        percentage = (data.get('blocks') / data.get('headers')) * 100
+        self.progbar_blockchain_sync.setValue(int(percentage))
+        msg = 'Synced {} blocks of {}'.format(data.get('blocks'), data.get('headers'))
+        self.statusbar.showMessage(msg, 10000)
 
 
 def main():

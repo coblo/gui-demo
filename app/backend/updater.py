@@ -21,6 +21,7 @@ class Updater(QtCore.QThread):
     address_changed = QtCore.pyqtSignal(str)
     permissions_changed = QtCore.pyqtSignal(list)
     transactions_changed = QtCore.pyqtSignal(list)
+    addresses_changed = QtCore.pyqtSignal(list)
 
     api = Api()
 
@@ -31,6 +32,7 @@ class Updater(QtCore.QThread):
         self.last_address = UNKNOWN_ADDRESS
         self.last_permissions = []
         self.last_transactions = []
+        self.last_addresses = []
 
     def __del__(self):
         self.wait()
@@ -58,6 +60,7 @@ class Updater(QtCore.QThread):
                 self.last_address = address
 
             self.update_permissions()
+            self.update_addresses()
             self.update_transaction()
 
             time.sleep(self.UPDATE_INTERVALL)
@@ -80,6 +83,12 @@ class Updater(QtCore.QThread):
         if transactions != self.last_transactions:
             self.transactions_changed.emit(transactions)
             self.last_transactions = transactions
+
+    def update_addresses(self):
+        addresses = self.api.get_addresses()
+        if addresses != self.last_addresses:
+            self.addresses_changed.emit(addresses)
+            self.last_addresses = addresses
 
     def update_chainstatus(self):
         chain_info = client.getblockchaininfo()['result']

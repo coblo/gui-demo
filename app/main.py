@@ -11,6 +11,7 @@ from app.backend.updater import Updater
 from app.ui.main import Ui_MainWindow
 from app.widgets.skills import WidgetSkills
 from app.widgets.wallet_header import WalletHeader
+from app.widgets.wallet_addresses import WalletAddresses
 from app.widgets.wallet_send import WalletSend
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.community import Community
@@ -35,6 +36,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Content
         self.stack_content.setCurrentIndex(0)
         self.layout_page_wallet.insertWidget(0, WalletHeader(self))
+        self.layout_wallet_addresses.addWidget(WalletAddresses(self))
         self.layout_wallet_send.addWidget(WalletSend(self))
         self.layout_wallet_history.addWidget(WalletHistory(self))
         self.layout_community.addWidget(Community(self))

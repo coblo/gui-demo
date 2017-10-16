@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from collections import namedtuple
+from decimal import Decimal
 from datetime import datetime
 
 from .rpc import client
@@ -58,6 +59,36 @@ class Api:
                 return len(mine_permissions) > 0
         # If something went wrong return False
         return False
+
+    def get_addresses(self):
+        balances = []
+        multi_balances = None
+        addresses = None
+        try:
+            multi_balances = client.getmultibalances()['result']
+            addresses = client.getaddresses()['result']
+        except Exception as e:
+            self.on_rpc_error(str(e))
+        if addresses is not None:
+            for address in addresses:
+                address_balance = {
+                    'Address': address
+                }
+                if address in multi_balances:
+                    address_balance['Balance'] = multi_balances[address][0]['qty']
+                else:
+                    address_balance['Balance'] = Decimal(0)
+                balances.append(address_balance)
+            balances.append({
+                'Address': 'Total',
+                'Balance': multi_balances['total'][0]['qty']
+            })
+            return balances
+        return False
+
+
+
+
 
     def on_rpc_error(self, error):
         log.error(error)

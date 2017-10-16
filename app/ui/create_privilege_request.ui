@@ -59,6 +59,9 @@
         <property name="rightMargin">
          <number>0</number>
         </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <widget class="QPushButton" name="btn_print_proof">
           <property name="sizePolicy">
@@ -93,6 +96,20 @@
             </widget>
            </item>
           </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_img_path">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_change_image">
+          <property name="text">
+           <string>Change Image</string>
+          </property>
          </widget>
         </item>
        </layout>

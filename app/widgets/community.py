@@ -20,10 +20,10 @@ class Community(QWidget, Ui_widget_community):
             self.widget_privilege_requests.setHidden(True)
             self.label_is_guardian.setText('No')
 
-        # if 'admin' in perms and 'mine' in perms:
-        #     self.btn_request_privileges.setHidden(True)
-        # else:
-        #     self.btn_request_privileges.setHidden(False)
+        if 'admin' in perms and 'mine' in perms:
+            self.btn_request_privileges.setHidden(True)
+        else:
+            self.btn_request_privileges.setHidden(False)
 
         if 'mine' in perms:
             self.label_is_validator.setText('Yes')

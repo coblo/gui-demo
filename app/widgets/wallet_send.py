@@ -13,7 +13,8 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
 
         self.amount_validator = QDoubleValidator()
         # TODO: max value needs to be updated with balance
-        self.amount_validator.setRange(0.00000001, float(settings.value('balance')), 8)
+        balance = float(settings.value('balance', 0.00))
+        self.amount_validator.setRange(0.00000001, balance, 8)
 
         self.edit_amount.setValidator(self.amount_validator)
         self.edit_amount.textChanged.connect(self.check_state)

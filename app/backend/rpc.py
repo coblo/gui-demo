@@ -40,6 +40,9 @@ class RpcClient:
     def getblockchainparams(self):
         return self._call('getblockchainparams')
 
+    def getblockhash(self, height):
+        return self._call('getblockhash', height)
+
     def getinfo(self) -> Optional[dict]:
         return self._call('getinfo')
 

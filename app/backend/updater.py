@@ -95,4 +95,8 @@ class Updater(QtCore.QThread):
         if chain_info:
             self.chainstatus_changed.emit(chain_info)
 
+    def on_send(self):
+        self.update_addresses()
+        self.update_transaction()
+
 

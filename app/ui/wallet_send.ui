@@ -66,6 +66,11 @@
         </item>
         <item row="0" column="1">
          <widget class="QLineEdit" name="edit_amount">
+          <property name="font">
+           <font>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string/>
           </property>
@@ -87,7 +92,16 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="edit_address"/>
+         <widget class="QLineEdit" name="edit_address">
+          <property name="font">
+           <font>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_send_description">
@@ -105,7 +119,19 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QLineEdit" name="edit_description"/>
+         <widget class="QLineEdit" name="edit_description">
+          <property name="font">
+           <font>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="maxLength">
+           <number>70</number>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

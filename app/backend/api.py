@@ -87,9 +87,6 @@ class Api:
         return False
 
 
-
-
-
     def on_rpc_error(self, error):
         log.error(error)
 
@@ -129,6 +126,14 @@ class Api:
             transactions.reverse()
             return transactions
         return False
+
+    def send(self, address, amount, description=None):
+        try:
+            success = client.send(address, amount, description)
+        except Exception as e:
+            self.on_rpc_error(str(e))
+            return False
+        return success['error'] is None
 
 
 class Transaction(namedtuple('Transaction', 'datetime description amount balance confirmations txid')):

@@ -17,13 +17,11 @@ class AddressValidator(QValidator):
         super().__init__(parent)
 
     def validate(self, input_str, position=0):
-        print(input_str)
         for c in input_str:
             if c not in self.symbols:
                 return QValidator.Invalid, input_str, position
 
         if self.max_length < len(input_str) < self.min_length:
-            print('C')
             return QValidator.Intermediate, input_str, position
 
         if address_valid(input_str):

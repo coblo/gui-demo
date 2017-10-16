@@ -4,17 +4,21 @@ from PyQt5.QtWidgets import QWidget
 from app import settings
 from app.tools.validators import AddressValidator
 from app.ui.wallet_send import Ui_widget_wallet_send
+from app.backend.api import Api
 
 
 class WalletSend(QWidget, Ui_widget_wallet_send):
     def __init__(self, parent):
         super().__init__(parent)
         self.setupUi(self)
+        self.api = Api()
 
         self.amount_validator = QDoubleValidator()
-        # TODO: max value needs to be updated with balance
         balance = float(settings.value('balance', 0.00))
         self.amount_validator.setRange(0.00000001, balance, 8)
+
+        self.updater = parent.updater
+        self.updater.balance_changed.connect(self.on_balance_changed)
 
         self.edit_amount.setValidator(self.amount_validator)
         self.edit_amount.textChanged.connect(self.check_state)
@@ -45,7 +49,19 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.edit_description.clear()
 
     def on_send_clicked(self):
-        print(self.edit_amount.text())
-        print(self.edit_address.text())
-        print(self.edit_description.text())
+        amount = float(self.edit_amount.text().replace(',', '.'))
+        success = self.api.send(address=self.edit_address.text(), amount=amount, description=self.edit_description.text())
+        if success:
+            self.edit_address.setText('')
+            self.edit_amount.setText('')
+            self.edit_description.setText('')
+            self.updater.on_send()
+
+    def on_balance_changed(self, balance):
+        if balance is None:
+            balance = float(settings.value('balance', 0.00))
+        else:
+            balance = float(settings.value('balance', balance))
+        self.amount_validator.setRange(0.00000001, balance, 8)
+
 

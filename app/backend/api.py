@@ -158,6 +158,19 @@ class Api:
             self.on_rpc_error(str(e))
         return actual_hash
 
+    def get_skills(self):
+        skills = []
+        try:
+            address = client.getruntimeparams()['result']['handshakelocal']
+            actual_block = client.getblockchaininfo()['result']['blocks'] - 1
+            resp = client.listpermissions('mine,admin,create,issue', address)
+            for entry in resp['result']:
+                if actual_block <= entry['endblock'] and actual_block >= entry['startblock']:
+                    skills.append(entry['type'])
+        except Exception as e:
+            self.on_rpc_error(str(e))
+        return skills
+
 
 class Transaction(namedtuple('Transaction', 'datetime description amount balance confirmations txid')):
     pass

@@ -16,10 +16,52 @@ class BaseModel(p.Model):
 
 class Address(BaseModel):
 
+    ISSUE, CREATE, MINE, ADMIN = 'issue', 'create', 'mine', 'admin'
+    PERMS = ISSUE, CREATE, MINE, ADMIN
+
+    alias = p.CharField(default='')
     address = p.CharField(primary_key=True)
+    can_create = p.BooleanField(default=False)
+    can_issue = p.BooleanField(default=False)
+    can_mine = p.BooleanField(default=False)
+    can_admin = p.BooleanField(default=False)
 
     def blocks_mined(self):
         return self.mined_blocks.count()
+
+    @classmethod
+    def sync_permissions(cls):
+        node_height = client.getblockcount()['result']
+        permissions = client.listpermissions(','.join(cls.PERMS))['result']
+
+        # Import new permissions
+        with database.atomic():
+            # Clear all old permissions
+            Address.update(
+                can_create=False,
+                can_issue=False,
+                can_mine=False,
+                can_admin=False,
+            ).execute()
+            for perm in permissions:
+                addr_obj, created = Address.get_or_create(address=perm['address'])
+                grant = True if perm['endblock'] >= node_height else False
+                setattr(addr_obj, 'can_' + perm['type'], grant)
+                addr_obj.save()
+        print('Synced {} permissions'.format(len(permissions)))
+
+    @classmethod
+    def sync_aliases(cls):
+        aliases = client.liststreamkeys('alias', verbose=True)['result']
+        with database.atomic():
+            for entry in aliases:
+                addr = entry['first']['publishers'][0]
+                alias = entry['key']
+                addr_obj, created = Address.get_or_create(address=addr, defaults=(dict(alias=alias)))
+                if not created:
+                    addr_obj.alias = alias
+                    addr_obj.save()
+        print('Synced {} aliases'.format(len(aliases)))
 
 
 class Block(BaseModel):
@@ -42,22 +84,23 @@ class Block(BaseModel):
         else:
             new_blocks = client.listblocks("{}-{}".format(latest_block, node_height))
             synched = 0
-            for block in new_blocks['result']:
-                addr_obj, adr_created = Address.get_or_create(address=block['miner'])
+            with database.atomic():
+                for block in new_blocks['result']:
+                    addr_obj, adr_created = Address.get_or_create(address=block['miner'])
 
-                block_obj, blk_created = Block.get_or_create(
-                    hash=block['hash'],
-                    defaults=dict(
-                        confirmations=block['confirmations'],
-                        miner=addr_obj,
-                        height=block['height'],
-                        time=datetime.fromtimestamp(block['time']),
-                        txcount=block['txcount'],
+                    block_obj, blk_created = Block.get_or_create(
+                        hash=block['hash'],
+                        defaults=dict(
+                            confirmations=block['confirmations'],
+                            miner=addr_obj,
+                            height=block['height'],
+                            time=datetime.fromtimestamp(block['time']),
+                            txcount=block['txcount'],
+                        )
                     )
-                )
-                if blk_created:
-                    synched += 1
-                print('Synced block {}'.format(block_obj.height))
+                    if blk_created:
+                        synched += 1
+                    print('Synced block {}'.format(block_obj.height))
 
             print('Synced {} blocks total.'.format(synched))
 
@@ -68,10 +111,13 @@ try:
 except p.OperationalError as e:
     pass
 
+
 if __name__ == '__main__':
     Block.sync()
     addr_obj = Address.select().first()
     print(addr_obj.blocks_mined())
     blk_obj = Block.select().first()
     print(blk_obj.time)
+    Address.sync_permissions()
+    Address.sync_aliases()
 

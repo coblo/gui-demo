@@ -135,6 +135,23 @@ class Api:
             return False
         return success['error'] is None
 
+    def publish(self, stream, key, data):
+        try:
+            success = client.publish(stream, key, data)
+        except Exception as e:
+            self.on_rpc_error(str(e))
+            return False
+        return success['error'] is None
+
+    def get_actual_hash(self):
+        actual_hash = None
+        try:
+            actual_block = client.getblockchaininfo()['result']['blocks'] - 1
+            actual_hash = client.getblockhash(actual_block)['result']
+        except Exception as e:
+            self.on_rpc_error(str(e))
+        return actual_hash
+
 
 class Transaction(namedtuple('Transaction', 'datetime description amount balance confirmations txid')):
     pass

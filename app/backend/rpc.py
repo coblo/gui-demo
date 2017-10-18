@@ -40,6 +40,9 @@ class RpcClient:
     def getblockchainparams(self):
         return self._call('getblockchainparams')
 
+    def getblockhash(self, height):
+        return self._call('getblockhash', height)
+
     def getinfo(self) -> Optional[dict]:
         return self._call('getinfo')
 
@@ -60,6 +63,9 @@ class RpcClient:
 
     def listwallettransactions(self, count=10, skip=0, include_watch_only=False, verbose=False):
         return self._call('listwallettransactions', count, skip, include_watch_only, verbose)
+
+    def publish(self, stream, key, data):
+        return self._call('publish', stream, key, data)
 
     def send(self, address, amount, comment=None, comment_to=None):
         """

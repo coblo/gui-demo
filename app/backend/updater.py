@@ -71,7 +71,8 @@ class Updater(QtCore.QThread):
             address = client.getruntimeparams()['result']['handshakelocal']
             resp = client.listpermissions('mine,admin,create,issue', address)
             for entry in resp['result']:
-                perms.append(entry['type'])
+                if entry['type'] != 'admin':
+                    perms.append(entry['type'])
         except Exception:
             skills = []
         if perms != self.last_permissions:

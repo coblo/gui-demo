@@ -1,4 +1,12 @@
+import time
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCursor
 from PyQt5.QtGui import QValidator
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from decimal import Decimal
 
@@ -72,16 +80,25 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.edit_description.clear()
 
     def on_send_clicked(self):
-        success = self.api.send(
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        answer = self.api.send(
             address=self.edit_address.text(),
             amount=Decimal(self.edit_amount.text()),
             description=self.edit_description.text()
         )
-        if success:
+        if answer['success']:
             self.edit_address.setText('')
             self.edit_amount.setText('')
             self.edit_description.setText('')
             self.updater.on_send()
+            QApplication.restoreOverrideCursor()
+        else:
+            error_dialog = QMessageBox()
+            error_dialog.setWindowTitle('Error while sending')
+            error_dialog.setText(answer['message'])
+            error_dialog.setIcon(QMessageBox.Warning)
+            QApplication.restoreOverrideCursor()
+            error_dialog.exec_()
 
     def on_balance_changed(self, balance):
         self.balance = balance

@@ -128,12 +128,18 @@ class Api:
         return False
 
     def send(self, address, amount, description=None):
+        answer = None
         try:
-            success = client.send(address, amount, description)
+            answer = client.send(address, amount, description)
         except Exception as e:
             self.on_rpc_error(str(e))
-            return False
-        return success['error'] is None
+        if not answer is None:
+            if answer['error'] is not None:
+                return {'success': False, 'message': answer['error']['message']}
+            else:
+                return {'success': True}
+        else:
+            return {'success': False}
 
     def publish(self, stream, key, data):
         try:

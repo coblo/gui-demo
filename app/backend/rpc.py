@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import decimal
+import json
 from decimal import Decimal
 import logging
 import requests
@@ -11,6 +13,13 @@ requests.packages.urllib3.disable_warnings()
 
 log = logging.getLogger(__name__)
 
+
+class DecimalEncoder(json.JSONEncoder):
+    """Custom json encoder that supports Decimal"""
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return float(o)
+        return super(DecimalEncoder, self).default(o)
 
 class RpcClient:
 
@@ -92,7 +101,8 @@ class RpcClient:
     def _call(self, method, *args) -> Optional[requests.Response]:
         args = [arg for arg in args if arg is not None]
         payload = {"id": method, "method": method, "params": args}
-        response = requests.post(self._url, json=payload, verify=False)
+        serialized = json.dumps(payload, cls=DecimalEncoder)
+        response = requests.post(self._url, data=serialized, verify=False)
         return response.json(parse_float=Decimal)
 
 

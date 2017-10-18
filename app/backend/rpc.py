@@ -67,14 +67,17 @@ class RpcClient:
     def getruntimeparams(self):
         return self._call('getruntimeparams')
 
-    def listblocks(self, blocks='-4294967295', verbose=False):
-        return self._call('listblocks', blocks, verbose)
-
     def listaddresses(self, addresses='*', verbose=False, count=100, start=0):
         return self._call('listaddresses', addresses, verbose, count, start)
 
+    def listblocks(self, blocks='-4294967295', verbose=False):
+        return self._call('listblocks', blocks, verbose)
+
     def listpermissions(self, permissions='*', addresses='*', verbose=False):
         return self._call('listpermissions', permissions, addresses, verbose)
+
+    def liststreamkeys(self, stream, keys='*', verbose=False, count=10000000, start=0, local_ordering=False):
+        return self._call('liststreamkeys', stream, keys, verbose, count, start, local_ordering)
 
     def listwallettransactions(self, count=10, skip=0, include_watch_only=False, verbose=False):
         return self._call('listwallettransactions', count, skip, include_watch_only, verbose)
@@ -131,5 +134,5 @@ if __name__ == '__main__':
     # pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))
     # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
     # pprint(client.getmultibalances())
-    pprint(client.getblockcount())
-
+    # pprint(client.getblockcount())
+    pprint(client.liststreamkeys('alias', verbose=True))

@@ -90,9 +90,10 @@ try:
 except p.OperationalError as e:
     pass
 
+
 def sync_permissions():
     node_height = client.getblockcount()['result']
-    permissions = client.listpermissions(','.join(Address.PERMS))['result']
+    permissions = client.listpermissions(','.join(Address.PERMS), verbose=True)['result']
     addresses = Address.select()
 
     # Get list of old permissions

@@ -30,27 +30,6 @@ class Address(BaseModel):
         return self.mined_blocks.count()
 
     @classmethod
-    def sync_permissions(cls):
-        node_height = client.getblockcount()['result']
-        permissions = client.listpermissions(','.join(cls.PERMS))['result']
-
-        # Import new permissions
-        with database.atomic():
-            # Clear all old permissions
-            Address.update(
-                can_create=False,
-                can_issue=False,
-                can_mine=False,
-                can_admin=False,
-            ).execute()
-            for perm in permissions:
-                addr_obj, created = Address.get_or_create(address=perm['address'])
-                grant = True if perm['endblock'] >= node_height else False
-                setattr(addr_obj, 'can_' + perm['type'], grant)
-                addr_obj.save()
-        print('Synced {} permissions'.format(len(permissions)))
-
-    @classmethod
     def sync_aliases(cls):
         aliases = client.liststreamkeys('alias', verbose=True)['result']
         with database.atomic():
@@ -111,6 +90,41 @@ try:
 except p.OperationalError as e:
     pass
 
+def sync_permissions():
+    node_height = client.getblockcount()['result']
+    permissions = client.listpermissions(','.join(Address.PERMS))['result']
+    addresses = Address.select()
+
+    # Get list of old permissions
+    old_permissions = {}
+    for address in addresses:
+        address_permissions = []
+        for perm in Address.PERMS:
+            if getattr(address, 'can_' + perm):
+                address_permissions.append(perm)
+        if len(address_permissions) > 0:
+            old_permissions[address.address] = address_permissions
+
+    # Import new permissions
+    with database.atomic():
+        for perm in permissions:
+            addr_obj, created = Address.get_or_create(address=perm['address'])
+            address = perm['address']
+            type = perm['type']
+            grant = perm['endblock'] >= node_height >= perm['startblock']
+            if address in old_permissions and type in old_permissions[address]:
+                old_permissions[address].remove(type)
+            setattr(addr_obj, 'can_' + type, grant)
+            addr_obj.save()
+
+        # Clear all old permissions, that don't exist anymore
+        for perm in old_permissions:
+            for type in perm:
+                setattr(addr_obj, 'can_' + type, False)
+                addr_obj.save()
+
+    print('Synced {} permissions'.format(len(permissions)))
+
 
 if __name__ == '__main__':
     Block.sync()
@@ -118,6 +132,6 @@ if __name__ == '__main__':
     print(addr_obj.blocks_mined())
     blk_obj = Block.select().first()
     print(blk_obj.time)
-    Address.sync_permissions()
+    sync_permissions()
     Address.sync_aliases()
 

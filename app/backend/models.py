@@ -110,17 +110,17 @@ def sync_permissions():
         for perm in permissions:
             addr_obj, created = Address.get_or_create(address=perm['address'])
             address = perm['address']
-            type = perm['type']
+            perm_type = perm['type']
             grant = perm['endblock'] >= node_height >= perm['startblock']
-            if address in old_permissions and type in old_permissions[address]:
-                old_permissions[address].remove(type)
-            setattr(addr_obj, 'can_' + type, grant)
+            if address in old_permissions and perm_type in old_permissions[address]:
+                old_permissions[address].remove(perm_type)
+            setattr(addr_obj, 'can_' + perm_type, grant)
             addr_obj.save()
 
         # Clear all old permissions, that don't exist anymore
         for perm in old_permissions:
-            for type in perm:
-                setattr(addr_obj, 'can_' + type, False)
+            for perm_type in perm:
+                setattr(addr_obj, 'can_' + perm_type, False)
                 addr_obj.save()
 
     print('Synced {} permissions'.format(len(permissions)))

@@ -31,6 +31,7 @@ class ConnectionSettingsDialog(QtWidgets.QDialog, Ui_ConnectionSettingsDialog):
         for field in self.fields:
             edit_widget = getattr(self, 'edit_{}'.format(field))
             settings.setValue(self.prefix.format(field), edit_widget.text())
+        settings.setValue(self.prefix.format('use_ssl'), self.check_box_use_ssl.checkState())
         settings.sync()
 
     def accept(self):

@@ -9,13 +9,11 @@ database = p.SqliteDatabase(db_path)
 
 
 class BaseModel(p.Model):
-
     class Meta:
         database = database
 
 
 class Address(BaseModel):
-
     ISSUE, CREATE, MINE, ADMIN = 'issue', 'create', 'mine', 'admin'
     PERMS = ISSUE, CREATE, MINE, ADMIN
 
@@ -44,7 +42,6 @@ class Address(BaseModel):
 
 
 class Block(BaseModel):
-
     confirmations = p.IntegerField()
     hash = p.CharField(primary_key=True)
     height = p.IntegerField()
@@ -84,9 +81,30 @@ class Block(BaseModel):
             print('Synced {} blocks total.'.format(synched))
 
 
+class Vote(BaseModel):
+    address = p.ForeignKeyField(Address)
+    perm_type = p.CharField()
+    votes = p.IntegerField()
+    required = p.IntegerField()
+    start_block = p.IntegerField()
+    end_block = p.IntegerField()
+
+    class Meta:
+        primary_key = p.CompositeKey('address', 'perm_type', 'start_block', 'end_block')
+
+    @classmethod
+    def grant_type(cls):
+        if cls.start_block == cls.end_block == 0:
+            return 'revoke'
+        if cls.start_block == 0  and cls.end_block == 4294967295:
+            return 'grant'
+        else:
+            return 'restricted_grant'
+
+
 database.connect()
 try:
-    database.create_tables([Address, Block])
+    database.create_tables([Address, Block, Vote])
 except p.OperationalError as e:
     pass
 
@@ -94,11 +112,10 @@ except p.OperationalError as e:
 def sync_permissions():
     node_height = client.getblockcount()['result']
     permissions = client.listpermissions(','.join(Address.PERMS), verbose=True)['result']
-    addresses = Address.select()
 
     # Get list of old permissions
     old_permissions = {}
-    for address in addresses:
+    for address in Address.select():
         address_permissions = []
         for perm in Address.PERMS:
             if getattr(address, 'can_' + perm):
@@ -106,17 +123,27 @@ def sync_permissions():
         if len(address_permissions) > 0:
             old_permissions[address.address] = address_permissions
 
+    # Delete old votes
+    Vote.delete()
+
     # Import new permissions
     with database.atomic():
         for perm in permissions:
             addr_obj, created = Address.get_or_create(address=perm['address'])
             address = perm['address']
             perm_type = perm['type']
-            grant = perm['endblock'] >= node_height >= perm['startblock']
+            grant = perm['startblock'] <= node_height <= perm['endblock']
             if address in old_permissions and perm_type in old_permissions[address]:
                 old_permissions[address].remove(perm_type)
             setattr(addr_obj, 'can_' + perm_type, grant)
             addr_obj.save()
+
+            for vote in perm['pending']:
+                start_block = vote['startblock']
+                end_block = vote['endblock']
+                vote_obj, created = Vote.get_or_create(address=address, perm_type=perm_type, start_block=start_block,
+                                              end_block=end_block, votes=len(vote['admins']), required=vote['required'])
+                vote_obj.save()
 
         # Clear all old permissions, that don't exist anymore
         for perm in old_permissions:
@@ -135,4 +162,3 @@ if __name__ == '__main__':
     print(blk_obj.time)
     sync_permissions()
     Address.sync_aliases()
-

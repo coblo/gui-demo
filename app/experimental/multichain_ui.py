@@ -4,18 +4,17 @@
 """MultiChain Minimal Gui"""
 import codecs
 import sys
-
+from bitcoinrpc.authproxy import AuthServiceProxy
 from datetime import datetime
 from functools import partial
-from bitcoinrpc.authproxy import AuthServiceProxy
 
-from views import Iscc
-from config import rpcuser, rpcpassword
-
-from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QPlainTextEdit, QSizePolicy, \
     QScrollArea, QComboBox, QFrame, QLabel, QLineEdit, QTextEdit, QDialog
+
+from app.experimental.iscc_ui import Iscc
+from config import rpcuser, rpcpassword
 
 
 class Multichain(QWidget):

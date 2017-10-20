@@ -246,5 +246,5 @@ class Iscc(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = Iscc()
+    ex = Iscc(None)
     sys.exit(app.exec_())

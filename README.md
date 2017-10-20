@@ -1,9 +1,5 @@
-# gui-demo
-Multichain GUI and ISCC generator
+# Content Blockchain GUI Prototype
 
-Setup:
+A pototype GUI frontend for the *Content Blockchain* build with PyQt.
 
-- copy config.example.py and rename it to config.py
-- adjust config
-- start Multichain Node
-- run views\multichain.py
+**Work in progress**

@@ -4,7 +4,7 @@
 import sys
 import locale
 import traceback
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from app.backend.api import Api
 from app.backend.updater import Updater
 
@@ -62,10 +62,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
-    locale.setlocale(locale.LC_ALL, '')
-    window = MainWindow()
 
+    app = QtWidgets.QApplication(sys.argv)
+
+    locale.setlocale(locale.LC_ALL, '')
+
+    # Set Gui Fonts
+    font_db = QtGui.QFontDatabase()
+    font_db.addApplicationFont(':/fonts/Roboto-Regular.ttf')
+    app_font = QtGui.QFont("Roboto Regular")
+    app_font.setStyleStrategy(QtGui.QFont.PreferAntialias | QtGui.QFont.PreferQuality)
+    app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)
+    app.setFont(app_font)
+
+    window = MainWindow()
     # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
     window.show()
     sys.exit(app.exec_())

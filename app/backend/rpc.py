@@ -4,7 +4,7 @@ import json
 from decimal import Decimal
 import logging
 import requests
-from config import rpcuser, rpcpassword
+from config import rpcuser, rpcpassword, host, port
 from typing import Optional
 
 # Disable SSL warning with self signed certificates
@@ -115,7 +115,7 @@ class RpcClient:
         return response.json(parse_float=Decimal)
 
 
-client = RpcClient('localhost', 8374, rpcuser, rpcpassword, use_ssl=False)
+client = RpcClient(host, port, rpcuser, rpcpassword, use_ssl=False)
 
 
 if __name__ == '__main__':

@@ -5,6 +5,7 @@
 	<qresource prefix="fonts">
 		<file>DroidSans-Bold.ttf</file>
 		<file>DroidSans-Regular.ttf</file>
+		<file>Roboto-Regular.ttf</file>
 	</qresource>
 	<qresource prefix="images">
 		<file>cog_white.svg</file>

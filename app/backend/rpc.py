@@ -4,7 +4,7 @@ import json
 from decimal import Decimal
 import logging
 import requests
-from config import rpcuser, rpcpassword
+from config import rpcuser, rpcpassword, host, port
 from typing import Optional
 
 # Disable SSL warning with self signed certificates
@@ -52,6 +52,9 @@ class RpcClient:
     def getblockhash(self, height):
         return self._call('getblockhash', height)
 
+    def getblockcount(self):
+        return self._call('getblockcount')
+
     def getinfo(self) -> Optional[dict]:
         return self._call('getinfo')
 
@@ -67,8 +70,14 @@ class RpcClient:
     def listaddresses(self, addresses='*', verbose=False, count=100, start=0):
         return self._call('listaddresses', addresses, verbose, count, start)
 
+    def listblocks(self, blocks='-4294967295', verbose=False):
+        return self._call('listblocks', blocks, verbose)
+
     def listpermissions(self, permissions='*', addresses='*', verbose=False):
         return self._call('listpermissions', permissions, addresses, verbose)
+
+    def liststreamkeys(self, stream, keys='*', verbose=False, count=10000000, start=0, local_ordering=False):
+        return self._call('liststreamkeys', stream, keys, verbose, count, start, local_ordering)
 
     def listwallettransactions(self, count=10, skip=0, include_watch_only=False, verbose=False):
         return self._call('listwallettransactions', count, skip, include_watch_only, verbose)
@@ -106,13 +115,13 @@ class RpcClient:
         return response.json(parse_float=Decimal)
 
 
-client = RpcClient('localhost', 8374, rpcuser, rpcpassword, use_ssl=False)
+client = RpcClient(host, port, rpcuser, rpcpassword, use_ssl=False)
 
 
 if __name__ == '__main__':
     from pprint import pprint
     # pprint(client.getaddresses(verbose=True))
-    pprint(client.getbalance())
+    # pprint(client.getbalance())
     # pprint(client.getblockchaininfo())
     # pprint(client.getblockchainparams())
     # pprint(client.getinfo())
@@ -125,5 +134,5 @@ if __name__ == '__main__':
     # pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))
     # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
     # pprint(client.getmultibalances())
-
-
+    # pprint(client.getblockcount())
+    pprint(client.liststreamkeys('alias', verbose=True))

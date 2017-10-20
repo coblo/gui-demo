@@ -64,6 +64,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 def main():
 
     app = QtWidgets.QApplication(sys.argv)
+    app.setOrganizationName('Content Blockchain Project')
+    app.setOrganizationDomain('content-blockchain.org')
+    app.setApplicationDisplayName('Charm')
+    app.setApplicationName('charm')
+    app.setApplicationVersion('0.0.1')
+    app.setDesktopFileName('charm')
 
     locale.setlocale(locale.LC_ALL, '')
 

@@ -44,10 +44,5 @@ class ConnectionSettingsDialog(QtWidgets.QDialog, Ui_ConnectionSettingsDialog):
 
 
 if __name__ == '__main__':
-    import sys
-    import traceback
-    app = QtWidgets.QApplication(sys.argv)
-    window = ConnectionSettingsDialog(None)
-    window.show()
-    sys.excepthook = traceback.print_exception
-    sys.exit(app.exec_())
+    from app.tools.runner import run_widget
+    run_widget(ConnectionSettingsDialog)

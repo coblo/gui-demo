@@ -2,7 +2,6 @@ import logging
 import peewee as p
 from datetime import datetime
 from app import PROFILE_DB, DATA_DB
-from app.backend.rpc import client
 
 
 log = logging.getLogger(__name__)
@@ -14,7 +13,7 @@ class Profile(p.Model):
     name = p.CharField(primary_key=True)
     chain = p.CharField(default='')
     host = p.CharField(default='')
-    port = p.SmallIntegerField(null=True)
+    port = p.CharField(default='')
     username = p.CharField(default='')
     password = p.CharField(default='')
     use_ssl = p.BooleanField(default=False)
@@ -23,6 +22,13 @@ class Profile(p.Model):
 
     class Meta:
         database = PROFILE_DB
+
+    def save(self, *args, **kwargs):
+        """There can only be one active profile"""
+        with PROFILE_DB.atomic():
+            if self.active:
+                Profile.update(active=False).execute()
+            super().save(*args, **kwargs)
 
     @staticmethod
     def get_active():
@@ -52,6 +58,7 @@ class Address(BaseModel):
 
     @classmethod
     def sync_aliases(cls):
+        from app.backend.rpc import client
         aliases = client.liststreamkeys('alias', verbose=True)['result']
         with DATA_DB.atomic():
             for entry in aliases:
@@ -75,6 +82,7 @@ class Block(BaseModel):
     @staticmethod
     def sync():
         """Synch block data from node"""
+        from app.backend.rpc import client
         node_height = client.getblockcount()['result']
         latest_block = Block.select().order_by(Block.height.desc()).first()
         latest_block = 1 if latest_block is None else latest_block.height
@@ -135,6 +143,7 @@ class VotingRound(BaseModel):
 
 
 def sync_permissions():
+    from app.backend.rpc import client
     node_height = client.getblockcount()['result']
     permissions = client.listpermissions(','.join(Address.PERMS), verbose=True)['result']
 

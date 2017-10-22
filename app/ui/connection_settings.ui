@@ -79,16 +79,9 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <layout class="QHBoxLayout" name="layout_profile" stretch="6,2,2">
+      <layout class="QHBoxLayout" name="layout_profile" stretch="6,2">
        <item>
         <widget class="QComboBox" name="combo_profile"/>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btn_profile_delete">
-         <property name="text">
-          <string>Delete</string>
-         </property>
-        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="btn_profile_add">
@@ -248,7 +241,6 @@
  </widget>
  <tabstops>
   <tabstop>combo_profile</tabstop>
-  <tabstop>btn_profile_delete</tabstop>
   <tabstop>btn_profile_add</tabstop>
   <tabstop>edit_chain</tabstop>
   <tabstop>edit_host</tabstop>

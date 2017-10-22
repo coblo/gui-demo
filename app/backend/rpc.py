@@ -4,11 +4,7 @@ import json
 from decimal import Decimal
 import logging
 import requests
-from config import rpcuser, rpcpassword, host, port
 from typing import Optional
-
-# Disable SSL warning with self signed certificates
-requests.packages.urllib3.disable_warnings()
 
 
 log = logging.getLogger(__name__)
@@ -21,14 +17,17 @@ class DecimalEncoder(json.JSONEncoder):
             return float(o)
         return super(DecimalEncoder, self).default(o)
 
+
 class RpcClient:
 
-    def __init__(self, host, port, user, pwd, use_ssl=False):
-        self.host = host
-        self.port = port
-        self.user = user
-        self.pwd = pwd
-        self.use_ssl = use_ssl
+    def __init__(self, host=None, port=None, user=None, pwd=None, use_ssl=False):
+        from app.backend.models import Profile
+        ap = Profile.get_active()
+        self.host = host or ap.host
+        self.port = port or ap.port
+        self.user = user or ap.username
+        self.pwd = pwd or ap.password
+        self.use_ssl = use_ssl or ap.use_ssl
 
     ###################
     # RPC API methods #
@@ -115,7 +114,7 @@ class RpcClient:
         return response.json(parse_float=Decimal)
 
 
-client = RpcClient(host, port, rpcuser, rpcpassword, use_ssl=False)
+client = RpcClient()
 
 
 if __name__ == '__main__':

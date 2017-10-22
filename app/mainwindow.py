@@ -59,34 +59,3 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.progbar_blockchain_sync.setValue(int(percentage))
         msg = 'Synced {} blocks of {}'.format(data.get('blocks'), data.get('headers'))
         self.statusbar.showMessage(msg, 10000)
-
-
-def main():
-
-    app = QtWidgets.QApplication(sys.argv)
-    app.setOrganizationName('Content Blockchain Project')
-    app.setOrganizationDomain('content-blockchain.org')
-    app.setApplicationDisplayName('Charm')
-    app.setApplicationName('charm')
-    app.setApplicationVersion('0.0.1')
-    app.setDesktopFileName('charm')
-
-    locale.setlocale(locale.LC_ALL, '')
-
-    # Set Gui Fonts
-    font_db = QtGui.QFontDatabase()
-    font_db.addApplicationFont(':/fonts/Roboto-Regular.ttf')
-    app_font = QtGui.QFont("Roboto Regular")
-    app_font.setStyleStrategy(QtGui.QFont.PreferAntialias | QtGui.QFont.PreferQuality)
-    app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)
-    app.setFont(app_font)
-
-    window = MainWindow()
-    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
-    window.show()
-    sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-    sys.excepthook = traceback.print_exception
-    main()

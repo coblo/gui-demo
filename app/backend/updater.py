@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Background Updater Thread"""
 import time
+import logging
 from PyQt5 import QtCore
 
 from decimal import Decimal
@@ -11,6 +12,7 @@ from app.backend.rpc import client
 UNKNOWN_BALANCE = ' '
 UNKNOWN_ADDRESS = ' '
 
+log = logging.getLogger(__name__)
 
 class Updater(QtCore.QThread):
 
@@ -26,6 +28,8 @@ class Updater(QtCore.QThread):
     api = Api()
 
     def __init__(self, parent=None):
+        log.debug('init updater')
+
         super().__init__(parent)
         self.last_changestatus = {}
         self.last_balance = UNKNOWN_BALANCE

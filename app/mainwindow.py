@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """Application Main Window and Entry Point"""
-import sys
-import locale
-import traceback
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtWidgets
 from app.backend.api import Api
 from app.backend.updater import Updater
 

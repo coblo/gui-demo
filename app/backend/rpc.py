@@ -33,6 +33,18 @@ class RpcClient:
     # RPC API methods #
     ###################
 
+    def appendrawchange(self, tx_hex, address, native_fee=0.0001):
+        return self._call('appendrawchange', tx_hex, address, native_fee)
+
+    def createrawtransaction(self, inputs, payment, data=(), action=''):
+        return self._call('createrawtransaction', inputs, payment, data, action)
+
+    def createrawsendfrom(self, from_addr, to, data=tuple(), action=""):
+        return self._call('createrawsendfrom', from_addr, to, data, action)
+
+    def decoderawtransaction(self, tx_hex):
+        return self._call('decoderawtransaction', tx_hex)
+
     def getaddresses(self, verbose=False):
         return self._call('getaddresses', verbose)
 
@@ -90,6 +102,12 @@ class RpcClient:
         publicly embedded in the blockchain transaction.
         """
         return self._call('send', address, amount, comment, comment_to)
+
+    def signrawtransaction(self, tx_hex):
+        return self._call('signrawtransaction', tx_hex)
+
+    def sendrawtransaction(self, tx_hex):
+        return self._call('sendrawtransaction', tx_hex)
 
     def stop(self) -> Optional[str]:
         result = self._call('stop')['result']

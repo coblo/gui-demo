@@ -17,7 +17,7 @@ log = logging.getLogger('app')
 # Application metadata
 ORG_NAME = 'Content-Blockchain'
 ORG_DOMAIN = 'content-blockchain.org'
-APP_NAME = 'Charm'
+APP_NAME = 'Cast'
 MAJOR = 0
 MINOR = 1
 PATCH = 0

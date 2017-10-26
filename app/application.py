@@ -41,6 +41,9 @@ class Application(QtWidgets.QApplication):
 
         # Shortcuts
         self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+D', self.ui, self.on_ctrl_d)
+        self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+K', self.ui, self.ui.node.kill)
+        self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+S', self.ui, self.ui.node.stop)
+        self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+R', self.ui, self.ui.node.start)
 
     def on_ctrl_d(self):
         """Toogle Debug"""

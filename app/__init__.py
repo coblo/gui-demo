@@ -24,6 +24,7 @@ PATCH = 0
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
 # Application paths
+APP_DIR = os.path.dirname(__file__)
 _dirs = AppDirs(APP_NAME, ORG_NAME, APP_VERSION)
 DATA_DIR = _dirs.user_data_dir
 if not os.path.exists(DATA_DIR):
@@ -41,3 +42,11 @@ PROFILE_DB = profile_db = peewee.SqliteDatabase(PROFILE_DB_PATH)
 DATA_DB_FILENAME = 'default.sqlite'
 DATA_DB_PATH = os.path.join(DATA_DIR, DATA_DB_FILENAME)
 DATA_DB = peewee.SqliteDatabase(DATA_DB_PATH)
+
+# Default local node settings
+NODE_RPC_HOST = '127.0.0.1'
+NODE_RPC_PORT = 8374
+NODE_RPC_USER = 'user'
+NODE_RPC_PASSWORD = 'password'
+NODE_RPC_USE_SSL = False
+NODE_BOOTSTRAP = 'charm@85.197.78.50:8375'

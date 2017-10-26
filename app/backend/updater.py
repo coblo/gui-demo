@@ -8,11 +8,13 @@ from decimal import Decimal
 
 from app.backend.api import Api
 from app.backend.rpc import client
+from app.signals import signals
 
 UNKNOWN_BALANCE = ' '
 UNKNOWN_ADDRESS = ' '
 
 log = logging.getLogger(__name__)
+
 
 class Updater(QtCore.QThread):
 
@@ -44,28 +46,39 @@ class Updater(QtCore.QThread):
     def run(self):
         while True:
 
-            # Update Chainstatus
-            self.update_chainstatus()
+            # # Update Chainstatus
+            try:
+                self.update_chainstatus()
+            except Exception:
+                pass
+
+            # try:
+            #
+            #     balance = client.getbalance()
+            #     print(balance)
+            # except Exception:
+            #     pass
+
 
             # Update Balance
-            balance = self.api.get_balance()
-            if balance is None:
-                balance = UNKNOWN_BALANCE
-            if balance != self.last_balance:
-                self.balance_changed.emit(balance)
-                self.last_balance = balance
+            # balance = self.api.get_balance()
+            # if balance is None:
+            #     balance = UNKNOWN_BALANCE
+            # if balance != self.last_balance:
+            #     self.balance_changed.emit(balance)
+            #     self.last_balance = balance
 
-            # Update Address
-            address = self.api.get_main_address()
-            if address is None:
-                address = UNKNOWN_ADDRESS
-            if address != self.last_address:
-                self.address_changed.emit(address)
-                self.last_address = address
+            # # Update Address
+            # address = self.api.get_main_address()
+            # if address is None:
+            #     address = UNKNOWN_ADDRESS
+            # if address != self.last_address:
+            #     self.address_changed.emit(address)
+            #     self.last_address = address
 
-            self.update_permissions()
-            self.update_addresses()
-            self.update_transaction()
+            # self.update_permissions()
+            # self.update_addresses()
+            # self.update_transaction()
 
             time.sleep(self.UPDATE_INTERVALL)
 
@@ -90,7 +103,7 @@ class Updater(QtCore.QThread):
     def update_chainstatus(self):
         chain_info = client.getblockchaininfo()['result']
         if chain_info:
-            self.chainstatus_changed.emit(chain_info)
+            signals.block_sync_changed.emit(chain_info)
 
     def on_send(self):
         self.update_addresses()

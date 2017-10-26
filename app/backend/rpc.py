@@ -5,6 +5,7 @@ from decimal import Decimal
 import logging
 import requests
 from typing import Optional
+import app
 
 
 log = logging.getLogger(__name__)
@@ -21,13 +22,13 @@ class DecimalEncoder(json.JSONEncoder):
 class RpcClient:
 
     def __init__(self, host=None, port=None, user=None, pwd=None, use_ssl=False):
-        from app.backend.models import Profile
-        ap = Profile.get_active()
-        self.host = host or ap.host
-        self.port = port or ap.port
-        self.user = user or ap.username
-        self.pwd = pwd or ap.password
-        self.use_ssl = use_ssl or ap.use_ssl
+        # from app.backend.models import Profile
+        # ap = Profile.get_active()
+        self.host = host or app.NODE_RPC_HOST
+        self.port = port or app.NODE_RPC_PORT
+        self.user = user or app.NODE_RPC_USER
+        self.pwd = pwd or app.NODE_RPC_PASSWORD
+        self.use_ssl = use_ssl or app.NODE_RPC_USE_SSL
 
     ###################
     # RPC API methods #
@@ -138,7 +139,7 @@ client = RpcClient()
 if __name__ == '__main__':
     from pprint import pprint
     # pprint(client.getaddresses(verbose=True))
-    # pprint(client.getbalance())
+    pprint(client.getbalance())
     # pprint(client.getblockchaininfo())
     # pprint(client.getblockchainparams())
     # pprint(client.getinfo())
@@ -152,4 +153,4 @@ if __name__ == '__main__':
     # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
     # pprint(client.getmultibalances())
     # pprint(client.getblockcount())
-    pprint(client.liststreamkeys('alias', verbose=True))
+    # pprint(client.liststreamkeys('alias', verbose=True))

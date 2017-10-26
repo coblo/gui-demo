@@ -12,7 +12,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
         self.btn_grp_nav.setId(self.btn_nav_community, 1)
         self.btn_grp_nav.setId(self.btn_nav_settings, 2)
-        self.centralwidget.setDisabled(False)
+        self.btn_nav_wallet.setChecked(True)
+        self.wgt_content.setCurrentIndex(0)
 
 
 if __name__ == '__main__':

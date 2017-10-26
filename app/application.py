@@ -2,7 +2,7 @@ import locale
 import logging
 from PyQt5 import QtWidgets, QtGui
 import app
-from app.mainwindow import MainWindow
+from app.widgets.proto import MainWindow
 
 
 log = logging.getLogger(__name__)
@@ -13,6 +13,8 @@ class Application(QtWidgets.QApplication):
     def __init__(self, args, main_widget=None):
         log.debug('init app')
         super().__init__(args)
+
+        self.setQuitOnLastWindowClosed(False)
 
         # Initialize application metadata
         locale.setlocale(locale.LC_ALL, '')

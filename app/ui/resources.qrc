@@ -1,0 +1,19 @@
+<RCC>
+  <qresource prefix="audio">
+    <file>resources/money.wav</file>
+  </qresource>
+  <qresource prefix="fonts">
+    <file>resources/DroidSans-Bold.ttf</file>
+    <file>resources/DroidSans-Regular.ttf</file>
+    <file>resources/Roboto-Regular.ttf</file>
+  </qresource>
+  <qresource prefix="images">
+    <file>resources/app_icon.png</file>
+    <file>resources/cog_white.svg</file>
+    <file>resources/cog_black.svg</file>
+    <file>resources/users_white.svg</file>
+    <file>resources/users_black.svg</file>
+    <file>resources/money_white.svg</file>
+    <file>resources/money_black.svg</file>
+  </qresource>
+</RCC>

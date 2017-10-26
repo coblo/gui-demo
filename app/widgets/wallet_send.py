@@ -1,12 +1,7 @@
-import time
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor
 from PyQt5.QtGui import QValidator
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from decimal import Decimal
 

@@ -1,4 +1,7 @@
 from PyQt5 import QtWidgets
+
+from PyQt5.QtGui import QIcon
+
 import app
 from app.ui.proto import Ui_MainWindow
 
@@ -16,9 +19,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
 
+        # Settings
+        self.check_box_exit_on_close.setChecked(app.settings.value('exit_on_close', False, type=bool))
+        self.check_box_exit_on_close.stateChanged['int'].connect(self.exit_on_close_changed)
+
         # Init TrayIcon
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)
-        self.tray_icon.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_ComputerIcon))
+        self.tray_icon.setIcon(QIcon(':images/resources/app_icon.png'))
         self.tray_icon.activated.connect(self.on_tray_activated)
 
         show_action = QtWidgets.QAction("Show", self)
@@ -33,19 +40,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         tray_menu.addAction(hide_action)
         tray_menu.addAction(quit_action)
         self.tray_icon.setContextMenu(tray_menu)
+
         self.tray_icon.show()
 
     def closeEvent(self, event):
-        if app.settings.value('exit_on_close', False):
+        if app.settings.value('exit_on_close', False, type=bool):
+            QtWidgets.qApp.quit()
+        else:
             event.ignore()
             self.hide()
-        else:
-            event.accept()
 
     def on_tray_activated(self, reason):
         if reason == QtWidgets.QSystemTrayIcon.DoubleClick:
             self.show()
             self.activateWindow()
+
+    def exit_on_close_changed(self, state):
+        app.settings.setValue('exit_on_close', state == 2)
 
 
 if __name__ == '__main__':

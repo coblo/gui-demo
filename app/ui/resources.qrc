@@ -3,9 +3,9 @@
     <file>resources/money.wav</file>
   </qresource>
   <qresource prefix="fonts">
-    <file>resources/DroidSans-Bold.ttf</file>
-    <file>resources/DroidSans-Regular.ttf</file>
-    <file>resources/Roboto-Regular.ttf</file>
+    <file>resources/Roboto-Light.ttf</file>
+    <file>resources/RobotoCondensed-Regular.ttf</file>
+    <file>resources/Oswald-Regular.ttf</file>
   </qresource>
   <qresource prefix="images">
     <file>resources/app_icon.png</file>

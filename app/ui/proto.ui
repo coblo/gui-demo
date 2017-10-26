@@ -21,8 +21,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Roboto</family>
-    <pointsize>10</pointsize>
+    <family>Roboto Light</family>
     <stylestrategy>PreferAntialias</stylestrategy>
    </font>
   </property>
@@ -297,7 +296,7 @@
     <item>
      <widget class="QStackedWidget" name="wgt_content">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="wgt_page_wallet">
        <layout class="QVBoxLayout" name="lout_page_wallet_v">
@@ -647,11 +646,6 @@
        </layout>
       </widget>
       <widget class="QWidget" name="wgt_page_community">
-       <property name="font">
-        <font>
-         <family>Roboto Medium</family>
-        </font>
-       </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <property name="spacing">
          <number>12</number>
@@ -812,6 +806,12 @@
         </item>
         <item>
          <widget class="QTabWidget" name="tab_widget_cummunity">
+          <property name="font">
+           <font>
+            <family>Oswald</family>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
           <property name="currentIndex">
            <number>0</number>
           </property>
@@ -919,7 +919,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QGroupBox" name="groupBox_5">
+         <widget class="QGroupBox" name="gbox_settings">
           <property name="font">
            <font>
             <family>Oswald</family>
@@ -944,7 +944,7 @@
              <property name="leftMargin">
               <number>0</number>
              </property>
-             <item row="1" column="0">
+             <item row="2" column="0">
               <widget class="QLabel" name="label_8">
                <property name="font">
                 <font>
@@ -957,7 +957,7 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="2" column="1">
               <layout class="QHBoxLayout" name="layout_profile" stretch="6,2">
                <item>
                 <widget class="QComboBox" name="combo_profile">
@@ -973,7 +973,7 @@
                 <widget class="QPushButton" name="btn_profile_add">
                  <property name="font">
                   <font>
-                   <family>Roboto</family>
+                   <family>Roboto Light</family>
                    <pointsize>10</pointsize>
                   </font>
                  </property>
@@ -984,7 +984,7 @@
                </item>
               </layout>
              </item>
-             <item row="2" column="0">
+             <item row="3" column="0">
               <widget class="QLabel" name="label_chain">
                <property name="font">
                 <font>
@@ -1000,7 +1000,7 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="3" column="1">
               <widget class="QLineEdit" name="edit_chain">
                <property name="font">
                 <font>
@@ -1016,7 +1016,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
+             <item row="4" column="0">
               <widget class="QLabel" name="label_host">
                <property name="font">
                 <font>
@@ -1032,7 +1032,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
+             <item row="4" column="1">
               <widget class="QLineEdit" name="edit_host">
                <property name="font">
                 <font>
@@ -1051,7 +1051,7 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="0">
+             <item row="5" column="0">
               <widget class="QLabel" name="label_port">
                <property name="font">
                 <font>
@@ -1067,7 +1067,7 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
+             <item row="5" column="1">
               <widget class="QLineEdit" name="edit_port">
                <property name="font">
                 <font>
@@ -1083,7 +1083,7 @@
                </property>
               </widget>
              </item>
-             <item row="5" column="0">
+             <item row="6" column="0">
               <widget class="QLabel" name="label_rpc_user">
                <property name="font">
                 <font>
@@ -1099,7 +1099,7 @@
                </property>
               </widget>
              </item>
-             <item row="5" column="1">
+             <item row="6" column="1">
               <widget class="QLineEdit" name="edit_rpc_user">
                <property name="font">
                 <font>
@@ -1115,7 +1115,7 @@
                </property>
               </widget>
              </item>
-             <item row="6" column="0">
+             <item row="7" column="0">
               <widget class="QLabel" name="label_rpc_password">
                <property name="font">
                 <font>
@@ -1131,7 +1131,7 @@
                </property>
               </widget>
              </item>
-             <item row="6" column="1">
+             <item row="7" column="1">
               <widget class="QLineEdit" name="edit_rpc_password">
                <property name="font">
                 <font>
@@ -1150,7 +1150,7 @@
                </property>
               </widget>
              </item>
-             <item row="7" column="1">
+             <item row="8" column="1">
               <widget class="QCheckBox" name="check_box_use_ssl">
                <property name="font">
                 <font>
@@ -1163,7 +1163,7 @@
                </property>
               </widget>
              </item>
-             <item row="8" column="1">
+             <item row="9" column="1">
               <widget class="QCheckBox" name="check_manage_node">
                <property name="font">
                 <font>
@@ -1176,13 +1176,26 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="1">
+              <widget class="QCheckBox" name="check_box_exit_on_close">
+               <property name="font">
+                <font>
+                 <family>Roboto Light</family>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Exit application when this window is closed</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
             <widget class="QDialogButtonBox" name="button_box">
              <property name="font">
               <font>
-               <family>Roboto</family>
+               <family>Roboto Light</family>
                <pointsize>10</pointsize>
               </font>
              </property>

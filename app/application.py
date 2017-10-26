@@ -27,8 +27,10 @@ class Application(QtWidgets.QApplication):
         # Gui Styles and Fonts
         self.setStyle('fusion')
         font_db = QtGui.QFontDatabase()
-        font_db.addApplicationFont(':/fonts/Roboto-Regular.ttf')
-        app_font = QtGui.QFont("Roboto Regular")
+        font_db.addApplicationFont(':/fonts/resources/Roboto-Light.ttf')
+        font_db.addApplicationFont(':/fonts/resources/RobotoCondensed-Regular.ttf')
+        font_db.addApplicationFont(':/fonts/resources/Oswald-Regular.ttf')
+        app_font = QtGui.QFont("Roboto Light")
         app_font.setStyleStrategy(QtGui.QFont.PreferAntialias | QtGui.QFont.PreferQuality)
         app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)
         self.setFont(app_font)

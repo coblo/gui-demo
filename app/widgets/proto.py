@@ -1,11 +1,12 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QIcon
-
-import app
 from app.backend.updater import Updater
+from app.models import Profile
+from app import helpers
 from app.node import Node
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
+import app
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -13,6 +14,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+
+        # Basic initialization
+        self.data_dir = helpers.init_data_dir()
+        self.profile_db = helpers.init_profile_db()
+        self.profile = Profile.get_active()
+        self.node_data_dir = helpers.init_node_data_dir()
 
         # Init Navigation
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
@@ -22,9 +29,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.wgt_content.setCurrentIndex(0)
 
         # Settings
-        self.check_box_exit_on_close.setChecked(app.settings.value('exit_on_close', False, type=bool))
+        self.check_box_exit_on_close.setChecked(self.profile.exit_on_close)
         self.check_box_exit_on_close.stateChanged['int'].connect(self.setting_changed_exit_on_close)
-        self.check_manage_node.setChecked(app.settings.value('manage_node', True, type=bool))
+        self.check_manage_node.setChecked(self.profile.manage_node)
         self.check_manage_node.stateChanged['int'].connect(self.setting_changed_manage_node)
 
         # Init TrayIcon
@@ -45,24 +52,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         tray_menu.addAction(quit_action)
         self.tray_icon.setContextMenu(tray_menu)
 
-        self.tray_icon.show()
-
         # Progress bar
         self.progress_bar_network_info.setMinimum(0)
         signals.block_sync_changed.connect(self.on_block_sync_changed)
-
         signals.node_started.connect(self.node_started)
 
         # Backend processes
         self.node = Node(self)
         self.updater = Updater(self)
 
-        if app.settings.value('manage_node', True, type=bool):
+        if self.profile.manage_node:
             self.node.start()
 
+        self.tray_icon.show()
+        self.show()
+        self.statusbar.showMessage(app.APP_DIR, 10000)
+
     def closeEvent(self, event):
-        if app.settings.value('exit_on_close', False, type=bool):
+        if self.profile.exit_on_close:
             self.node.kill()
+            self.profile_db.close()
             QtWidgets.qApp.quit()
         else:
             event.ignore()
@@ -74,11 +83,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.activateWindow()
 
     def setting_changed_exit_on_close(self, state):
-        app.settings.setValue('exit_on_close', state == 2)
+        self.profile.exit_on_close = state == 2
+        self.profile.save()
 
     def setting_changed_manage_node(self, state):
-        app.settings.setValue('manage_node', state == 2)
-        self.node.start()
+        self.profile.manage_node = state == 2
+        self.profile.save()
+        if self.profile.manage_node:
+            self.node.start()
 
     def node_started(self):
         self.updater.start()

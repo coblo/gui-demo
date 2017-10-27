@@ -3,11 +3,9 @@
 import time
 import logging
 from PyQt5 import QtCore
-
 from decimal import Decimal
-
 from app.backend.api import Api
-from app.backend.rpc import client
+from app.backend.rpc import get_active_rpc_client
 from app.signals import signals
 
 UNKNOWN_BALANCE = ' '
@@ -30,9 +28,9 @@ class Updater(QtCore.QThread):
     api = Api()
 
     def __init__(self, parent=None):
-        log.debug('init updater')
-
         super().__init__(parent)
+        log.debug('init updater')
+        self.client = get_active_rpc_client()
         self.last_changestatus = {}
         self.last_balance = UNKNOWN_BALANCE
         self.last_address = UNKNOWN_ADDRESS
@@ -101,12 +99,10 @@ class Updater(QtCore.QThread):
             self.last_addresses = addresses
 
     def update_chainstatus(self):
-        chain_info = client.getblockchaininfo()['result']
+        chain_info = self.client.getblockchaininfo()['result']
         if chain_info:
             signals.block_sync_changed.emit(chain_info)
 
     def on_send(self):
         self.update_addresses()
         self.update_transaction()
-
-

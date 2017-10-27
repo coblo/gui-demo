@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""All QT Signals that the application provides"""
-
-
+"""QT Signals that the application provides"""
 from PyQt5.QtCore import QObject, pyqtSignal, QProcess
 
 

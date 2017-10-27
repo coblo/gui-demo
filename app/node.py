@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
-
 import os
 from PyQt5.QtCore import QProcess
 import app
-from app.backend.rpc import client
+from app.helpers import init_node_data_dir
+from app.models import Profile
 from app.signals import signals
+from app.backend.rpc import get_active_rpc_client
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +15,9 @@ class Node(QProcess):
 
     def __init__(self, parent):
         super().__init__(parent)
-
+        self.profile = Profile.get_active()
+        assert isinstance(self.profile, Profile)
+        assert self.profile.manage_node, "profile does not want to manage node"
         self.started.connect(signals.node_started)
         self.started.connect(self.node_started)
         self.finished.connect(self.node_finished)
@@ -24,19 +27,21 @@ class Node(QProcess):
 
     def start(self, *args, **kwargs):
         if self.state() == self.NotRunning:
-            node_path = os.path.join(app.APP_DIR, 'bin/multichaind')
+            node_path = os.path.join(app.APP_DIR, 'app/bin/multichaind')
             log.debug('starting node')
             super().start(
                 node_path, [
                     app.NODE_BOOTSTRAP,
                     '-server=1',
                     '-daemon',
-                    '-rpcuser={}'.format(app.NODE_RPC_USER),
-                    '-rpcpassword={}'.format(app.NODE_RPC_PASSWORD),
-                    '-rpcbind={}'.format(app.NODE_RPC_HOST),
-                    '-rpcallowip={}'.format(app.NODE_RPC_HOST),
-                    '-rpcport={}'.format(app.NODE_RPC_PORT),
-                    '-datadir={}'.format(app.DATA_DIR),
+                    '-autosubscribe=assets,streams',
+                    '-maxshowndata=32',
+                    '-rpcuser={}'.format(self.profile.rpc_user),
+                    '-rpcpassword={}'.format(self.profile.rpc_password),
+                    '-rpcbind={}'.format(self.profile.rpc_host),
+                    '-rpcallowip={}'.format(self.profile.rpc_host),
+                    '-rpcport={}'.format(self.profile.rpc_port),
+                    '-datadir={}'.format(init_node_data_dir()),
                 ]
             )
         else:
@@ -47,9 +52,9 @@ class Node(QProcess):
             log.debug('node already stopped')
         else:
             try:
-                client.stop()
-            except Exception:
-                log.debug('cannot reach node to stop')
+                get_active_rpc_client().stop()
+            except Exception as e:
+                log.debug('cannot reach node to stop {}'.format(e))
 
     def node_started(self):
         log.debug('node started')

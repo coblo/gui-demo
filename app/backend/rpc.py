@@ -4,11 +4,20 @@ import json
 from decimal import Decimal
 import logging
 import requests
+from multiprocessing import Queue
 from typing import Optional
-import app
 
 
 log = logging.getLogger(__name__)
+
+
+def get_active_rpc_client():
+    from app.models import Profile
+    profile = Profile.get_active()
+    assert isinstance(profile, Profile)
+    return RpcClient(
+        profile.rpc_host, profile.rpc_port, profile.rpc_user, profile.rpc_password, profile.rpc_use_ssl
+    )
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -22,13 +31,11 @@ class DecimalEncoder(json.JSONEncoder):
 class RpcClient:
 
     def __init__(self, host=None, port=None, user=None, pwd=None, use_ssl=False):
-        # from app.backend.models import Profile
-        # ap = Profile.get_active()
-        self.host = host or app.NODE_RPC_HOST
-        self.port = port or app.NODE_RPC_PORT
-        self.user = user or app.NODE_RPC_USER
-        self.pwd = pwd or app.NODE_RPC_PASSWORD
-        self.use_ssl = use_ssl or app.NODE_RPC_USE_SSL
+        self.host = host
+        self.port = port
+        self.user = user
+        self.pwd = pwd
+        self.use_ssl = use_ssl
 
     ###################
     # RPC API methods #

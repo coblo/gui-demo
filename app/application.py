@@ -3,8 +3,11 @@ import logging
 from PyQt5 import QtWidgets, QtGui
 import app
 from app.widgets.proto import MainWindow
+from app.ui import resources_rc
+from app import helpers
 
 
+helpers.init_logging()
 log = logging.getLogger(__name__)
 
 
@@ -37,17 +40,8 @@ class Application(QtWidgets.QApplication):
 
         # Initialize main window
         self.ui = main_widget() if main_widget else MainWindow()
-        self.ui.show()
 
         # Shortcuts
-        self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+D', self.ui, self.on_ctrl_d)
         self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+K', self.ui, self.ui.node.kill)
         self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+S', self.ui, self.ui.node.stop)
         self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+R', self.ui, self.ui.node.start)
-
-    def on_ctrl_d(self):
-        """Toogle Debug"""
-        debug = app.settings.value('debug', False, bool)
-        app.settings.setValue('debug', not debug)
-        app.settings.sync()
-        self.ui.statusbar.showMessage('Debug set to "{}"'.format(debug), 2000)

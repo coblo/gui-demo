@@ -3,6 +3,7 @@ from PyQt5.QtGui import QIcon
 from app.backend.updater import Updater
 from app.models import Profile
 from app import helpers
+from app import models
 from app.node import Node
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
@@ -17,9 +18,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Basic initialization
         self.data_dir = helpers.init_data_dir()
-        self.profile_db = helpers.init_profile_db()
-        self.profile = Profile.get_active()
+        self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()
+        self.data_db = models.init_data_db()
+        self.profile = Profile.get_active()
 
         # Init Navigation
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
@@ -62,6 +64,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.updater = Updater(self)
 
         if self.profile.manage_node:
+            # Todo check for existing node process
             self.node.start()
 
         self.tray_icon.show()

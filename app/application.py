@@ -3,8 +3,8 @@ import logging
 from PyQt5 import QtWidgets, QtGui
 import app
 from app.widgets.proto import MainWindow
-from app.ui import resources_rc
 from app import helpers
+from app.ui import resources_rc
 
 
 helpers.init_logging()

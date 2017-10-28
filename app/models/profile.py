@@ -5,9 +5,9 @@ import os
 import peewee
 import app
 from app.helpers import gen_password
+from app.models.db import profile_db
 
 log = logging.getLogger(__name__)
-profile_db = peewee.SqliteDatabase(app.PROFILE_DB_FILEPATH)
 
 
 class Profile(peewee.Model):
@@ -26,12 +26,11 @@ class Profile(peewee.Model):
     class Meta:
         database = profile_db
 
-    # def save(self, *args, **kwargs):
-    #     """There can only be one active profile at any given time."""
-    #     with profile_db.atomic():
-    #         if self.active:
-    #             Profile.update(active=False).execute()
-    #         super().save(*args, **kwargs)
+    def set_active(self):
+        with profile_db.atomic():
+            Profile.update(active=False).execute()
+            self.active = True
+            self.save()
 
     @property
     def data_db_filepath(self):
@@ -66,8 +65,9 @@ class Profile(peewee.Model):
 if __name__ == '__main__':
     import app.helpers
     app.helpers.init_logging()
-    profile_db.connect()
-    profile_db.create_tables([Profile], safe=True)
-    Profile.create_default_profile()
+    from app.models import init_profile_db
+    init_profile_db()
     for p in Profile.select().execute():
         print(p)
+    p = Profile.select().first()
+    p.set_active()

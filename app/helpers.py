@@ -7,6 +7,7 @@ import string
 import logging
 import app
 
+
 log = logging.getLogger(__name__)
 
 
@@ -21,18 +22,6 @@ def init_data_dir():
         log.debug('creating data dir {}'.format(app.DATA_DIR))
         os.makedirs(app.DATA_DIR, exist_ok=True)
     return app.DATA_DIR
-
-
-def init_profile_db():
-    log.debug('init profile database')
-    from app.models import profile_db, Profile
-    profile_db.connect()
-    profile_db.create_tables([Profile], safe=True)
-    if not Profile.get_active():
-        log.debug('create default profile')
-        with profile_db.atomic():
-            profile = Profile.create_default_profile()
-    return profile_db
 
 
 def init_node_data_dir():

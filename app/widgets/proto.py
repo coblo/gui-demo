@@ -60,12 +60,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         signals.node_started.connect(self.node_started)
 
         # Backend processes
-        self.node = Node(self)
         self.updater = Updater(self)
 
         if self.profile.manage_node:
             # Todo check for existing node process
+            self.node = Node(self)
             self.node.start()
+        else:
+            # No managed node to wait for... start updater
+            self.updater.start()
 
         self.tray_icon.show()
         self.show()
@@ -73,7 +76,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         if self.profile.exit_on_close:
-            self.node.kill()
+            if hasattr(self, 'node'):
+                self.node.kill()
             self.profile_db.close()
             QtWidgets.qApp.quit()
         else:

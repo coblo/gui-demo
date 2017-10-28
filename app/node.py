@@ -28,7 +28,7 @@ class Node(QProcess):
     def start(self, *args, **kwargs):
         if self.state() == self.NotRunning:
             node_path = os.path.join(app.APP_DIR, 'app/bin/multichaind')
-            log.debug('starting node')
+            log.debug('starting node at: {}'.format(node_path))
             super().start(
                 node_path, [
                     app.NODE_BOOTSTRAP,

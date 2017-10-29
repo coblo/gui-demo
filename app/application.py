@@ -33,6 +33,7 @@ class Application(QtWidgets.QApplication):
         font_db.addApplicationFont(':/fonts/resources/Roboto-Light.ttf')
         font_db.addApplicationFont(':/fonts/resources/RobotoCondensed-Regular.ttf')
         font_db.addApplicationFont(':/fonts/resources/Oswald-Regular.ttf')
+        font_db.addApplicationFont(':/fonts/resources/Oswald-SemiBold.ttf')
         app_font = QtGui.QFont("Roboto Light")
         app_font.setStyleStrategy(QtGui.QFont.PreferAntialias | QtGui.QFont.PreferQuality)
         app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)

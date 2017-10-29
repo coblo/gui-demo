@@ -6,6 +6,7 @@
     <file>resources/Roboto-Light.ttf</file>
     <file>resources/RobotoCondensed-Regular.ttf</file>
     <file>resources/Oswald-Regular.ttf</file>
+    <file>resources/Oswald-SemiBold.ttf</file>
   </qresource>
   <qresource prefix="images">
     <file>resources/app_icon.png</file>

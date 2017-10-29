@@ -9,14 +9,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>683</width>
-    <height>480</height>
+    <width>780</width>
+    <height>530</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>683</width>
-    <height>480</height>
+    <width>780</width>
+    <height>530</height>
    </size>
   </property>
   <property name="font">
@@ -65,13 +65,13 @@
      <widget class="QWidget" name="wgt_sidebar" native="true">
       <property name="minimumSize">
        <size>
-        <width>160</width>
+        <width>180</width>
         <height>0</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>160</width>
+        <width>180</width>
         <height>16777215</height>
        </size>
       </property>
@@ -102,7 +102,7 @@
           <enum>QFrame::NoFrame</enum>
          </property>
          <property name="text">
-          <string>CAST</string>
+          <string>CHARM</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignHCenter|Qt::AlignTop</set>
@@ -255,6 +255,12 @@
           <string>NETWORK INFO</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_6">
+          <property name="leftMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QLabel" name="label_network_info">
             <property name="font">
@@ -264,17 +270,36 @@
              </font>
             </property>
             <property name="text">
-             <string>Connected to Testnet</string>
+             <string>Not connected ...</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QProgressBar" name="progress_bar_network_info">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>24</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>16</height>
+              <height>24</height>
              </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Roboto Light</family>
+              <pointsize>8</pointsize>
+              <stylestrategy>PreferAntialias</stylestrategy>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="maximum">
+             <number>0</number>
             </property>
             <property name="value">
              <number>0</number>
@@ -284,6 +309,9 @@
             </property>
             <property name="invertedAppearance">
              <bool>false</bool>
+            </property>
+            <property name="format">
+             <string>%v/%m blocks (%p%)</string>
             </property>
            </widget>
           </item>
@@ -296,7 +324,7 @@
     <item>
      <widget class="QStackedWidget" name="wgt_content">
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="wgt_page_wallet">
        <layout class="QVBoxLayout" name="lout_page_wallet_v">
@@ -366,7 +394,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>musterman</string>
+                <string>Undefined</string>
                </property>
                <property name="textInteractionFlags">
                 <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -398,7 +426,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>1Lr3zphEuSJx9xMtnB6RRRfZbknGFDf7JEsgk1  </string>
+                <string>Loading ...</string>
                </property>
                <property name="textInteractionFlags">
                 <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -434,7 +462,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>2153,20 CST</string>
+                <string>0.00 CHM</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -458,7 +486,7 @@
            </font>
           </property>
           <property name="title">
-           <string>SEND CASTCOIN</string>
+           <string>SEND COINS</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -636,7 +664,7 @@
           <property name="flat">
            <bool>false</bool>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout">
+          <layout class="QVBoxLayout" name="lout_gbox_wallet_transactions">
            <item>
             <widget class="QTableView" name="table_view_transactions"/>
            </item>
@@ -986,7 +1014,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>683</width>
+     <width>780</width>
      <height>21</height>
     </rect>
    </property>

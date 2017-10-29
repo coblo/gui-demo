@@ -4,8 +4,10 @@ import json
 from decimal import Decimal
 import logging
 import requests
-from multiprocessing import Queue
+from enum import Enum
 from typing import Optional
+# Don´t remove this import. Its a hack for cx freezing
+from multiprocessing import Queue
 
 
 log = logging.getLogger(__name__)
@@ -26,6 +28,25 @@ class DecimalEncoder(json.JSONEncoder):
         if isinstance(o, decimal.Decimal):
             return float(o)
         return super(DecimalEncoder, self).default(o)
+
+
+class Method(Enum):
+    """An api method where:
+
+    .name is the string name of the method
+    .autosync tells us if we should autosync that method
+
+    Enum value tuple semantics
+    (index, autosync, )
+    """
+    getblockchaininfo = (1, True,)
+    getinfo = (2, True,)
+    getruntimeparams = (3, True,)
+
+    @property
+    def autosync(self):
+        """Wether this method should be autosynced"""
+        return self.value[1]
 
 
 class RpcClient:
@@ -53,7 +74,7 @@ class RpcClient:
     def decoderawtransaction(self, tx_hex):
         return self._call('decoderawtransaction', tx_hex)
 
-    def getaddresses(self, verbose=False):
+    def getaddresses(self, verbose=True):
         return self._call('getaddresses', verbose)
 
     def getaddressbalances(self, address, minconf=1, includelocked=False):
@@ -78,7 +99,7 @@ class RpcClient:
         return self._call('getinfo')
 
     def getmultibalances(self, addresses='*', assets='*', minconf=0, includeWatchOnly=False, includeLocked=False):
-        return self._call('getmultibalances', addresses, assets, minconf, includeWatchOnly, includeLocked )
+        return self._call('getmultibalances', addresses, assets, minconf, includeWatchOnly, includeLocked)
 
     def getnewaddress(self):
         return self._call('getnewaddress')
@@ -86,13 +107,13 @@ class RpcClient:
     def getruntimeparams(self):
         return self._call('getruntimeparams')
 
-    def listaddresses(self, addresses='*', verbose=False, count=100, start=0):
+    def listaddresses(self, addresses='*', verbose=True, count=100, start=0):
         return self._call('listaddresses', addresses, verbose, count, start)
 
-    def listblocks(self, blocks='-4294967295', verbose=False):
+    def listblocks(self, blocks='-3', verbose=True):
         return self._call('listblocks', blocks, verbose)
 
-    def listpermissions(self, permissions='*', addresses='*', verbose=False):
+    def listpermissions(self, permissions='*', addresses='*', verbose=True):
         return self._call('listpermissions', permissions, addresses, verbose)
 
     def liststreamkeys(self, stream, keys='*', verbose=False, count=10000000, start=0, local_ordering=False):
@@ -140,18 +161,20 @@ class RpcClient:
         return response.json(parse_float=Decimal)
 
 
-client = RpcClient()
-
-
 if __name__ == '__main__':
     from pprint import pprint
+    from app import models
+    models.init_profile_db()
+    models.init_data_db()
+    client = get_active_rpc_client()
+
     # pprint(client.getaddresses(verbose=True))
-    pprint(client.getbalance())
+    # pprint(client.getbalance())
     # pprint(client.getblockchaininfo())
     # pprint(client.getblockchainparams())
     # pprint(client.getinfo())
     # pprint(client.getmultibalances())
-    # pprint(client.listwallettransactions(1, verbose=False))
+    pprint(client.listwallettransactions(10000, verbose=False))
     # pprint(client.getnewaddress())
     # pprint(client.getruntimeparams())
     # pprint(client.listaddresses(verbose=True))

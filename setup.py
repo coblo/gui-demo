@@ -9,11 +9,11 @@ buildOptions = dict(
 base = 'Win32GUI' if sys.platform == 'win32' else None
 
 executables = [
-    Executable('main.py', base=base, targetName='cast.exe')
+    Executable('main.py', base=base, targetName='charm.exe')
 ]
 
 setup(
-    name='Cast',
+    name='Charm',
     version='0.1.1',
     description='Content Blockchain Desktop App',
     options=dict(build_exe=buildOptions),

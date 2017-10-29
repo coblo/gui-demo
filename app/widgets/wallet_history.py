@@ -1,16 +1,18 @@
 from datetime import datetime
-from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
+from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt, pyqtSlot
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QHeaderView, QWidget
+from PyQt5.QtWidgets import QHeaderView, QWidget, QTableView
 from decimal import Decimal, ROUND_DOWN
+
+from app.models import Transaction
 from app.ui.wallet_history import Ui_widget_wallet_history
+from app.signals import signals
 
 
 class WalletHistory(QWidget, Ui_widget_wallet_history):
     def __init__(self, parent):
         super().__init__(parent)
         self.setupUi(self)
-        self.updater = parent.updater
         self.table_model = TransactionHistoryTableModel(self)
         self.table_wallet_history.setModel(self.table_model)
         header = self.table_wallet_history.horizontalHeader()
@@ -23,7 +25,7 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
 class TransactionHistoryTableModel(QAbstractTableModel):
 
     DATETIME = 0
-    DESCRIPTION = 1
+    COMMENT = 1
     AMOUNT = 2
     BALANCE = 3
     CONFIRMATIONS = 4
@@ -31,10 +33,17 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def __init__(self, parent=None):
         super().__init__()
-        self.updater = parent.updater
-        self.updater.transactions_changed.connect(self.on_transactions_changed)
-        self.header = ['Date', 'Description', 'Amount', 'Balance']
-        self.txs = []
+        signals.listwallettransactions.connect(self.listwallettransactions)
+        self.header = ['Date', 'Comment', 'Amount', 'Balance']
+        self.txs = self.get_db_data()
+
+    def get_db_data(self):
+        return [(
+            o.datetime,
+            o.comment,
+            o.amount,
+            o.balance,
+            o.confirmations) for o in Transaction.select().order_by(Transaction.datetime.desc())]
 
     def rowCount(self, parent=None, *args, **kwargs):
         return len(self.txs)
@@ -57,7 +66,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 display = "{0:n}".format(normalized)
                 return '+' + display if value > 0 and col == self.AMOUNT else display
             elif isinstance(value, datetime):
-                if tx.confirmations == 0:
+                if tx[self.CONFIRMATIONS] == 0:
                     return 'Unconfirmed'
                 else:
                     return value.strftime("%Y-%m-%d %H:%M")
@@ -65,10 +74,10 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 return str(value)
         if role == Qt.ToolTipRole and col in (self.AMOUNT, self.BALANCE):
             return "{0:n}".format(tx[col])
-        elif role == Qt.TextAlignmentRole and col not in (self.DESCRIPTION, self.DATETIME):
+        elif role == Qt.TextAlignmentRole and col not in (self.COMMENT, self.DATETIME):
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
         elif role == Qt.ForegroundRole:
-            if col == self.AMOUNT and tx.amount < 0:
+            if col == self.AMOUNT and tx[self.AMOUNT] < 0:
                 return QVariant(QColor(Qt.red))
         return None
 
@@ -77,7 +86,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.txs.sort(key=lambda x: x[p_int], reverse=(order == Qt.DescendingOrder))
         self.layoutChanged.emit()
 
-    def on_transactions_changed(self, transactions):
+    @pyqtSlot()
+    def listwallettransactions(self):
         self.beginResetModel()
-        self.txs = transactions
+        self.txs = self.get_db_data()
         self.endResetModel()

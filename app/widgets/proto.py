@@ -1,19 +1,28 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
+from decimal import Decimal, ROUND_DOWN
+
+from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
-from app.backend.updater import Updater
-from app.models import Profile
+
+import app
 from app import helpers
 from app import models
+from app.backend.rpc import Method
+from app.models import Profile
 from app.node import Node
+from app.responses import Getblockchaininfo, Getinfo, Getruntimeparams
+from app.settings import settings
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
-import app
+from app.updater import Updater
+from app.widgets.wallet_history import WalletHistory
+from app.widgets.wallet_send import WalletSend
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.setupUi(self)
 
         # Basic initialization
@@ -29,6 +38,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_grp_nav.setId(self.btn_nav_settings, 2)
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
+
+        # Patch custom widgets
+
+        self.gbox_wallet_transactions.setParent(None)
+        self.gbox_wallet_send.setParent(None)
+
+        wallet_send = WalletSend(self)
+        self.lout_page_wallet_v.addWidget(wallet_send)
+
+        wallet_history = WalletHistory(self)
+        self.lout_page_wallet_v.addWidget(wallet_history)
 
         # Settings
         self.check_box_exit_on_close.setChecked(self.profile.exit_on_close)
@@ -54,9 +74,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         tray_menu.addAction(quit_action)
         self.tray_icon.setContextMenu(tray_menu)
 
-        # Progress bar
-        self.progress_bar_network_info.setMinimum(0)
-        signals.block_sync_changed.connect(self.on_block_sync_changed)
+        # Connect autosync methods
+        for method in Method:
+            if method.autosync:
+                sig = getattr(signals, method.name)
+                slot = getattr(self, method.name)
+                sig.connect(slot)
+
         signals.node_started.connect(self.node_started)
 
         # Backend processes
@@ -102,9 +126,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def node_started(self):
         self.updater.start()
 
-    def on_block_sync_changed(self, data):
-        self.progress_bar_network_info.setMaximum(data.get('headers'))
-        self.progress_bar_network_info.setValue(data.get('blocks'))
+    @pyqtSlot(object)
+    def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):
+        self.progress_bar_network_info.setMaximum(blockchaininfo.headers)
+        self.progress_bar_network_info.setValue(blockchaininfo.blocks)
+        self.label_network_info.setText(blockchaininfo.description)
+
+    @pyqtSlot(object)
+    def getinfo(self, info: Getinfo):
+        settings.setValue('balance', info.balance)
+        settings.sync()
+        normalized = info.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+        display = "{0:n} {1}".format(normalized, app.CURRENCY_CODE)
+        self.lbl_wallet_balance.setText(display)
+        self.lbl_wallet_balance.setToolTip("{0:n} {1}".format(
+            info.balance, app.CURRENCY_CODE)
+        )
+
+    @pyqtSlot(object)
+    def getruntimeparams(self, rtp: Getruntimeparams):
+        self.lbl_wallet_address.setText(rtp.handshakelocal)
 
 
 if __name__ == '__main__':

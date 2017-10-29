@@ -8,7 +8,7 @@ from app.tools.address import address_valid
 class AddressValidator(QValidator):
 
     min_length = 26
-    max_length = 45
+    max_length = 55
     symbols = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
     internal_send = pyqtSignal()

@@ -1,8 +1,8 @@
 from PyQt5 import QtWidgets
 
 from app import settings
-from app.backend.updater import Updater
 from app.ui.wallet_header import Ui_widget_wallet_header
+from app.updater import Updater
 
 
 class WalletHeader(QtWidgets.QWidget, Ui_widget_wallet_header):

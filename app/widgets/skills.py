@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtWidgets
 
-from app.backend.updater import Updater
 from app.ui.skills import Ui_WidgetSkills
+from app.updater import Updater
 
 
 class WidgetSkills(QtWidgets.QGroupBox, Ui_WidgetSkills):

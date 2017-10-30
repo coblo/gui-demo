@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.backend.rpc import get_active_rpc_client
 from app.helpers import init_logging
-from app.models import Transaction, init_profile_db, init_data_db, data_db
+from app.models import Address, Permission, Transaction, VotingRound, init_profile_db, init_data_db, data_db
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +56,47 @@ def listwallettransactions():
                 else:
                     tx_obj.save()
     return has_new
+
+
+def listpermissions():
+    client = get_active_rpc_client()
+    perms = client.listpermissions()
+    if not perms:
+        log.warning('no permissions from api')
+        return
+    new_perms, new_votes = False, False
+    Permission.delete().execute()
+    with data_db.atomic():
+        for perm in perms['result']:
+            perm_type = perm['type']
+            if perm_type not in Permission.PERM_TYPES:
+                continue
+            addr_obj, created = Address.get_or_create(address=perm['address'])
+
+            for vote in perm['pending']:
+                start_block = vote['startblock']
+                end_block = vote['endblock']
+                approbations = len(vote['admins'])
+                vote_obj, created = VotingRound.get_or_create(
+                    address=addr_obj, perm_type=perm_type, start_block=start_block, end_block=end_block,
+                    defaults=(dict(approbations=approbations, first_vote=datetime.now()))
+                )
+                vote_obj.set_vote_type()
+                if created:
+                    new_votes = True
+                else:
+                    vote_obj.save()
+
+            start_block = perm['startblock']
+            end_block = perm['endblock']
+            perm_obj, created = Permission.get_or_create(
+                address=addr_obj, perm_type=perm_type, defaults=dict(start_block=start_block, end_block=end_block)
+            )
+            if created:
+                new_perms = True
+            else:
+                perm_obj.save()
+    return {'new_perms': new_perms, 'new_votes': new_votes}
 
 
 if __name__ == '__main__':

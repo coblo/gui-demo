@@ -51,13 +51,17 @@ class Updater(QtCore.QThread):
                         log.error(e)
             # Database sync
             try:
-                changed = sync.listwallettransactions()
+                changed_transactions = sync.listwallettransactions()
+                changed_permissions = sync.listpermissions()
             except Exception as e:
                 log.error(e)
-                changed = False
+                changed_transactions, changed_permissions = False, False
 
-            if changed:
+            if changed_transactions:
                 signals.listwallettransactions.emit()
+
+            # if changed_permissions:
+            #     signals.listwallettransactions.emit()
 
             time.sleep(self.UPDATE_INTERVALL)
 

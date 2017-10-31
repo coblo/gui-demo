@@ -6,7 +6,9 @@ from PyQt5 import QtCore
 from app.signals import signals
 from app import responses
 from app import sync
-from app.backend.rpc import get_active_rpc_client, Method
+from app.backend.rpc import get_active_rpc_client
+from app.enums import Method
+
 
 log = logging.getLogger(__name__)
 
@@ -46,22 +48,26 @@ class Updater(QtCore.QThread):
             for method in Method:
                 if method.autosync:
                     try:
+                        log.debug('updating %s' % method.name)
                         self.update_api_method(method.name)
                     except Exception as e:
-                        log.error(e)
-            # Database sync
-            try:
-                changed_transactions = sync.listwallettransactions()
-                changed_permissions = sync.listpermissions()
-            except Exception as e:
-                log.error(e)
-                changed_transactions, changed_permissions = False, False
+                        log.exception(e)
 
-            if changed_transactions:
-                signals.listwallettransactions.emit()
+            # Database syncs
+            sync_funcs = (
+                sync.listwallettransactions,
+                sync.listpermissions,
+                sync.liststreamitems_alias,
+            )
 
-            # if changed_permissions:
-            #     signals.listwallettransactions.emit()
+            for sync_func in sync_funcs:
+                try:
+                    num_items_updated = sync_func()
+                    if num_items_updated:
+                        signal = getattr(signals, sync_func.__name__)
+                        signal.emit()
+                except Exception as e:
+                    log.exception(e)
 
             time.sleep(self.UPDATE_INTERVALL)
 

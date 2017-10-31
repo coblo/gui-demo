@@ -7,7 +7,7 @@ import appdirs
 
 ORG_NAME = 'Content-Blockchain'
 ORG_DOMAIN = 'content-blockchain.org'
-APP_NAME = 'Cast'
+APP_NAME = 'Charm'
 MAJOR = 0
 MINOR = 1
 PATCH = 0

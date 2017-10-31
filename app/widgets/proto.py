@@ -1,3 +1,4 @@
+import logging
 from PyQt5 import QtWidgets, QtCore
 from decimal import Decimal, ROUND_DOWN
 
@@ -7,7 +8,7 @@ from PyQt5.QtGui import QIcon
 import app
 from app import helpers
 from app import models
-from app.backend.rpc import Method
+from app.enums import Method, SettingKey
 from app.models import Profile
 from app.node import Node
 from app.responses import Getblockchaininfo, Getinfo, Getruntimeparams
@@ -17,6 +18,9 @@ from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
+
+
+log = logging.getLogger(__name__)
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -38,6 +42,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_grp_nav.setId(self.btn_nav_settings, 2)
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
+
+        # Init saved settings
+        log.debug('load gui setting keys: %s' % settings.allKeys())
+        self.lbl_wallet_alias.setText(settings.value(SettingKey.alias.name, '', str))
+        self.lbl_wallet_address.setText(settings.value(SettingKey.address.name, '', str))
+        self.lbl_wallet_balance.setText(str(settings.value(SettingKey.balance.name, Decimal(), Decimal)))
 
         # Patch custom widgets
 
@@ -81,7 +91,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 slot = getattr(self, method.name)
                 sig.connect(slot)
 
+        signals.alias_changed.connect(self.on_alias_changed)
         signals.node_started.connect(self.node_started)
+
 
         # Backend processes
         self.updater = Updater(self)
@@ -134,7 +146,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @pyqtSlot(object)
     def getinfo(self, info: Getinfo):
-        settings.setValue('balance', info.balance)
+        settings.setValue(SettingKey.balance.name, info.balance)
         settings.sync()
         normalized = info.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
         display = "{0:n} {1}".format(normalized, app.CURRENCY_CODE)
@@ -146,6 +158,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @pyqtSlot(object)
     def getruntimeparams(self, rtp: Getruntimeparams):
         self.lbl_wallet_address.setText(rtp.handshakelocal)
+        settings.setValue(SettingKey.address.name, rtp.handshakelocal)
+        settings.sync()
+
+    @pyqtSlot(str)
+    def on_alias_changed(self, alias):
+        self.lbl_wallet_alias.setText(alias)
+        settings.setValue(SettingKey.alias.name, alias)
+        settings.sync()
 
 
 if __name__ == '__main__':

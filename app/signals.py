@@ -14,12 +14,20 @@ class Signals(QObject):
     node_finished = pyqtSignal(int, QProcess.ExitStatus)
     node_error = pyqtSignal(QProcess.ProcessError)
 
-    # rpc method syncs
+    # simple rpc method syncs
     getinfo = pyqtSignal(object)
     getblockchaininfo = pyqtSignal(object)
     getruntimeparams = pyqtSignal(object)
 
+    # database rpc syncs
     listwallettransactions = pyqtSignal()
+    listpermissions = pyqtSignal()
+    liststreamitems_alias = pyqtSignal()
+
+    # custom signals
+
+    #: alias of main address changed
+    alias_changed = pyqtSignal(str)
 
     block_sync_changed = pyqtSignal(dict)
     transactions_changed = pyqtSignal(list)

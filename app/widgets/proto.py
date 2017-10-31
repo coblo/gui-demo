@@ -9,7 +9,7 @@ import app
 from app import helpers
 from app import models
 from app.enums import Method, SettingKey
-from app.models import Profile
+from app.models import Profile, Permission, VotingRound
 from app.node import Node
 from app.responses import Getblockchaininfo, Getinfo, Getruntimeparams
 from app.settings import settings
@@ -91,6 +91,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 slot = getattr(self, method.name)
                 sig.connect(slot)
 
+        # Manual connections
+        signals.listpermissions.connect(self.listpermissions)
+
         signals.alias_changed.connect(self.on_alias_changed)
         signals.node_started.connect(self.node_started)
 
@@ -160,6 +163,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.lbl_wallet_address.setText(rtp.handshakelocal)
         settings.setValue(SettingKey.address.name, rtp.handshakelocal)
         settings.sync()
+
+    @pyqtSlot()
+    def listpermissions(self):
+
+        num_validators = Permission.num_validators()
+        log.debug('set num validators %s' % num_validators)
+        self.lbl_num_validators.setText(str(num_validators))
+
+        num_guardians = Permission.num_guardians()
+        log.debug('set num guardians %s' % num_guardians)
+        self.lbl_num_guardians.setText(str(num_guardians))
+
+        num_candidates = VotingRound.num_candidates()
+        log.debug('set num candidates %s' % num_candidates)
+        self.lbl_num_candidates.setText(str(num_candidates))
 
     @pyqtSlot(str)
     def on_alias_changed(self, alias):

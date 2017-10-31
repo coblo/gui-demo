@@ -324,7 +324,7 @@
     <item>
      <widget class="QStackedWidget" name="wgt_content">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="wgt_page_wallet">
        <layout class="QVBoxLayout" name="lout_page_wallet_v">
@@ -724,7 +724,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>000</string>
+                <string>0</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -772,7 +772,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>00</string>
+                <string>0</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>

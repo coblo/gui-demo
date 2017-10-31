@@ -62,6 +62,7 @@ class Updater(QtCore.QThread):
 
             for sync_func in sync_funcs:
                 try:
+                    log.debug('updating %s' % sync_func.__name__)
                     num_items_updated = sync_func()
                     if num_items_updated:
                         signal = getattr(signals, sync_func.__name__)

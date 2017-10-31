@@ -20,6 +20,8 @@ class VotingRound(peewee.Model):
         (SCOPED_GRANT, 'Scoped Grant'),
     )
 
+    MAX_END_BLOCK = 4294967295
+
     first_vote = peewee.DateTimeField()
     address = peewee.ForeignKeyField(Address, related_name='votings')
     perm_type = peewee.CharField(choices=Permission.PERM_TYPES)
@@ -28,7 +30,6 @@ class VotingRound(peewee.Model):
     approbations = peewee.IntegerField()
     vote_type = peewee.SmallIntegerField(choices=VOTE_TYPES, null=True)
 
-
     class Meta:
         database = data_db
         primary_key = peewee.CompositeKey('address', 'perm_type', 'start_block', 'end_block')
@@ -36,7 +37,14 @@ class VotingRound(peewee.Model):
     def set_vote_type(self):
         if self.start_block == self.end_block == 0:
             self.vote_type = self.REVOKE
-        if self.end_block == 0 and self.end_block == 4294967295:
+        if self.end_block == 0 and self.end_block == self.MAX_END_BLOCK:
             self.vote_type = self.GRANT
         else:
             self.vote_type = self.SCOPED_GRANT
+
+    @staticmethod
+    def num_candidates():
+        return VotingRound.select().where(
+            VotingRound.start_block == 0,
+            VotingRound.end_block == VotingRound.MAX_END_BLOCK
+        ).count()

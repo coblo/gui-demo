@@ -26,6 +26,9 @@ class Profile(peewee.Model):
     class Meta:
         database = profile_db
 
+    def __repr__(self):
+        return 'Profile(%s, %s, %s...)' % (self.name, self.rpc_host, self.rpc_user)
+
     def set_active(self):
         with profile_db.atomic():
             Profile.update(active=False).execute()

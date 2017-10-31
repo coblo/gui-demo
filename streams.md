@@ -11,6 +11,7 @@ It can be re-assigned to a new address after the autoritative owner has
 released it by registering another alias to his address.
 
 A valid alias stream entry has to have:
+- at least one confirmation
 - exactly one publisher
 - emtpy data-hex
 - a key that is a a valid username

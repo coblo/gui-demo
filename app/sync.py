@@ -110,7 +110,7 @@ def liststreamitems_alias():
 
     client = get_active_rpc_client()
 
-    # TODO read only fresh stream data!?
+    # TODO read and process only fresh stream data by storing a state cursor between runs
     # TODO read stream items 100 at a time
     stream_items = client.liststreamitems(Stream.alias.name, count=100000)
     if not stream_items['result']:
@@ -120,25 +120,29 @@ def liststreamitems_alias():
     by_addr = {}     # address -> alias
     reseved = set()  # reserved aliases
 
-    # aggregate te final state of address to alias mappings from stream
+    # aggregate the final state of address to alias mappings from stream
     for item in stream_items['result']:
+        confirmations = item['confirmations']
         alias = item['key']
         address = item['publishers'][0]
         data = item['data']
         num_publishers = len(item['publishers'])
 
-        if data:
-            log.warning('ignoring - alias item "%s" with data "%s..."' % (alias, data[:8]))
+        # Sanity checks
+        if confirmations < 1:
+            log.debug('ignore alias - 0 confirmations for %s -> %s' % (address, alias))
             continue
-
+        if data:
+            log.debug('ignore alias - alias item "%s" with data "%s..."' % (alias, data[:8]))
+            continue
         if not is_valid_username(alias):
-            log.warning('ignoring - alias invalid: %s' % alias)
+            log.debug('ignore alias - alias does not match our regex: %s' % alias)
             continue
         if num_publishers != 1:
-            log.warning('ignoring - alias has multiple publishers: %s' % alias)
+            log.debug('ignore alias - alias has multiple publishers: %s' % alias)
             continue
         if alias in reseved:
-            log.warning('ignoring - alias already reserved %s' % alias)
+            log.debug('ignore alias - alias "%s" already reserved by "%s"' % (alias, address))
             continue
 
         is_new_address = address not in by_addr

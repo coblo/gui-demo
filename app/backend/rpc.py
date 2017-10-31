@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import decimal
 import json
-from decimal import Decimal
 import logging
 import requests
-from enum import Enum
+from decimal import Decimal
 from typing import Optional
 # Don´t remove this import. Its a hack for cx freezing
 from multiprocessing import Queue
@@ -28,25 +27,6 @@ class DecimalEncoder(json.JSONEncoder):
         if isinstance(o, decimal.Decimal):
             return float(o)
         return super(DecimalEncoder, self).default(o)
-
-
-class Method(Enum):
-    """An api method where:
-
-    .name is the string name of the method
-    .autosync tells us if we should autosync that method
-
-    Enum value tuple semantics
-    (index, autosync, )
-    """
-    getblockchaininfo = (1, True,)
-    getinfo = (2, True,)
-    getruntimeparams = (3, True,)
-
-    @property
-    def autosync(self):
-        """Wether this method should be autosynced"""
-        return self.value[1]
 
 
 class RpcClient:
@@ -142,7 +122,7 @@ class RpcClient:
         return self._call('sendrawtransaction', tx_hex)
 
     def stop(self) -> Optional[str]:
-        result = self._call('stop')['result']
+        return self._call('stop')['result']
 
     def validateaddress(self, address):
         return self._call('validateaddress', address)

@@ -96,7 +96,7 @@ class RpcClient:
     def listpermissions(self, permissions='*', addresses='*', verbose=True):
         return self._call('listpermissions', permissions, addresses, verbose)
 
-    def liststreamitems(self, stream, verbose=False, count=10, start=0, local_ordering=False):
+    def liststreamitems(self, stream, verbose=False, count=10000000, start=0, local_ordering=False):
         return self._call('liststreamitems', stream, verbose, count, start, local_ordering)
 
     def liststreamkeys(self, stream, keys='*', verbose=False, count=10000000, start=0, local_ordering=False):
@@ -146,9 +146,14 @@ class RpcClient:
 
 if __name__ == '__main__':
     from pprint import pprint
+    from app import helpers
     from app import models
+    helpers.init_logging()
+    helpers.init_data_dir()
     models.init_profile_db()
+    helpers.init_node_data_dir()
     models.init_data_db()
+    print(models.Profile.get_active())
     client = get_active_rpc_client()
 
     # pprint(client.getaddresses(verbose=True))
@@ -167,4 +172,4 @@ if __name__ == '__main__':
     # pprint(client.getmultibalances())
     # pprint(client.getblockcount())
     # pprint(client.liststreamkeys('alias'))
-    pprint(client.liststreamitems('alias'))
+    pprint(client.liststreamitems('alias', start=1, count=3))

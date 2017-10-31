@@ -109,7 +109,7 @@
            <string/>
           </property>
           <property name="placeholderText">
-           <string>Paste address of type alias of recipient</string>
+           <string>Paste address or type alias of recipient</string>
           </property>
          </widget>
         </item>

@@ -104,6 +104,17 @@ def listpermissions():
 
 
 def liststreamitems_alias():
+    """
+    Sample stream item (none verbose):
+    {
+        'blocktime': 1505905511,
+        'confirmations': 28948,
+        'data': '4d696e65722031',
+        'key': 'Miner_1',
+        'publishers': ['1899xJpqZN3kMQdpvTxESWqykxgFJwRddCE4Tr'],
+        'txid': 'caa1155e719803b9f39096860519a5e08e78214245ae9822beeea2b37a656178'
+    }
+    """
 
     settings_main_alias = settings.value(SettingKey.alias.name, '', str)
     settings_main_address = settings.value(SettingKey.address.name, '', str)

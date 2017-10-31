@@ -11,7 +11,10 @@ class Address(peewee.Model):
     """Addresses"""
 
     address = peewee.CharField(primary_key=True)
-    alias = peewee.CharField(default='')
+    alias = peewee.CharField(unique=True, null=True)
+
+    def __repr__(self):
+        return 'Address(%s, %s)' % (self.address, self.alias)
 
     class Meta:
         database = data_db

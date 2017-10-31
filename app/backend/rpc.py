@@ -116,6 +116,9 @@ class RpcClient:
     def listpermissions(self, permissions='*', addresses='*', verbose=True):
         return self._call('listpermissions', permissions, addresses, verbose)
 
+    def liststreamitems(self, stream, verbose=False, count=10, start=0, local_ordering=False):
+        return self._call('liststreamitems', stream, verbose, count, start, local_ordering)
+
     def liststreamkeys(self, stream, keys='*', verbose=False, count=10000000, start=0, local_ordering=False):
         return self._call('liststreamkeys', stream, keys, verbose, count, start, local_ordering)
 
@@ -174,7 +177,7 @@ if __name__ == '__main__':
     # pprint(client.getblockchainparams())
     # pprint(client.getinfo())
     # pprint(client.getmultibalances())
-    pprint(client.listwallettransactions(10000, verbose=False))
+    # pprint(client.listwallettransactions(10000, verbose=False))
     # pprint(client.getnewaddress())
     # pprint(client.getruntimeparams())
     # pprint(client.listaddresses(verbose=True))
@@ -183,4 +186,5 @@ if __name__ == '__main__':
     # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
     # pprint(client.getmultibalances())
     # pprint(client.getblockcount())
-    # pprint(client.liststreamkeys('alias', verbose=True))
+    # pprint(client.liststreamkeys('alias'))
+    pprint(client.liststreamitems('alias'))

@@ -6,8 +6,8 @@ from datetime import datetime
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
 from app.enums import Stream, SettingKey
-from app.helpers import init_logging, init_data_dir
-from app.models import Address, Permission, Transaction, VotingRound, init_profile_db, init_data_db, data_db
+from app.helpers import init_logging, init_data_dir, batchwise
+from app.models import Address, Permission, Transaction, VotingRound, init_profile_db, init_data_db, data_db, Block
 from app.settings import settings
 from app.tools.validators import is_valid_username
 
@@ -196,11 +196,58 @@ def liststreamitems_alias():
     return len(changed_addrs)
 
 
+def listblocks() -> int:
+    """Synch block data from node
+
+    :return int: number of new blocks synched to database
+    """
+
+    # TODO: Handle blockchain forks gracefully
+
+    client = get_active_rpc_client()
+
+    height_node = client.getblockcount()['result']
+    latest_block_obj = Block.select().order_by(Block.height.desc()).first()
+    if latest_block_obj is None:
+        height_db = 0
+    else:
+        height_db = latest_block_obj.height
+
+    if height_db == height_node:
+        return 0
+
+    synced = 0
+
+    for batch in batchwise(range(height_db, height_node), 100):
+
+        new_blocks = client.listblocks(batch)
+
+        with data_db.atomic():
+            for block in new_blocks['result']:
+                addr_obj, adr_created = Address.get_or_create(address=block['miner'])
+                block_obj, blk_created = Block.get_or_create(
+                    hash=block['hash'],
+                    defaults=dict(
+                        time=datetime.fromtimestamp(block['time']),
+                        miner=addr_obj,
+                        txcount=block['txcount'],
+                        height=block['height'],
+                    )
+                )
+                if blk_created:
+                    synced += 1
+                log.debug('Synced block {}'.format(block_obj.height))
+
+    log.debug('Synced {} blocks total.'.format(synced))
+    return synced
+
+
 if __name__ == '__main__':
     init_logging()
     init_data_dir()
     init_profile_db()
     init_data_db()
     # listwallettransactions()
-    # listpermissions()
-    print(liststreamitems_alias())
+    listpermissions()
+    liststreamitems_alias()
+    print(listblocks())

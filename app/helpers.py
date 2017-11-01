@@ -40,3 +40,12 @@ def gen_password(length=36):
     return ''.join(random.SystemRandom().choice(chars) for _ in range(length))
 
 
+def batchwise(rng, chunksize):
+    """Batchwise api iteration.
+
+    >>>batchwise(range(1501, 1750), 100)
+    ['1501-1600', '1601-1700', '1701-1750']
+    """
+    for i in range(0, len(rng) - 1, chunksize):
+        batch = rng[i:i+chunksize - 1]
+        yield '{}-{}'.format(batch.start, batch.stop)

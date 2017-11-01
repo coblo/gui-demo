@@ -55,6 +55,7 @@ class Updater(QtCore.QThread):
 
             # Database syncs
             sync_funcs = (
+                sync.listblocks,
                 sync.listwallettransactions,
                 sync.listpermissions,
                 sync.liststreamitems_alias,

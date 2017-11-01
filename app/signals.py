@@ -23,6 +23,7 @@ class Signals(QObject):
     listwallettransactions = pyqtSignal()
     listpermissions = pyqtSignal()
     liststreamitems_alias = pyqtSignal()
+    listblocks = pyqtSignal()
 
     # custom signals
 

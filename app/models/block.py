@@ -12,12 +12,15 @@ log = logging.getLogger(__name__)
 class Block(peewee.Model):
     """Blocks"""
 
+    # TODO: store hash as raw bytes in BlobField
+    hash = peewee.CharField(primary_key=True)
     time = peewee.DateTimeField()
     miner = peewee.ForeignKeyField(Address, related_name='mined_blocks')
     txcount = peewee.IntegerField()
-    hash = peewee.CharField(primary_key=True)
     height = peewee.IntegerField()
-
 
     class Meta:
         database = data_db
+
+    def __repr__(self):
+        return "Block(%s)" % self.height

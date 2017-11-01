@@ -1,5 +1,5 @@
 import logging
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 from decimal import Decimal, ROUND_DOWN
 
 from PyQt5.QtCore import pyqtSlot
@@ -16,6 +16,7 @@ from app.settings import settings
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
+from app.widgets.community_tables import CommunityTableView
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
 
@@ -60,6 +61,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         wallet_history = WalletHistory(self)
         self.lout_page_wallet_v.addWidget(wallet_history)
 
+        self.table_validators.setParent(None)
+        table_validators = CommunityTableView(self, perm_type=Permission.MINE)
+        self.tab_validators.layout().insertWidget(0, table_validators)
+
+        self.table_guardians.setParent(None)
+        table_guardians = CommunityTableView(self, perm_type=Permission.ADMIN)
+        self.tab_guardians.layout().insertWidget(0, table_guardians)
+
         # Settings
         self.check_box_exit_on_close.setChecked(self.profile.exit_on_close)
         self.check_box_exit_on_close.stateChanged['int'].connect(self.setting_changed_exit_on_close)
@@ -96,7 +105,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         signals.alias_changed.connect(self.on_alias_changed)
         signals.node_started.connect(self.node_started)
-
 
         # Backend processes
         self.updater = Updater(self)

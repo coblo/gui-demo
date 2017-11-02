@@ -22,6 +22,20 @@ class Method(Enum):
         return self.value[1]
 
 
+class Permission(Enum):
+    """A blockchain permission
+
+    """
+
+    admin = 1
+    create = 2
+    issue = 3
+    mine = 4
+
+
+
+
+
 class Stream(Enum):
     """A build in multichain stream where:
 

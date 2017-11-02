@@ -44,8 +44,8 @@ class PermissionModel(QAbstractTableModel):
 
     def data(self, idx: QModelIndex, role=None):
 
-        if role == Qt.TextAlignmentRole and idx.column() == 4:
-            return int(Qt.AlignRight | Qt.AlignVCenter)
+        if role == Qt.TextAlignmentRole and idx.column() in (3, 4):
+            return Qt.AlignCenter
 
         if not idx.isValid():
             return None
@@ -105,6 +105,9 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
 
 
 class CommunityTableView(QtWidgets.QTableView):
+
+    # TODO: show number of block mined/votes in validator/guardian tables
+    # TODO: show revokes as "x of y" in "Revokes" column
 
     def __init__(self, *args, **kwargs):
         perm_type = kwargs.pop('perm_type')

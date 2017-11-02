@@ -76,6 +76,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.check_manage_node.stateChanged['int'].connect(self.setting_changed_manage_node)
 
         # Init TrayIcon
+        # Todo: fix issue of multiple tray icons poping up
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)
         self.tray_icon.setIcon(QIcon(':images/resources/app_icon.png'))
         self.tray_icon.activated.connect(self.on_tray_activated)

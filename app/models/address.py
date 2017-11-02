@@ -3,6 +3,7 @@ import logging
 import peewee
 
 from app.models.db import data_db
+from app.enums import PermType
 
 
 log = logging.getLogger(__name__)
@@ -32,19 +33,19 @@ class Address(peewee.Model):
         return 'TODO find out :)'
 
     def num_validator_revokes(self):
-        from app.models import VotingRound, Permission
+        from app.models import VotingRound
         return VotingRound.select().where(
             (VotingRound.address == self) &
-            (VotingRound.perm_type == Permission.MINE) &
+            (VotingRound.perm_type == PermType.MINE) &
             (VotingRound.start_block == 0) &
             (VotingRound.end_block == 0)
         ).count()
 
     def num_guardian_revokes(self):
-        from app.models import VotingRound, Permission
+        from app.models import VotingRound
         return VotingRound.select().where(
             (VotingRound.address == self) &
-            (VotingRound.perm_type == Permission.ADMIN) &
+            (VotingRound.perm_type == PermType.ADMIN) &
             (VotingRound.start_block == 0) &
             (VotingRound.end_block == 0)
         ).count()

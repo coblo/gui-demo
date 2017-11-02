@@ -8,7 +8,7 @@ from PyQt5.QtGui import QIcon
 import app
 from app import helpers
 from app import models
-from app.enums import Method, SettingKey
+from app.enums import Method, SettingKey, PermType
 from app.models import Profile, Permission, VotingRound
 from app.node import Node
 from app.responses import Getblockchaininfo, Getinfo, Getruntimeparams
@@ -62,11 +62,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.lout_page_wallet_v.addWidget(wallet_history)
 
         self.table_validators.setParent(None)
-        table_validators = CommunityTableView(self, perm_type=Permission.MINE)
+        table_validators = CommunityTableView(self, perm_type=PermType.MINE)
         self.tab_validators.layout().insertWidget(0, table_validators)
 
         self.table_guardians.setParent(None)
-        table_guardians = CommunityTableView(self, perm_type=Permission.ADMIN)
+        table_guardians = CommunityTableView(self, perm_type=PermType.ADMIN)
         self.tab_guardians.layout().insertWidget(0, table_guardians)
 
         # Settings

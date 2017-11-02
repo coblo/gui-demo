@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
-from app.enums import Stream, SettingKey
+from app.enums import Stream, SettingKey, PermType
 from app.helpers import init_logging, init_data_dir, batchwise
 from app.models import Address, Permission, Transaction, VotingRound, init_profile_db, init_data_db, data_db, Block
 from app.settings import settings
@@ -73,7 +73,7 @@ def listpermissions():
     with data_db.atomic():
         for perm in perms['result']:
             perm_type = perm['type']
-            if perm_type not in Permission.PERM_TYPES:
+            if perm_type not in [type.value for type in PermType]:
                 continue
             addr_obj, created = Address.get_or_create(address=perm['address'])
 

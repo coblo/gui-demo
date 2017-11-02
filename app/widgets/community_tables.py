@@ -8,6 +8,7 @@ from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtWidgets import QHeaderView
 from app.models import Permission
 from app.signals import signals
+from app.enums import PermType
 
 
 log = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class PermissionModel(QAbstractTableModel):
 
     # TODO: make permissions table model sortable (keep sort order on data update)
 
-    def __init__(self, parent, perm_type=Permission.MINE):
+    def __init__(self, parent, perm_type=PermType.MINE):
         super().__init__(parent)
 
         self._fields = ('Alias', 'Address', 'Last Active', 'Revokes', 'Action')
@@ -27,9 +28,9 @@ class PermissionModel(QAbstractTableModel):
         signals.listpermissions.connect(self.listpermissions)
 
     def load_data(self):
-        if self._perm_type == Permission.MINE:
+        if self._perm_type == PermType.MINE:
             return list(Permission.validators())
-        elif self._perm_type == Permission.ADMIN:
+        elif self._perm_type == PermType.ADMIN:
             return list(Permission.guardians())
 
     def headerData(self, col, orientation, role=Qt.DisplayRole):
@@ -60,13 +61,13 @@ class PermissionModel(QAbstractTableModel):
         if idx.column() == 1:
             return perm_obj.address_id
         if idx.column() == 2:
-            if self._perm_type == Permission.MINE:
+            if self._perm_type == PermType.MINE:
                 last_mined = perm_obj.address.last_mined()
                 if last_mined:
                     return timeago.format(last_mined, datetime.now())
             return 'Go find out'
         if idx.column() == 3:
-            if self._perm_type == Permission.MINE:
+            if self._perm_type == PermType.MINE:
                 return perm_obj.address.num_validator_revokes()
             else:
                 return perm_obj.address.num_guardian_revokes()

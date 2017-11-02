@@ -22,17 +22,20 @@ class Method(Enum):
         return self.value[1]
 
 
-class Permission(Enum):
-    """A blockchain permission
-
+class PermType(Enum):
     """
+    A blockchain permission
+    """
+    ISSUE = 'issue'
+    CREATE = 'create'
+    MINE = 'mine'
+    ADMIN = 'admin'
 
-    admin = 1
-    create = 2
-    issue = 3
-    mine = 4
 
-
+class VoteType(Enum):
+    GRANT = 'Grant'
+    REVOKE = 'Revoke'
+    SCOPED_GRANT = 'Scoped Grant'
 
 
 

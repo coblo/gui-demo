@@ -2,9 +2,9 @@
 import logging
 import peewee
 from app.models.db import data_db
+from app.enums import VoteType, PermType
 
 from .address import Address
-from .permission import Permission
 
 
 log = logging.getLogger(__name__)
@@ -13,22 +13,15 @@ log = logging.getLogger(__name__)
 class VotingRound(peewee.Model):
     """Permission votings"""
 
-    GRANT, REVOKE, SCOPED_GRANT = 0, 1, 2
-    VOTE_TYPES = (
-        (GRANT, 'Grant'),
-        (REVOKE, 'Revoke'),
-        (SCOPED_GRANT, 'Scoped Grant'),
-    )
-
     MAX_END_BLOCK = 4294967295
 
     first_vote = peewee.DateTimeField()
     address = peewee.ForeignKeyField(Address, related_name='votings')
-    perm_type = peewee.CharField(choices=Permission.PERM_TYPES)
+    perm_type = peewee.CharField(choices=PermType)
     start_block = peewee.IntegerField()
     end_block = peewee.IntegerField()
     approbations = peewee.IntegerField()
-    vote_type = peewee.SmallIntegerField(choices=VOTE_TYPES, null=True)
+    vote_type = peewee.CharField(choices=VoteType, null=True)
 
     class Meta:
         database = data_db
@@ -36,11 +29,11 @@ class VotingRound(peewee.Model):
 
     def set_vote_type(self):
         if self.start_block == self.end_block == 0:
-            self.vote_type = self.REVOKE
+            self.vote_type = VoteType.REVOKE.value
         if self.end_block == 0 and self.end_block == self.MAX_END_BLOCK:
-            self.vote_type = self.GRANT
+            self.vote_type = VoteType.GRANT.value
         else:
-            self.vote_type = self.SCOPED_GRANT
+            self.vote_type = VoteType.SCOPED_GRANT.value
 
     @staticmethod
     def num_candidates():

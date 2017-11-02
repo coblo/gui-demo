@@ -2,6 +2,7 @@
 import logging
 import peewee
 from app.models.db import data_db
+from app.enums import PermType
 
 from .address import Address
 
@@ -12,13 +13,10 @@ log = logging.getLogger(__name__)
 class Permission(peewee.Model):
     """Address permissions"""
 
-    # TODO move model constants to app.enums
-    ISSUE, CREATE, MINE, ADMIN = 'issue', 'create', 'mine', 'admin'
-    PERM_TYPES = ISSUE, CREATE, MINE, ADMIN
     MAX_END_BLOCK = 4294967295
 
     address = peewee.ForeignKeyField(Address, related_name='permissions')
-    perm_type = peewee.CharField(choices=PERM_TYPES)
+    perm_type = peewee.CharField(choices=PermType)
     start_block = peewee.IntegerField()
     end_block = peewee.IntegerField()
 
@@ -34,7 +32,7 @@ class Permission(peewee.Model):
     @staticmethod
     def validators():
         return Permission.select().where(
-            Permission.perm_type == Permission.MINE,
+            Permission.perm_type == PermType.MINE,
             Permission.start_block == 0,
             Permission.end_block == Permission.MAX_END_BLOCK,
         )
@@ -42,7 +40,7 @@ class Permission(peewee.Model):
     @staticmethod
     def guardians():
         return Permission.select().where(
-            Permission.perm_type == Permission.ADMIN,
+            Permission.perm_type == PermType.ADMIN,
             Permission.start_block == 0,
             Permission.end_block == Permission.MAX_END_BLOCK,
         )

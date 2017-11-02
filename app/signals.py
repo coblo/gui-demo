@@ -33,5 +33,7 @@ class Signals(QObject):
     block_sync_changed = pyqtSignal(dict)
     transactions_changed = pyqtSignal(list)
 
+    admin_state_changed = pyqtSignal(bool)
+
 
 signals = Signals()

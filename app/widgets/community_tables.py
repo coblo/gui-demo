@@ -7,6 +7,7 @@ from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtWidgets import QHeaderView
 from app.models import Permission
+from app.settings import settings
 from app.signals import signals
 
 
@@ -113,12 +114,16 @@ class CommunityTableView(QtWidgets.QTableView):
         perm_type = kwargs.pop('perm_type')
         QtWidgets.QTableView.__init__(self, *args, **kwargs)
 
+        signals.admin_state_changed.connect(self.admin_state_changed)
+
         self.table_model = PermissionModel(self, perm_type=perm_type)
         self.setModel(self.table_model)
 
         font = QtGui.QFont()
         font.setFamily("Roboto Light")
         font.setPointSize(10)
+
+        self.setColumnHidden(4, not settings.value('is_admin'))
 
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -147,6 +152,8 @@ class CommunityTableView(QtWidgets.QTableView):
         for row in range(0, self.table_model.rowCount()):
             self.openPersistentEditor(self.table_model.index(row, 4))
 
+    def admin_state_changed(self, new_admin_state):
+        self.setColumnHidden(4, not new_admin_state)
 
 if __name__ == '__main__':
     from app.models import init_profile_db, init_data_db

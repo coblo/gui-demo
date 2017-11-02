@@ -71,10 +71,14 @@ def listpermissions():
     new_perms, new_votes = False, False
     Permission.delete().execute()
     with data_db.atomic():
+        new_admin_state = False
         for perm in perms['result']:
             perm_type = perm['type']
             if perm_type not in Permission.PERM_TYPES:
                 continue
+            if perm_type == Permission.ADMIN and settings.value('address') in perm['address']:
+                new_admin_state = True
+
             addr_obj, created = Address.get_or_create(address=perm['address'])
 
             for vote in perm['pending']:
@@ -100,6 +104,9 @@ def listpermissions():
                 new_perms = True
             else:
                 perm_obj.save()
+        if new_admin_state != settings.value('is_admin'):
+            settings.setValue('is_admin', new_admin_state)
+            signals.admin_state_changed.emit(new_admin_state)
     return {'new_perms': new_perms, 'new_votes': new_votes}
 
 

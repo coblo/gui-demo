@@ -56,3 +56,4 @@ class SettingKey(Enum):
     alias = 1
     address = 2
     balance = 3
+    is_admin = False

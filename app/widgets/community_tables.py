@@ -67,9 +67,9 @@ class PermissionModel(QAbstractTableModel):
             return 'Go find out'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
-                return perm_obj.address.num_validator_revokes()
+                return "{} of {}".format(perm_obj.address.num_validator_revokes(), Permission.num_guardians())
             else:
-                return perm_obj.address.num_guardian_revokes()
+                return "{} of {}".format(perm_obj.address.num_guardian_revokes(), Permission.num_guardians())
 
     @pyqtSlot()
     def listpermissions(self):
@@ -108,7 +108,6 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
 class CommunityTableView(QtWidgets.QTableView):
 
     # TODO: show number of "blocks mined"/"votes given" in last 24h in validator/guardian tables
-    # TODO: show revokes as "x of y" in "Revokes" column
 
     def __init__(self, *args, **kwargs):
         perm_type = kwargs.pop('perm_type')

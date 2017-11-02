@@ -106,7 +106,7 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
 
 class CommunityTableView(QtWidgets.QTableView):
 
-    # TODO: show number of block mined/votes in validator/guardian tables
+    # TODO: show number of "blocks mined"/"votes given" in last 24h in validator/guardian tables
     # TODO: show revokes as "x of y" in "Revokes" column
 
     def __init__(self, *args, **kwargs):

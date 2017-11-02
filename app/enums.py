@@ -22,7 +22,7 @@ class Method(Enum):
         return self.value[1]
 
 
-class PermType(Enum):
+class PermType():
     """
     A blockchain permission
     """
@@ -31,8 +31,12 @@ class PermType(Enum):
     MINE = 'mine'
     ADMIN = 'admin'
 
+    @staticmethod
+    def is_perm_type(perm_type):
+        return perm_type in [PermType.ISSUE, PermType.CREATE, PermType.MINE, PermType.ADMIN]
 
-class VoteType(Enum):
+
+class VoteType():
     GRANT = 'Grant'
     REVOKE = 'Revoke'
     SCOPED_GRANT = 'Scoped Grant'

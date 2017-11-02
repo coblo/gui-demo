@@ -73,7 +73,7 @@ def listpermissions():
     with data_db.atomic():
         for perm in perms['result']:
             perm_type = perm['type']
-            if perm_type not in [type.value for type in PermType]:
+            if not PermType.is_perm_type(perm_type):
                 continue
             addr_obj, created = Address.get_or_create(address=perm['address'])
 

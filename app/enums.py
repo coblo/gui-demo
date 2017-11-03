@@ -33,9 +33,6 @@ class Permission(Enum):
     mine = 4
 
 
-
-
-
 class Stream(Enum):
     """A build in multichain stream where:
 
@@ -56,3 +53,6 @@ class SettingKey(Enum):
     alias = 1
     address = 2
     balance = 3
+    is_admin = 4
+    is_miner = 5
+

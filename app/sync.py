@@ -71,18 +71,37 @@ def listpermissions():
         log.warning('no permissions from api')
         return
     new_perms, new_votes = False, False
+
+    is_admin_old = settings.value(SettingKey.is_admin.name, False, bool)
+    is_miner_old = settings.value(SettingKey.is_miner.name, False, bool)
+
+    is_admin_new = False
+    is_miner_new = False
+
+    users_address = settings.value(SettingKey.address.name)
+
     Permission.delete().execute()
+
     with data_db.atomic():
+
         for perm in perms['result']:
             perm_type = perm['type']
             if perm_type not in Permission.PERM_TYPES:
                 continue
+
+            if perm_type == Permission.ADMIN and users_address == perm['address']:
+                is_admin_new = True
+
+            if perm_type == Permission.MINE and users_address == perm['address']:
+                is_miner_new = True
+
             addr_obj, created = Address.get_or_create(address=perm['address'])
 
             for vote in perm['pending']:
                 start_block = vote['startblock']
                 end_block = vote['endblock']
                 approbations = len(vote['admins'])
+                # TODO: Fix: current time of syncing is not the time of first_vote!
                 vote_obj, created = VotingRound.get_or_create(
                     address=addr_obj, perm_type=perm_type, start_block=start_block, end_block=end_block,
                     defaults=(dict(approbations=approbations, first_vote=datetime.now()))
@@ -95,6 +114,7 @@ def listpermissions():
 
             start_block = perm['startblock']
             end_block = perm['endblock']
+            # TODO Why get_or_create ... we just deleted all Permission objects
             perm_obj, created = Permission.get_or_create(
                 address=addr_obj, perm_type=perm_type, defaults=dict(start_block=start_block, end_block=end_block)
             )
@@ -102,6 +122,15 @@ def listpermissions():
                 new_perms = True
             else:
                 perm_obj.save()
+        if is_admin_old != is_admin_new:
+            settings.setValue(SettingKey.is_admin.name, is_admin_new)
+            settings.sync()
+            signals.is_admin_changed.emit(is_admin_new)
+        if is_miner_old != is_miner_new:
+            settings.setValue(SettingKey.is_miner.name, is_miner_new)
+            settings.sync()
+            signals.is_miner_changed.emit(is_miner_new)
+
     return {'new_perms': new_perms, 'new_votes': new_votes}
 
 

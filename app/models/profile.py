@@ -3,9 +3,13 @@ import getpass
 import logging
 import os
 import peewee
+
+from decimal import Decimal
+
 import app
 from app.helpers import gen_password
 from app.models.db import profile_db
+from app.signals import signals
 
 log = logging.getLogger(__name__)
 
@@ -23,11 +27,22 @@ class Profile(peewee.Model):
     exit_on_close = peewee.BooleanField()
     active = peewee.BooleanField()
 
+    # state of variables shown in gui
+    alias = peewee.CharField(default='')
+    address = peewee.CharField(default='')
+    balance = peewee.DecimalField(default=Decimal())
+    is_admin = peewee.BooleanField(default=False)
+    is_miner = peewee.BooleanField(default=False)
+
     class Meta:
         database = profile_db
 
     def __repr__(self):
         return 'Profile(%s, %s, %s...)' % (self.name, self.rpc_host, self.rpc_user)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        signals.profile_changed.emit()
 
     def set_active(self):
         with profile_db.atomic():
@@ -41,7 +56,7 @@ class Profile(peewee.Model):
         return os.path.join(app.DATA_DIR, self.name + '-data.db')
 
     @staticmethod
-    def get_active():
+    def get_active() -> 'Profile':
         """Return currently active Pofile"""
         return Profile.select().where(Profile.active).first()
 

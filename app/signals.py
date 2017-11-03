@@ -27,8 +27,8 @@ class Signals(QObject):
 
     # custom signals
 
-    #: alias of main address changed
-    alias_changed = pyqtSignal(str)
+    #: profile changed
+    profile_changed = pyqtSignal()
 
     block_sync_changed = pyqtSignal(dict)
     transactions_changed = pyqtSignal(list)

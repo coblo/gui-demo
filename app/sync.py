@@ -1,19 +1,49 @@
 # -*- coding: utf-8 -*-
 """Api to local database synchronization by api method"""
 import logging
-import codecs
 from datetime import datetime
 from binascii import unhexlify
 
+from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
-from app.enums import Stream, SettingKey
+from app.enums import Stream
 from app.helpers import init_logging, init_data_dir, batchwise
-from app.models import Address, Permission, Transaction, VotingRound, init_profile_db, init_data_db, data_db, Block
-from app.settings import settings
+from app.models import Address, Permission, Transaction, VotingRound, init_profile_db, init_data_db, data_db, Block, \
+    Profile
 from app.tools.validators import is_valid_username
 
 log = logging.getLogger(__name__)
+
+
+def getinfo():
+    """Update latest wallet balance on current profile"""
+    client = get_active_rpc_client()
+    profile = Profile.get_active()
+    result = client.getinfo()['result']
+
+    if result['balance'] != profile.balance:
+        profile.balance = result['balance']
+        profile.save()
+
+
+def getblockchaininfo():
+    """Emit headers and blocks (block sync status)"""
+    client = get_active_rpc_client()
+    result = client.getblockchaininfo()['result']
+    # Todo: Maybe track headers/blocks on Profile db model
+    signals.getblockchaininfo.emit(Getblockchaininfo(**result))
+
+
+def getruntimeparams():
+    """Update wallet main address on current profile"""
+    client = get_active_rpc_client()
+    profile = Profile.get_active()
+    result = client.getruntimeparams()['result']
+
+    if result['handshakelocal'] != profile.address:
+        profile.address = result['handshakelocal']
+        profile.save()
 
 
 def listwallettransactions():
@@ -61,39 +91,38 @@ def listwallettransactions():
                     has_new = True
                 else:
                     tx_obj.save()
+    if has_new:
+        signals.listwallettransactions.emit()
     return has_new
 
 
 def listpermissions():
     client = get_active_rpc_client()
+
     perms = client.listpermissions()
     if not perms:
         log.warning('no permissions from api')
         return
     new_perms, new_votes = False, False
 
-    is_admin_old = settings.value(SettingKey.is_admin.name, False, bool)
-    is_miner_old = settings.value(SettingKey.is_miner.name, False, bool)
-
-    is_admin_new = False
-    is_miner_new = False
-
-    users_address = settings.value(SettingKey.address.name)
-
     Permission.delete().execute()
 
+    admin_addresses = set()
+    miner_addresses = set()
+
     with data_db.atomic():
+        profile = Profile.get_active()
 
         for perm in perms['result']:
             perm_type = perm['type']
             if perm_type not in Permission.PERM_TYPES:
                 continue
 
-            if perm_type == Permission.ADMIN and users_address == perm['address']:
-                is_admin_new = True
+            if perm_type == Permission.ADMIN:
+                admin_addresses.add(perm['address'])
 
-            if perm_type == Permission.MINE and users_address == perm['address']:
-                is_miner_new = True
+            if perm_type == Permission.MINE:
+                miner_addresses.add(perm['address'])
 
             addr_obj, created = Address.get_or_create(address=perm['address'])
 
@@ -122,15 +151,20 @@ def listpermissions():
                 new_perms = True
             else:
                 perm_obj.save()
-        if is_admin_old != is_admin_new:
-            settings.setValue(SettingKey.is_admin.name, is_admin_new)
-            settings.sync()
-            signals.is_admin_changed.emit(is_admin_new)
-        if is_miner_old != is_miner_new:
-            settings.setValue(SettingKey.is_miner.name, is_miner_new)
-            settings.sync()
-            signals.is_miner_changed.emit(is_miner_new)
 
+    new_is_admin = profile.address in admin_addresses
+    if profile.is_admin != new_is_admin:
+        profile.is_admin = new_is_admin
+
+    new_is_miner = profile.address in miner_addresses
+    if profile.is_miner != new_is_miner:
+        profile.is_miner = new_is_miner
+
+    if profile.dirty_fields:
+        profile.save()
+
+    # Todo: maybe only trigger table updates on actual change?
+    signals.listpermissions.emit()  # triggers community tab updates
     return {'new_perms': new_perms, 'new_votes': new_votes}
 
 
@@ -146,9 +180,6 @@ def liststreamitems_alias():
         'txid': 'caa1155e719803b9f39096860519a5e08e78214245ae9822beeea2b37a656178'
     }
     """
-
-    settings_main_alias = settings.value(SettingKey.alias.name, '', str)
-    settings_main_address = settings.value(SettingKey.address.name, '', str)
 
     client = get_active_rpc_client()
 
@@ -206,12 +237,14 @@ def liststreamitems_alias():
             by_addr[address] = alias
             continue
 
-    # signal alias to gui
-    new_main_alias = by_addr.get(settings_main_address)
-    if new_main_alias != settings_main_alias:
-        signals.alias_changed.emit(new_main_alias)
+    # update database
+    profile = Profile.get_active()
+    new_main_alias = by_addr.get(profile.address)
+    if profile.alias != new_main_alias:
+        log.debug('sync found new alias. profile.alias from %s to %s' % (profile.alias, new_main_alias))
+        profile.alias = new_main_alias
+        profile.save()
 
-    # update addresses in database
     with data_db.atomic():
         old_addrs = set(Address.select(Address.address, Address.alias).tuples())
         new_addrs = set(by_addr.items())
@@ -278,7 +311,8 @@ if __name__ == '__main__':
     init_data_dir()
     init_profile_db()
     init_data_db()
+    getinfo()
     # listwallettransactions()
-    listpermissions()
-    liststreamitems_alias()
-    print(listblocks())
+    # listpermissions()
+    # liststreamitems_alias()
+    #print(listblocks())

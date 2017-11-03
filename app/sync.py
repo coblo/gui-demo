@@ -91,6 +91,8 @@ def listwallettransactions():
                     has_new = True
                 else:
                     tx_obj.save()
+    if has_new:
+        signals.listwallettransactions.emit()
     return has_new
 
 

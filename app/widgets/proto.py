@@ -134,6 +134,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             self.gbox_community_skills.hide()
 
+        self.button_apply_validator.setVisible(not self.profile.is_miner)
+        self.button_apply_guardian.setVisible(not self.profile.is_admin)
+
     def format_balance(self, balance):
         display = "{0:n}".format(balance.normalize()) if balance is not ' ' else balance
         return display + ' CHM'

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Api to local database synchronization by api method"""
 import logging
+import codecs
 from datetime import datetime
+from binascii import unhexlify
 
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
@@ -226,7 +228,7 @@ def listblocks() -> int:
             for block in new_blocks['result']:
                 addr_obj, adr_created = Address.get_or_create(address=block['miner'])
                 block_obj, blk_created = Block.get_or_create(
-                    hash=block['hash'],
+                    hash=unhexlify(block['hash']),
                     defaults=dict(
                         time=datetime.fromtimestamp(block['time']),
                         miner=addr_obj,

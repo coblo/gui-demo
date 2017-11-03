@@ -136,6 +136,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.button_apply_validator.setVisible(not self.profile.is_miner)
         self.button_apply_guardian.setVisible(not self.profile.is_admin)
+        self.button_invite_canditate.setVisible(self.profile.is_admin)
 
     def format_balance(self, balance):
         display = "{0:n}".format(balance.normalize()) if balance is not ' ' else balance

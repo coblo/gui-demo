@@ -87,7 +87,7 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
     def createEditor(self, parent, option, index):
         combo = QtWidgets.QPushButton('Revoke', parent)
         combo.setStyleSheet(
-            "QPushButton {background-color: red; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}"
+            "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}"
         )
         combo.clicked.connect(self.currentIndexChanged)
         return combo

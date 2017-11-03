@@ -49,7 +49,7 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
             amount = Decimal(clean)
         except Exception as e:
             return
-        if amount > self.parent().profile.balance or abs(amount.as_tuple().exponent) > 8:
+        if amount > self.window().profile.balance or abs(amount.as_tuple().exponent) > 8:
             self.edit_amount.setStyleSheet('QLineEdit { background-color: #f6989d}')
         else:
             self.edit_amount.setStyleSheet('QLineEdit { background-color: #c4df9b}')

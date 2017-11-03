@@ -123,6 +123,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.profile.balance, app.CURRENCY_CODE)
         )
 
+        self.lbl_skill_is_admin.setEnabled(self.profile.is_admin)
+        self.lbl_skill_is_miner.setEnabled(self.profile.is_miner)
+        # We must manually "polish" the style to trigger visuals
+        self.lbl_skill_is_admin.style().polish(self.lbl_skill_is_admin)
+        self.lbl_skill_is_miner.style().polish(self.lbl_skill_is_miner)
+
+        if any((self.profile.is_admin, self.profile.is_miner)):
+            self.gbox_community_skills.show()
+        else:
+            self.gbox_community_skills.hide()
+
     def format_balance(self, balance):
         display = "{0:n}".format(balance.normalize()) if balance is not ' ' else balance
         return display + ' CHM'

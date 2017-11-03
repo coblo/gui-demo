@@ -244,12 +244,80 @@
         </spacer>
        </item>
        <item>
+        <widget class="QGroupBox" name="gbox_community_skills">
+         <property name="font">
+          <font>
+           <family>Oswald</family>
+           <pointsize>9</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QLabel {
+	color: white;
+	background-color: darkgray;
+	border-radius: 0px;
+    padding: 4px;
+}
+
+QLabel[enabled=&quot;true&quot;] {
+	background-color: #0183ea;
+}</string>
+         </property>
+         <property name="title">
+          <string>COMMUNITY SKILLS</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLabel" name="lbl_skill_is_miner">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="font">
+             <font>
+              <family>Roboto Light</family>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Validator</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lbl_skill_is_admin">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="font">
+             <font>
+              <family>Roboto Light</family>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Guardian</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="gbox_network_info">
          <property name="font">
           <font>
            <family>Oswald</family>
            <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
          </property>
          <property name="title">
           <string>NETWORK INFO</string>
@@ -324,7 +392,7 @@
     <item>
      <widget class="QStackedWidget" name="wgt_content">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="wgt_page_wallet">
        <layout class="QVBoxLayout" name="lout_page_wallet_v">

@@ -6,10 +6,8 @@ from PyQt5.QtWidgets import QWidget
 from decimal import Decimal
 
 from app.backend.rpc import get_active_rpc_client
-from app.enums import SettingKey
 from app.tools.validators import AddressValidator
 from app.ui.wallet_send import Ui_widget_wallet_send
-from app.settings import settings
 
 
 class WalletSend(QWidget, Ui_widget_wallet_send):
@@ -51,7 +49,7 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
             amount = Decimal(clean)
         except Exception as e:
             return
-        if amount > settings.value(SettingKey.balance.name, Decimal("0")) or abs(amount.as_tuple().exponent) > 8:
+        if amount > self.parent().profile.balance or abs(amount.as_tuple().exponent) > 8:
             self.edit_amount.setStyleSheet('QLineEdit { background-color: #f6989d}')
         else:
             self.edit_amount.setStyleSheet('QLineEdit { background-color: #c4df9b}')

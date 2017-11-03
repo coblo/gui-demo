@@ -8,11 +8,9 @@ from PyQt5.QtGui import QIcon
 import app
 from app import helpers
 from app import models
-from app.enums import Method, SettingKey
 from app.models import Profile, Permission, VotingRound
 from app.node import Node
-from app.responses import Getblockchaininfo, Getinfo, Getruntimeparams
-from app.settings import settings
+from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
@@ -35,7 +33,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()
         self.data_db = models.init_data_db()
-        self.profile = Profile.get_active()
+        self.profile = None
+        log.debug('load current profile: %s' % self.profile)
+        self.load_profile()
+        signals.profile_changed.connect(self.load_profile)
 
         # Init Navigation
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
@@ -44,14 +45,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
 
-        # Init saved settings
-        log.debug('load gui setting keys: %s' % settings.allKeys())
-        self.lbl_wallet_alias.setText(settings.value(SettingKey.alias.name, '', str))
-        self.lbl_wallet_address.setText(settings.value(SettingKey.address.name, '', str))
-        self.lbl_wallet_balance.setText(str(settings.value(SettingKey.balance.name, Decimal(), Decimal)))
-
         # Patch custom widgets
-
         self.gbox_wallet_transactions.setParent(None)
         self.gbox_wallet_send.setParent(None)
 
@@ -94,17 +88,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         tray_menu.addAction(quit_action)
         self.tray_icon.setContextMenu(tray_menu)
 
-        # Connect autosync methods
-        for method in Method:
-            if method.autosync:
-                sig = getattr(signals, method.name)
-                slot = getattr(self, method.name)
-                sig.connect(slot)
-
-        # Manual connections
+        # Connections
+        signals.getblockchaininfo.connect(self.getblockchaininfo)
         signals.listpermissions.connect(self.listpermissions)
-
-        signals.alias_changed.connect(self.on_alias_changed)
         signals.node_started.connect(self.node_started)
 
         # Backend processes
@@ -121,6 +107,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.tray_icon.show()
         self.show()
         self.statusbar.showMessage(app.APP_DIR, 10000)
+
+    @pyqtSlot()
+    def load_profile(self):
+        """Read current active profile and set gui labels"""
+        self.profile = Profile.get_active()
+
+        self.lbl_wallet_alias.setText(self.profile.alias)
+        self.lbl_wallet_address.setText(self.profile.address)
+
+        normalized = self.profile.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+        display = "{0:n} {1}".format(normalized, app.CURRENCY_CODE)
+        self.lbl_wallet_balance.setText(display)
+        self.lbl_wallet_balance.setToolTip("{0:n} {1}".format(
+            self.profile.balance, app.CURRENCY_CODE)
+        )
+
+    def format_balance(self, balance):
+        display = "{0:n}".format(balance.normalize()) if balance is not ' ' else balance
+        return display + ' CHM'
 
     def closeEvent(self, event):
         if self.profile.exit_on_close:
@@ -156,26 +161,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.progress_bar_network_info.setValue(blockchaininfo.blocks)
         self.label_network_info.setText(blockchaininfo.description)
 
-    @pyqtSlot(object)
-    def getinfo(self, info: Getinfo):
-        settings.setValue(SettingKey.balance.name, info.balance)
-        settings.sync()
-        normalized = info.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
-        display = "{0:n} {1}".format(normalized, app.CURRENCY_CODE)
-        self.lbl_wallet_balance.setText(display)
-        self.lbl_wallet_balance.setToolTip("{0:n} {1}".format(
-            info.balance, app.CURRENCY_CODE)
-        )
-
-    @pyqtSlot(object)
-    def getruntimeparams(self, rtp: Getruntimeparams):
-        self.lbl_wallet_address.setText(rtp.handshakelocal)
-        settings.setValue(SettingKey.address.name, rtp.handshakelocal)
-        settings.sync()
-
     @pyqtSlot()
     def listpermissions(self):
-
         num_validators = Permission.num_validators()
         log.debug('set num validators %s' % num_validators)
         self.lbl_num_validators.setText(str(num_validators))
@@ -187,12 +174,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         num_candidates = VotingRound.num_candidates()
         log.debug('set num candidates %s' % num_candidates)
         self.lbl_num_candidates.setText(str(num_candidates))
-
-    @pyqtSlot(str)
-    def on_alias_changed(self, alias):
-        self.lbl_wallet_alias.setText(alias)
-        settings.setValue(SettingKey.alias.name, alias)
-        settings.sync()
 
 
 if __name__ == '__main__':

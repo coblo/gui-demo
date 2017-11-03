@@ -7,7 +7,6 @@ from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtWidgets import QHeaderView
 from app.models import Permission
-from app.settings import settings
 from app.signals import signals
 
 
@@ -113,6 +112,7 @@ class CommunityTableView(QtWidgets.QTableView):
     def __init__(self, *args, **kwargs):
         perm_type = kwargs.pop('perm_type')
         QtWidgets.QTableView.__init__(self, *args, **kwargs)
+        self.profile = self.parent().profile
 
         signals.is_admin_changed.connect(self.is_admin_changed)
 
@@ -123,7 +123,7 @@ class CommunityTableView(QtWidgets.QTableView):
         font.setFamily("Roboto Light")
         font.setPointSize(10)
 
-        self.setColumnHidden(4, not settings.value('is_admin'))
+        self.setColumnHidden(4, not self.profile.is_admin)
 
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)

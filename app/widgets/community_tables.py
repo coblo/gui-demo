@@ -114,7 +114,7 @@ class CommunityTableView(QtWidgets.QTableView):
         perm_type = kwargs.pop('perm_type')
         QtWidgets.QTableView.__init__(self, *args, **kwargs)
 
-        signals.admin_state_changed.connect(self.admin_state_changed)
+        signals.is_admin_changed.connect(self.is_admin_changed)
 
         self.table_model = PermissionModel(self, perm_type=perm_type)
         self.setModel(self.table_model)
@@ -152,8 +152,10 @@ class CommunityTableView(QtWidgets.QTableView):
         for row in range(0, self.table_model.rowCount()):
             self.openPersistentEditor(self.table_model.index(row, 4))
 
-    def admin_state_changed(self, new_admin_state):
-        self.setColumnHidden(4, not new_admin_state)
+    @pyqtSlot(bool)
+    def is_admin_changed(self, is_admin):
+        self.setColumnHidden(4, not is_admin)
+
 
 if __name__ == '__main__':
     from app.models import init_profile_db, init_data_db

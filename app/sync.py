@@ -240,7 +240,7 @@ def liststreamitems_alias():
     # update database
     profile = Profile.get_active()
     new_main_alias = by_addr.get(profile.address)
-    if profile.alias != new_main_alias:
+    if new_main_alias and profile.alias != new_main_alias:
         log.debug('sync found new alias. profile.alias from %s to %s' % (profile.alias, new_main_alias))
         profile.alias = new_main_alias
         profile.save()

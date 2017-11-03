@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>696</height>
+    <height>278</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,11 +30,12 @@
     <widget class="QGroupBox" name="box_wallet_history">
      <property name="font">
       <font>
-       <pointsize>12</pointsize>
+       <family>Oswald</family>
+       <pointsize>9</pointsize>
       </font>
      </property>
      <property name="title">
-      <string>Transaction History</string>
+      <string>TRANSACTIONS</string>
      </property>
      <property name="flat">
       <bool>false</bool>
@@ -47,6 +48,7 @@
        <widget class="QTableView" name="table_wallet_history">
         <property name="font">
          <font>
+          <family>Roboto Light</family>
           <pointsize>10</pointsize>
          </font>
         </property>

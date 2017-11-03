@@ -8,4 +8,4 @@ import traceback
 if __name__ == '__main__':
     from app.application import Application
     sys.excepthook = traceback.print_exception
-    sys.exit(Application(sys.argv).exec_())
+    sys.exit(Application(sys.argv).exec())

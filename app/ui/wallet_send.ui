@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
-    <height>200</height>
+    <width>635</width>
+    <height>150</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,18 +30,15 @@
     <widget class="QGroupBox" name="box_wallet_send">
      <property name="font">
       <font>
-       <pointsize>12</pointsize>
-       <weight>50</weight>
-       <bold>false</bold>
-       <stylestrategy>PreferAntialias</stylestrategy>
-       <kerning>true</kerning>
+       <family>Oswald</family>
+       <pointsize>10</pointsize>
       </font>
      </property>
      <property name="styleSheet">
       <string notr="true"/>
      </property>
      <property name="title">
-      <string>Send</string>
+      <string>SEND COINS</string>
      </property>
      <property name="flat">
       <bool>false</bool>
@@ -53,6 +50,7 @@
          <widget class="QLabel" name="label_send_amount">
           <property name="font">
            <font>
+            <family>Roboto Light</family>
             <pointsize>10</pointsize>
            </font>
           </property>
@@ -68,11 +66,18 @@
          <widget class="QLineEdit" name="edit_amount">
           <property name="font">
            <font>
-            <pointsize>8</pointsize>
+            <family>Roboto Light</family>
+            <pointsize>10</pointsize>
            </font>
+          </property>
+          <property name="focusPolicy">
+           <enum>Qt::ClickFocus</enum>
           </property>
           <property name="text">
            <string/>
+          </property>
+          <property name="placeholderText">
+           <string>0.00</string>
           </property>
          </widget>
         </item>
@@ -80,11 +85,12 @@
          <widget class="QLabel" name="label_send_address">
           <property name="font">
            <font>
+            <family>Roboto Light</family>
             <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>Address:</string>
+           <string>Pay to:</string>
           </property>
           <property name="buddy">
            <cstring>edit_address</cstring>
@@ -95,11 +101,15 @@
          <widget class="QLineEdit" name="edit_address">
           <property name="font">
            <font>
-            <pointsize>8</pointsize>
+            <family>Roboto Light</family>
+            <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
            <string/>
+          </property>
+          <property name="placeholderText">
+           <string>Paste address or type alias of recipient</string>
           </property>
          </widget>
         </item>
@@ -107,11 +117,12 @@
          <widget class="QLabel" name="label_send_description">
           <property name="font">
            <font>
+            <family>Roboto Light</family>
             <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>Description:</string>
+           <string>Comment:</string>
           </property>
           <property name="buddy">
            <cstring>edit_description</cstring>
@@ -122,7 +133,8 @@
          <widget class="QLineEdit" name="edit_description">
           <property name="font">
            <font>
-            <pointsize>8</pointsize>
+            <family>Roboto Light</family>
+            <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
@@ -130,6 +142,9 @@
           </property>
           <property name="maxLength">
            <number>70</number>
+          </property>
+          <property name="placeholderText">
+           <string>Optional payment reference information</string>
           </property>
          </widget>
         </item>
@@ -154,11 +169,12 @@
          <widget class="QPushButton" name="btn_send_cancel">
           <property name="font">
            <font>
+            <family>Roboto Light</family>
             <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>Cancel</string>
+           <string>Clear</string>
           </property>
          </widget>
         </item>
@@ -166,6 +182,7 @@
          <widget class="QPushButton" name="btn_send_send">
           <property name="font">
            <font>
+            <family>Roboto Light</family>
             <pointsize>10</pointsize>
            </font>
           </property>

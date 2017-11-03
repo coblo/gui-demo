@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 """Application Main Window and Entry Point"""
 from PyQt5 import QtWidgets
-from app.backend.api import Api
-from app.backend.updater import Updater
 
+from app.backend.api import Api
 from app.ui.main import Ui_MainWindow
-from app.widgets.skills import WidgetSkills
-from app.widgets.wallet_header import WalletHeader
-from app.widgets.wallet_addresses import WalletAddresses
-from app.widgets.wallet_send import WalletSend
-from app.widgets.wallet_history import WalletHistory
+from app.updater import Updater
 from app.widgets.community import Community
 from app.widgets.create_privilege_request import CreatePrivilegeRequest
+from app.widgets.skills import WidgetSkills
+from app.widgets.wallet_addresses import WalletAddresses
+from app.widgets.wallet_header import WalletHeader
+from app.widgets.wallet_history import WalletHistory
+from app.widgets.wallet_send import WalletSend
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):

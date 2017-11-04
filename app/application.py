@@ -1,13 +1,10 @@
 import locale
 import logging
 from PyQt5 import QtWidgets, QtGui
-
 from PyQt5.QtCore import pyqtSlot
-
 import app
 from app.widgets.proto import MainWindow
 from app import helpers
-from app.ui import resources_rc
 
 
 helpers.init_logging()
@@ -56,7 +53,7 @@ class Application(QtWidgets.QApplication):
     @pyqtSlot()
     def cleanup(self):
         """Final application teardown/cleanup"""
-        log.debug('trying to cleanup')
+        log.debug('init app teardown cleanup')
         if hasattr(self.ui, 'node'):
             try:
                 log.debug('attempt gracefull node shuttdown via rpc')
@@ -68,3 +65,4 @@ class Application(QtWidgets.QApplication):
                 self.ui.node.kill()
         self.ui.data_db.close()
         self.ui.profile_db.close()
+        log.debug('finished app teardown cleanup - quitting.')

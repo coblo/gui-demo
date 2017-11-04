@@ -3,6 +3,7 @@
 """Main application entry point"""
 import sys
 import traceback
+from app.ui import resources_rc
 
 
 if __name__ == '__main__':

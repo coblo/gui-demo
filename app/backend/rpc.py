@@ -87,6 +87,12 @@ class RpcClient:
     def getruntimeparams(self):
         return self._call('getruntimeparams')
 
+    def grant(self, addresses, permissions, native_amount=0, start_block=0, end_block=0, comment=None, comment_to=None):
+        return self._call('grant', addresses, permissions, native_amount, start_block, end_block, comment, comment_to)
+
+    def grantwithdata(self, addresses, permissions, data_hex, native_amount=0, start_block=0, end_block=4294967295):
+        return self._call('grantwithdata', addresses, permissions, data_hex, native_amount, start_block, end_block)
+
     def listaddresses(self, addresses='*', verbose=True, count=100, start=0):
         return self._call('listaddresses', addresses, verbose, count, start)
 
@@ -173,4 +179,3 @@ if __name__ == '__main__':
     # pprint(client.getblockcount())
     # pprint(client.liststreamkeys('alias'))
     # pprint(client.liststreamitems('alias', start=1, count=3))
-    print(client.stop())

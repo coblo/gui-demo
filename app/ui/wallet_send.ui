@@ -31,7 +31,7 @@
      <property name="font">
       <font>
        <family>Oswald</family>
-       <pointsize>10</pointsize>
+       <pointsize>9</pointsize>
       </font>
      </property>
      <property name="styleSheet">
@@ -79,6 +79,9 @@
           <property name="placeholderText">
            <string>0.00</string>
           </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="1" column="0">
@@ -111,6 +114,9 @@
           <property name="placeholderText">
            <string>Paste address or type alias of recipient</string>
           </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="2" column="0">
@@ -141,10 +147,13 @@
            <string/>
           </property>
           <property name="maxLength">
-           <number>70</number>
+           <number>100</number>
           </property>
           <property name="placeholderText">
            <string>Optional payment reference information</string>
+          </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

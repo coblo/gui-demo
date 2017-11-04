@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>246</height>
+    <width>476</width>
+    <height>227</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>476</width>
+    <height>227</height>
+   </size>
   </property>
   <property name="font">
    <font>
@@ -83,6 +89,12 @@
             <pointsize>9</pointsize>
            </font>
           </property>
+          <property name="placeholderText">
+           <string>Account address of candidate</string>
+          </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="1" column="0">
@@ -128,24 +140,21 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QPlainTextEdit" name="edit_publoc_comment">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>40</height>
-           </size>
-          </property>
+         <widget class="QLineEdit" name="edit_public_comment">
           <property name="font">
            <font>
             <family>Roboto Light</family>
             <pointsize>10</pointsize>
            </font>
           </property>
-          <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarAlwaysOff</enum>
+          <property name="maxLength">
+           <number>100</number>
           </property>
-          <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarAlwaysOff</enum>
+          <property name="placeholderText">
+           <string>Reason for invitation</string>
+          </property>
+          <property name="clearButtonEnabled">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

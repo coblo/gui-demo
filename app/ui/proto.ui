@@ -551,7 +551,7 @@ QLabel[enabled=&quot;true&quot;] {
            </font>
           </property>
           <property name="title">
-           <string>SEND COINS</string>
+           <string>SEND COINS (Dummy)</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -589,6 +589,9 @@ QLabel[enabled=&quot;true&quot;] {
                <property name="placeholderText">
                 <string>0.00</string>
                </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
               </widget>
              </item>
              <item row="1" column="0">
@@ -618,6 +621,9 @@ QLabel[enabled=&quot;true&quot;] {
                <property name="placeholderText">
                 <string>Address or alias of recipient</string>
                </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
               </widget>
              </item>
              <item row="2" column="0">
@@ -646,6 +652,9 @@ QLabel[enabled=&quot;true&quot;] {
                </property>
                <property name="placeholderText">
                 <string>Optional payment reference information</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

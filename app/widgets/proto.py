@@ -16,6 +16,7 @@ from app.updater import Updater
 from app.widgets.community_tables import CommunityTableView
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
+from app.widgets.invite import InviteDialog
 
 
 log = logging.getLogger(__name__)
@@ -44,6 +45,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.wgt_content.setCurrentIndex(0)
 
         # Patch custom widgets
+        self.tab_widget_cummunity.setStyleSheet('QPushButton {padding: 5 12 5 12; font: 10pt "Roboto Light"}')
+
         self.gbox_wallet_transactions.setParent(None)
         self.gbox_wallet_send.setParent(None)
 
@@ -60,6 +63,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_guardians.setParent(None)
         table_guardians = CommunityTableView(self, perm_type=Permission.ADMIN)
         self.tab_guardians.layout().insertWidget(0, table_guardians)
+
+        invite_dialog = InviteDialog(self)
+        self.button_invite_canditate.clicked.connect(invite_dialog.exec)
 
         # Settings
         self.check_box_exit_on_close.setChecked(self.profile.exit_on_close)

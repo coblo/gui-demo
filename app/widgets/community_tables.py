@@ -6,7 +6,7 @@ from datetime import datetime
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtWidgets import QHeaderView
-from app.models import Permission
+from app.models import Permission, Profile
 from app.signals import signals
 
 
@@ -50,10 +50,13 @@ class PermissionModel(QAbstractTableModel):
         if not idx.isValid():
             return None
 
+        perm_obj = self._data[idx.row()]
+
+        if role == Qt.EditRole and idx.column() in (1, 4):
+            return perm_obj.address_id
+
         if role != Qt.DisplayRole:
             return None
-
-        perm_obj = self._data[idx.row()]
 
         if idx.column() == 0:
             return perm_obj.address.alias
@@ -71,6 +74,11 @@ class PermissionModel(QAbstractTableModel):
             else:
                 return "{} of {}".format(perm_obj.address.num_guardian_revokes(), Permission.num_guardians())
 
+    def flags(self, idx: QModelIndex):
+        if idx.column() == 1:
+            return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        return super().flags(idx)
+
     @pyqtSlot()
     def listpermissions(self):
         self.beginResetModel()
@@ -84,25 +92,21 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, parent):
         QtWidgets.QStyledItemDelegate.__init__(self, parent)
 
-    def createEditor(self, parent, option, index):
-        combo = QtWidgets.QPushButton('Revoke', parent)
-        combo.setStyleSheet(
-            "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}"
-        )
-        combo.clicked.connect(self.currentIndexChanged)
-        return combo
+    def createEditor(self, parent, option, idx):
+        btn = QtWidgets.QPushButton('Revoke', parent)
+        btn.setStyleSheet("QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+        address = idx.data(Qt.EditRole)
+        btn.setObjectName(address)
+        btn.clicked.connect(self.on_revoke_clicked)
+        return btn
 
-    def setEditorData(self, editor, index):
-        log.debug('triggered ButtonDelegate setEditorData')
-        editor.blockSignals(True)
-        editor.blockSignals(False)
-
-    def setModelData(self, editor, model, index):
-        log.debug('triggered ButtonDelegate setModelData')
-
-    @pyqtSlot()
-    def currentIndexChanged(self):
-        log.debug('triggered ButtonDelegate currentIndexChanged')
+    def on_revoke_clicked(self):
+        sender = self.sender()
+        address = sender.objectName()
+        perm_type = self.parent().perm_type
+        log.debug('TODO: revoke %s for %s' % (perm_type, address))
+        # client = get_active_rpc_client()
+        # response = client.revoke(address, perm_type)
 
 
 class CommunityTableView(QtWidgets.QTableView):
@@ -110,13 +114,24 @@ class CommunityTableView(QtWidgets.QTableView):
     # TODO: show number of "blocks mined"/"votes given" in last 24h in validator/guardian tables
 
     def __init__(self, *args, **kwargs):
-        perm_type = kwargs.pop('perm_type')
+        self.perm_type = kwargs.pop('perm_type')
         QtWidgets.QTableView.__init__(self, *args, **kwargs)
-        self.profile = self.parent().profile
+
+        self.setMinimumWidth(400)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+
+        try:
+            self.profile = self.parent().profile
+        except AttributeError:
+            # In case of standalone usage
+            self.profile = Profile.get_active()
 
         signals.is_admin_changed.connect(self.is_admin_changed)
 
-        self.table_model = PermissionModel(self, perm_type=perm_type)
+        # self.pressed.connect(self.on_cell_clicked)
+
+        self.table_model = PermissionModel(self, perm_type=self.perm_type)
         self.setModel(self.table_model)
 
         font = QtGui.QFont()
@@ -159,6 +174,8 @@ class CommunityTableView(QtWidgets.QTableView):
 
 if __name__ == '__main__':
     from app.models import init_profile_db, init_data_db
+    from app.helpers import init_logging
+    init_logging()
     # from app.tools.runner import run_widget
     init_profile_db()
     init_data_db()

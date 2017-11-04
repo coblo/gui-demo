@@ -114,6 +114,9 @@ class RpcClient:
     def publish(self, stream, key, data):
         return self._call('publish', stream, key, data)
 
+    def revoke(self, addresses, permissions, native_amount=0, comment=None, comment_to=None):
+        return self._call('revoke', addresses, permissions, native_amount, comment, comment_to)
+
     def send(self, address, amount, comment=None, comment_to=None):
         """
         Note: 'comment' fields are local to the node and not

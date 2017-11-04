@@ -12,9 +12,9 @@ from multiprocessing import Queue
 log = logging.getLogger(__name__)
 
 
-def get_active_rpc_client():
+def get_active_rpc_client(override=None):
     from app.models import Profile
-    profile = Profile.get_active()
+    profile = override or Profile.get_active()
     assert isinstance(profile, Profile)
     return RpcClient(
         profile.rpc_host, profile.rpc_port, profile.rpc_user, profile.rpc_password, profile.rpc_use_ssl
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     helpers.init_node_data_dir()
     models.init_data_db()
     print(models.Profile.get_active())
-    client = get_active_rpc_client()
+    client = get_active_rpc_client(models.Profile.get(name='default'))
 
     # pprint(client.getaddresses(verbose=True))
     # pprint(client.getbalance())
@@ -172,4 +172,5 @@ if __name__ == '__main__':
     # pprint(client.getmultibalances())
     # pprint(client.getblockcount())
     # pprint(client.liststreamkeys('alias'))
-    pprint(client.liststreamitems('alias', start=1, count=3))
+    # pprint(client.liststreamitems('alias', start=1, count=3))
+    print(client.stop())

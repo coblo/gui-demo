@@ -144,9 +144,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         if self.profile.exit_on_close:
-            if hasattr(self, 'node'):
-                self.node.kill()
-            self.profile_db.close()
             QtWidgets.qApp.quit()
         else:
             event.ignore()

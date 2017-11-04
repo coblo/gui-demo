@@ -1,6 +1,9 @@
 import locale
 import logging
 from PyQt5 import QtWidgets, QtGui
+
+from PyQt5.QtCore import pyqtSlot
+
 import app
 from app.widgets.proto import MainWindow
 from app import helpers
@@ -42,8 +45,26 @@ class Application(QtWidgets.QApplication):
         # Initialize main window
         self.ui = main_widget() if main_widget else MainWindow()
 
+        self.aboutToQuit.connect(self.cleanup)
+
         # Shortcuts
         if hasattr(self.ui, 'node'):
             self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+K', self.ui, self.ui.node.kill)
             self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+S', self.ui, self.ui.node.stop)
             self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+R', self.ui, self.ui.node.start)
+
+    @pyqtSlot()
+    def cleanup(self):
+        """Final application teardown/cleanup"""
+        log.debug('trying to cleanup')
+        if hasattr(self.ui, 'node'):
+            try:
+                log.debug('attempt gracefull node shuttdown via rpc')
+                rpc_result = self.ui.node.stop()
+                log.debug('rpc stop returned: %s' % rpc_result)
+                assert rpc_result == "MultiChain server stopping"
+            except Exception as e:
+                log.exception('failed rpc shutdown - try to kill node process')
+                self.ui.node.kill()
+        self.ui.data_db.close()
+        self.ui.profile_db.close()

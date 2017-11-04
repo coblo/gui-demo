@@ -51,10 +51,7 @@ class Node(QProcess):
         if self.state() == self.NotRunning:
             log.debug('node already stopped')
         else:
-            try:
-                get_active_rpc_client().stop()
-            except Exception as e:
-                log.debug('cannot reach node to stop {}'.format(e))
+            return get_active_rpc_client().stop()
 
     def node_started(self):
         log.debug('node started')

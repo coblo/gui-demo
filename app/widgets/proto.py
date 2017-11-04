@@ -33,7 +33,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.node_data_dir = helpers.init_node_data_dir()
         self.data_db = models.init_data_db()
         self.profile = None
-        log.debug('load current profile: %s' % self.profile)
         self.load_profile()
         signals.profile_changed.connect(self.load_profile)
 
@@ -91,6 +90,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def load_profile(self):
         """Read current active profile and set gui labels"""
         self.profile = Profile.get_active()
+        log.debug('load current profile %s' % self.profile)
 
         self.lbl_wallet_alias.setText(self.profile.alias)
         self.lbl_wallet_address.setText(self.profile.address)

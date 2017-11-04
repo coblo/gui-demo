@@ -33,7 +33,7 @@ class Node(QProcess):
                 node_path, [
                     app.NODE_BOOTSTRAP,
                     '-server=1',
-                    '-daemon',
+                    # '-daemon',
                     '-autosubscribe=assets,streams',
                     '-maxshowndata=32',
                     '-rpcuser={}'.format(self.profile.rpc_user),

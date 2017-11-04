@@ -2,6 +2,8 @@ import locale
 import logging
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QIcon
+
 import app
 from app.widgets.proto import MainWindow
 from app import helpers
@@ -44,6 +46,25 @@ class Application(QtWidgets.QApplication):
 
         self.aboutToQuit.connect(self.cleanup)
 
+        # Init TrayIcon
+        self.tray_icon = QtWidgets.QSystemTrayIcon(self)
+        self.tray_icon.setIcon(QIcon(':images/resources/app_icon.png'))
+        self.tray_icon.activated.connect(self.on_tray_activated)
+
+        show_action = QtWidgets.QAction("Show", self)
+        quit_action = QtWidgets.QAction("Exit", self)
+        hide_action = QtWidgets.QAction("Hide", self)
+        show_action.triggered.connect(self.ui.show)
+        hide_action.triggered.connect(self.ui.hide)
+        quit_action.triggered.connect(QtWidgets.qApp.quit)
+
+        tray_menu = QtWidgets.QMenu()
+        tray_menu.addAction(show_action)
+        tray_menu.addAction(hide_action)
+        tray_menu.addAction(quit_action)
+        self.tray_icon.setContextMenu(tray_menu)
+        self.tray_icon.show()
+
         # Shortcuts
         if hasattr(self.ui, 'node'):
             self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+K', self.ui, self.ui.node.kill)
@@ -66,3 +87,8 @@ class Application(QtWidgets.QApplication):
         self.ui.data_db.close()
         self.ui.profile_db.close()
         log.debug('finished app teardown cleanup - quitting.')
+
+    def on_tray_activated(self, reason):
+        if reason == QtWidgets.QSystemTrayIcon.DoubleClick:
+            self.ui.show()
+            self.activateWindow()

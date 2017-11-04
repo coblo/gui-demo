@@ -69,25 +69,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.check_manage_node.setChecked(self.profile.manage_node)
         self.check_manage_node.stateChanged['int'].connect(self.setting_changed_manage_node)
 
-        # Init TrayIcon
-        # Todo: fix issue of multiple tray icons poping up
-        self.tray_icon = QtWidgets.QSystemTrayIcon(self)
-        self.tray_icon.setIcon(QIcon(':images/resources/app_icon.png'))
-        self.tray_icon.activated.connect(self.on_tray_activated)
-
-        show_action = QtWidgets.QAction("Show", self)
-        quit_action = QtWidgets.QAction("Exit", self)
-        hide_action = QtWidgets.QAction("Hide", self)
-        show_action.triggered.connect(self.show)
-        hide_action.triggered.connect(self.hide)
-        quit_action.triggered.connect(QtWidgets.qApp.quit)
-
-        tray_menu = QtWidgets.QMenu()
-        tray_menu.addAction(show_action)
-        tray_menu.addAction(hide_action)
-        tray_menu.addAction(quit_action)
-        self.tray_icon.setContextMenu(tray_menu)
-
         # Connections
         signals.getblockchaininfo.connect(self.getblockchaininfo)
         signals.listpermissions.connect(self.listpermissions)
@@ -104,7 +85,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # No managed node to wait for... start updater
             self.updater.start()
 
-        self.tray_icon.show()
         self.show()
         self.statusbar.showMessage(app.APP_DIR, 10000)
 
@@ -148,11 +128,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             event.ignore()
             self.hide()
-
-    def on_tray_activated(self, reason):
-        if reason == QtWidgets.QSystemTrayIcon.DoubleClick:
-            self.show()
-            self.activateWindow()
 
     def setting_changed_exit_on_close(self, state):
         self.profile.exit_on_close = state == 2

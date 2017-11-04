@@ -2,14 +2,18 @@ import sys
 from cx_Freeze import Executable, setup
 
 buildOptions = dict(
-    packages=['requests', 'idna'],
+    packages=['requests', 'idna', 'timeago'],
     excludes=[],
 )
 
 base = 'Win32GUI' if sys.platform == 'win32' else None
 
 executables = [
-    Executable('main.py', base=base, targetName='charm.exe')
+    Executable(
+        'main.py',
+        base=base,
+        targetName='charm.exe'
+    )
 ]
 
 setup(

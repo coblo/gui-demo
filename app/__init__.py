@@ -29,3 +29,12 @@ DEFAULT_RPC_PORT = 8374
 NODE_BOOTSTRAP = 'charm@85.197.78.50:8375'
 
 CURRENCY_CODE = 'CHM'
+
+
+def init():
+    from app import helpers
+    from app import models
+    helpers.init_logging()
+    helpers.init_data_dir()
+    models.init_profile_db()
+    models.init_data_db()

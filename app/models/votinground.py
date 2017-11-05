@@ -37,7 +37,7 @@ class VotingRound(peewee.Model):
     def set_vote_type(self):
         if self.start_block == self.end_block == 0:
             self.vote_type = self.REVOKE
-        if self.end_block == 0 and self.end_block == self.MAX_END_BLOCK:
+        elif self.end_block == 0 and self.end_block == self.MAX_END_BLOCK:
             self.vote_type = self.GRANT
         else:
             self.vote_type = self.SCOPED_GRANT

@@ -143,8 +143,8 @@
          <widget class="QLineEdit" name="edit_public_comment">
           <property name="font">
            <font>
-            <family>Roboto Light</family>
-            <pointsize>10</pointsize>
+            <family>Roboto Condensed</family>
+            <pointsize>9</pointsize>
            </font>
           </property>
           <property name="maxLength">

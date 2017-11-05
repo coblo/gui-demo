@@ -98,6 +98,7 @@ def listwallettransactions():
 
 def listpermissions():
     client = get_active_rpc_client()
+    node_height = client.getblockcount()['result']
 
     perms = client.listpermissions()
     if not perms:
@@ -115,13 +116,16 @@ def listpermissions():
 
         for perm in perms['result']:
             perm_type = perm['type']
+            perm_start = perm['startblock']
+            perm_end = perm['endblock']
+
             if perm_type not in Permission.PERM_TYPES:
                 continue
 
-            if perm_type == Permission.ADMIN:
+            if perm_type == Permission.ADMIN and perm_start < node_height < perm_end:
                 admin_addresses.add(perm['address'])
 
-            if perm_type == Permission.MINE:
+            if perm_type == Permission.MINE and perm_start < node_height < perm_end:
                 miner_addresses.add(perm['address'])
 
             addr_obj, created = Address.get_or_create(address=perm['address'])

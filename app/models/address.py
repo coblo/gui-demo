@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import peewee
+from peewee import fn
 
 from app.models.db import data_db
 
@@ -21,6 +22,12 @@ class Address(peewee.Model):
 
     def __repr__(self):
         return 'Address(%s, %s)' % (self.address, self.alias)
+
+    @classmethod
+    def verbose(cls):
+        """Return annotated queryset"""
+        from app.models import Block
+        return cls.select().annotate(Block, fn.MAX(Block.time).alias('last_mined'))
 
     def last_mined(self):
         from app.models import Block

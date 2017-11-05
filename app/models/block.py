@@ -22,4 +22,4 @@ class Block(peewee.Model):
         database = data_db
 
     def __repr__(self):
-        return "Block(%s)" % self.height
+        return "Block(h=%s, t=%s, txs=%s)" % (self.height, self.time, self.txcount)

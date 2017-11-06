@@ -32,8 +32,11 @@ CURRENCY_CODE = 'CHM'
 
 
 def init():
+    import sys
+    import traceback
     from app import helpers
     from app import models
+    sys.excepthook = traceback.print_exception
     helpers.init_logging()
     helpers.init_data_dir()
     models.init_profile_db()

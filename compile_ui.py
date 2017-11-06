@@ -19,7 +19,7 @@ def ui():
 
 
 def resource():
-    for resfile in glob(os.path.join(HERE, "app/resources/*.qrc")):
+    for resfile in glob(os.path.join(HERE, "app/ui/*.qrc")):
         pyfile = os.path.splitext(resfile)[0] + "_rc.py"
         print(resfile)
         call("pyrcc5 -o {} {}".format(pyfile, resfile), shell=True)

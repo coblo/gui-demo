@@ -18,7 +18,8 @@
   </property>
   <property name="font">
    <font>
-    <pointsize>10</pointsize>
+    <family>Oswald</family>
+    <pointsize>9</pointsize>
    </font>
   </property>
   <property name="windowTitle">

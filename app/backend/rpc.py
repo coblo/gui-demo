@@ -63,6 +63,9 @@ class RpcClient:
     def getbalance(self):
         return self._call('getbalance')
 
+    def getblock(self, height):
+        return self._call('getblock', height)
+
     def getblockchaininfo(self) -> Optional[dict]:
         return self._call('getblockchaininfo')
 
@@ -83,6 +86,9 @@ class RpcClient:
 
     def getnewaddress(self):
         return self._call('getnewaddress')
+
+    def getrawtransaction(self, txid, verbose=0):
+        return self._call('getrawtransaction', txid, verbose)
 
     def getruntimeparams(self):
         return self._call('getruntimeparams')

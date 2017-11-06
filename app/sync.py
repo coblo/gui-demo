@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """Api to local database synchronization by api method"""
 import logging
-from datetime import datetime
 from binascii import unhexlify
+from datetime import datetime
+from hashlib import sha256, new
+
+import base58
+permission_candidates = ['admin', 'mine', 'issue', 'create']
 
 from app.responses import Getblockchaininfo
 from app.signals import signals
@@ -194,7 +198,7 @@ def liststreamitems_alias():
         log.debug('got no items from stream alias')
         return 0
 
-    by_addr = {}     # address -> alias
+    by_addr = {}  # address -> alias
     reseved = set()  # reserved aliases
 
     # aggregate the final state of address to alias mappings from stream
@@ -264,6 +268,69 @@ def liststreamitems_alias():
     return len(changed_addrs)
 
 
+def sha256d(data):
+    return sha256(sha256(data).digest()).digest()
+
+
+def xor_bytes(a, b):
+    result = bytearray()
+    for b1, b2 in zip(a, b):
+        result.append(b1 ^ b2)
+    return bytes(result)
+
+
+def otherToAddr(pubkey, pubkeyhash_version, checksum_value):
+    # Work with raw bytes
+    pubkey_raw = unhexlify(pubkey)
+    pkhv_raw = unhexlify(pubkeyhash_version)
+    cv_raw = unhexlify(checksum_value)
+
+    # Hash public key
+    ripemd160 = new('ripemd160')
+    ripemd160.update(sha256(pubkey_raw).digest())
+    pubkey_raw_hashed = ripemd160.digest()
+
+    # Extend
+    steps = 20 // len(pkhv_raw)
+    chunks = [pubkey_raw_hashed[i:i + steps] for i in range(0, len(pubkey_raw_hashed), steps)]
+    pubkey_raw_extended = b''
+    for idx, b in enumerate(unhexlify(pubkeyhash_version), start=0):
+        pubkey_raw_extended += b.to_bytes(1, 'big') + chunks[idx]
+
+    # Double SHA256
+    pubkey_raw_sha256d = sha256d(pubkey_raw_extended)
+
+    # XOR first 4 bytes with address-checksum-value for postfix
+    postfix = xor_bytes(pubkey_raw_sha256d[:4], cv_raw)
+
+    # Compose final address
+    address_bin = pubkey_raw_extended + postfix
+    return base58.b58encode(address_bin)
+
+def processTransaction(client, txid, pubkeyhash_version, checksum_value):
+    transaction = client.getrawtransaction(txid, 4)
+    if transaction['error'] is None:
+        if 'vout' in transaction['result']:
+            vout = transaction['result']['vout']
+            permissions = []
+            start_block = None
+            end_block = None
+            for vout_key, entry in enumerate(vout):
+                if len(entry['permissions']) > 0:
+                    for key, perm in entry['permissions'][0].items():
+                        if perm and key in permission_candidates:
+                            permissions.append(key)
+                        if key == 'startblock':
+                            start_block = perm
+                        if key == 'endblock':
+                            end_block = perm
+                    in_entry = transaction['result']['vin'][vout_key]
+                    public_key = in_entry['scriptSig']['asm'].split(' ')[1]
+                    from_pubkey = otherToAddr(public_key, pubkeyhash_version, checksum_value)
+                    given_to = entry['scriptPubKey']['addresses']
+                    print(permissions, given_to, from_pubkey)
+
+
 def listblocks() -> int:
     """Synch block data from node
 
@@ -286,12 +353,22 @@ def listblocks() -> int:
 
     synced = 0
 
+    blockchain_params = client.getblockchainparams()['result']
+    pubkeyhash_version = blockchain_params['address-pubkeyhash-version']
+    checksum_value = blockchain_params['address-checksum-value']
+
     for batch in batchwise(range(height_db, height_node), 100):
 
         new_blocks = client.listblocks(batch)
 
         with data_db.atomic():
             for block in new_blocks['result']:
+                if block['txcount'] > 1:
+                    height = block['height']
+                    block_info = client.getblock("{}".format(height))['result']
+                    for txid in block_info['tx']:
+                        processTransaction(client, txid, pubkeyhash_version, checksum_value)
+
                 addr_obj, adr_created = Address.get_or_create(address=block['miner'])
                 block_obj, blk_created = Block.get_or_create(
                     hash=unhexlify(block['hash']),

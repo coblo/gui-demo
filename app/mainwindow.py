@@ -1,21 +1,18 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """Application Main Window and Entry Point"""
-import sys
-import locale
-import traceback
-from PyQt5 import QtWidgets, QtGui
-from app.backend.api import Api
-from app.backend.updater import Updater
+from PyQt5 import QtWidgets
 
+from app.backend.api import Api
 from app.ui.main import Ui_MainWindow
-from app.widgets.skills import WidgetSkills
-from app.widgets.wallet_header import WalletHeader
-from app.widgets.wallet_addresses import WalletAddresses
-from app.widgets.wallet_send import WalletSend
-from app.widgets.wallet_history import WalletHistory
+from app.updater import Updater
 from app.widgets.community import Community
 from app.widgets.create_privilege_request import CreatePrivilegeRequest
+from app.widgets.skills import WidgetSkills
+from app.widgets.wallet_addresses import WalletAddresses
+from app.widgets.wallet_header import WalletHeader
+from app.widgets.wallet_history import WalletHistory
+from app.widgets.wallet_send import WalletSend
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -59,28 +56,3 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.progbar_blockchain_sync.setValue(int(percentage))
         msg = 'Synced {} blocks of {}'.format(data.get('blocks'), data.get('headers'))
         self.statusbar.showMessage(msg, 10000)
-
-
-def main():
-
-    app = QtWidgets.QApplication(sys.argv)
-
-    locale.setlocale(locale.LC_ALL, '')
-
-    # Set Gui Fonts
-    font_db = QtGui.QFontDatabase()
-    font_db.addApplicationFont(':/fonts/Roboto-Regular.ttf')
-    app_font = QtGui.QFont("Roboto Regular")
-    app_font.setStyleStrategy(QtGui.QFont.PreferAntialias | QtGui.QFont.PreferQuality)
-    app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)
-    app.setFont(app_font)
-
-    window = MainWindow()
-    # app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
-    window.show()
-    sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-    sys.excepthook = traceback.print_exception
-    main()

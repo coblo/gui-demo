@@ -5,3 +5,5 @@ QDarkStyle==2.3.1
 requests==2.18.4
 bitcoin==1.1.42
 peewee==2.10.2
+appdirs==1.4.3
+timeago==1.0.7

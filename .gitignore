@@ -99,6 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Project Specific
 /config.py
 /runchain.bat
 /.idea
+.vagrant/

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Input Validation Classes"""
+import re
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QValidator
 from app.tools.address import address_valid
@@ -8,7 +9,7 @@ from app.tools.address import address_valid
 class AddressValidator(QValidator):
 
     min_length = 26
-    max_length = 45
+    max_length = 55
     symbols = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
     internal_send = pyqtSignal()
@@ -28,3 +29,21 @@ class AddressValidator(QValidator):
             return QValidator.Acceptable, input_str, position
 
         return QValidator.Intermediate, input_str, position
+
+
+username_regex = re.compile(r"""
+    ^                  # beginning of string
+    (?!_$)             # no only _
+    (?![-.])           # no - or . at the beginning
+    (?!.*[_.-]{2})     # no __ or _. or ._ or .. or -- inside
+    [a-z0-9_.-]{3,30}  # allowed characters (between 3 and 30)
+    (?<![.-])          # no - or . at the end
+    $                  # end of string
+    """, re.X)
+
+
+def is_valid_username(username):
+    if not re.match(username_regex, username):
+        return False
+    else:
+        return True

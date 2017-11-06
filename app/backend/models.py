@@ -1,16 +1,45 @@
+import logging
 import peewee as p
-
 from datetime import datetime
+from app import PROFILE_DB, DATA_DB
 
-from app.backend.rpc import client
-from config import db_path
 
-database = p.SqliteDatabase(db_path)
+log = logging.getLogger(__name__)
+
+
+class Profile(p.Model):
+    """Application profile to mangage different Nodes/Accounts"""
+
+    name = p.CharField(primary_key=True)
+    chain = p.CharField(default='')
+    host = p.CharField(default='')
+    port = p.CharField(default='')
+    username = p.CharField(default='')
+    password = p.CharField(default='')
+    use_ssl = p.BooleanField(default=False)
+    manage_node = p.BooleanField(default=False)
+    active = p.BooleanField(default=False)
+
+    class Meta:
+        database = PROFILE_DB
+
+    def save(self, *args, **kwargs):
+        """There can only be one active profile"""
+        with PROFILE_DB.atomic():
+            if self.active:
+                Profile.update(active=False).execute()
+            super().save(*args, **kwargs)
+
+    @staticmethod
+    def get_active():
+        """Return currently active Pofile"""
+        return Profile.select().where(Profile.active).first()
 
 
 class BaseModel(p.Model):
+
     class Meta:
-        database = database
+        database = DATA_DB
 
 
 class Address(BaseModel):
@@ -29,8 +58,9 @@ class Address(BaseModel):
 
     @classmethod
     def sync_aliases(cls):
+        from app.backend.rpc import client
         aliases = client.liststreamkeys('alias', verbose=True)['result']
-        with database.atomic():
+        with DATA_DB.atomic():
             for entry in aliases:
                 addr = entry['first']['publishers'][0]
                 alias = entry['key']
@@ -38,7 +68,7 @@ class Address(BaseModel):
                 if not created:
                     addr_obj.alias = alias
                     addr_obj.save()
-        print('Synced {} aliases'.format(len(aliases)))
+        log.debug('Synced {} aliases'.format(len(aliases)))
 
 
 class Block(BaseModel):
@@ -52,6 +82,7 @@ class Block(BaseModel):
     @staticmethod
     def sync():
         """Synch block data from node"""
+        from app.backend.rpc import client
         node_height = client.getblockcount()['result']
         latest_block = Block.select().order_by(Block.height.desc()).first()
         latest_block = 1 if latest_block is None else latest_block.height
@@ -60,7 +91,7 @@ class Block(BaseModel):
         else:
             new_blocks = client.listblocks("{}-{}".format(latest_block, node_height))
             synched = 0
-            with database.atomic():
+            with DATA_DB.atomic():
                 for block in new_blocks['result']:
                     addr_obj, adr_created = Address.get_or_create(address=block['miner'])
 
@@ -76,40 +107,43 @@ class Block(BaseModel):
                     )
                     if blk_created:
                         synched += 1
-                    print('Synced block {}'.format(block_obj.height))
+                    log.debug('Synced block {}'.format(block_obj.height))
 
-            print('Synced {} blocks total.'.format(synched))
+            log.debug('Synced {} blocks total.'.format(synched))
 
 
-class Vote(BaseModel):
+class VotingRound(BaseModel):
+
+    GRANT, REVOKE, SCOPED_GRANT = 0, 1, 2
+    VOTE_TYPES = (
+        (GRANT, 'Grant'),
+        (REVOKE, 'Revoke'),
+        (SCOPED_GRANT, 'Scoped Grant'),
+    )
+
     address = p.ForeignKeyField(Address)
-    perm_type = p.CharField()
-    votes = p.IntegerField()
-    required = p.IntegerField()
+    perm_type = p.CharField(choices=Address.PERMS)
     start_block = p.IntegerField()
     end_block = p.IntegerField()
+
+    vote_type = p.SmallIntegerField(choices=VOTE_TYPES, null=True)
+    votes = p.IntegerField(null=True)
+    required = p.IntegerField(null=True)
 
     class Meta:
         primary_key = p.CompositeKey('address', 'perm_type', 'start_block', 'end_block')
 
-    @classmethod
-    def grant_type(cls):
-        if cls.start_block == cls.end_block == 0:
-            return 'revoke'
-        if cls.start_block == 0  and cls.end_block == 4294967295:
-            return 'grant'
+    def set_vote_type(self):
+        if self.start_block == self.end_block == 0:
+            self.vote_type = self.REVOKE
+        if self.end_block == 0 and self.end_block == 4294967295:
+            self.vote_type = self.GRANT
         else:
-            return 'restricted_grant'
-
-
-database.connect()
-try:
-    database.create_tables([Address, Block, Vote])
-except p.OperationalError as e:
-    pass
+            self.vote_type = self.SCOPED_GRANT
 
 
 def sync_permissions():
+    from app.backend.rpc import client
     node_height = client.getblockcount()['result']
     permissions = client.listpermissions(','.join(Address.PERMS), verbose=True)['result']
 
@@ -124,10 +158,10 @@ def sync_permissions():
             old_permissions[address.address] = address_permissions
 
     # Delete old votes
-    Vote.delete()
+    VotingRound.delete()
 
     # Import new permissions
-    with database.atomic():
+    with DATA_DB.atomic():
         for perm in permissions:
             addr_obj, created = Address.get_or_create(address=perm['address'])
             address = perm['address']
@@ -138,11 +172,16 @@ def sync_permissions():
             setattr(addr_obj, 'can_' + perm_type, grant)
             addr_obj.save()
 
-            for vote in perm['pending']:
-                start_block = vote['startblock']
-                end_block = vote['endblock']
-                vote_obj, created = Vote.get_or_create(address=address, perm_type=perm_type, start_block=start_block,
-                                              end_block=end_block, votes=len(vote['admins']), required=vote['required'])
+            for vote_round in perm['pending']:
+                vote_obj, created = VotingRound.get_or_create(
+                    address=address,
+                    perm_type=perm_type,
+                    start_block=vote_round['startblock'],
+                    end_block=vote_round['endblock'],
+                )
+                vote_obj.set_vote_type()
+                vote_obj.votes = len(vote_round['admins'])
+                vote_obj.required = vote_round['required']
                 vote_obj.save()
 
         # Clear all old permissions, that don't exist anymore
@@ -151,14 +190,13 @@ def sync_permissions():
                 setattr(addr_obj, 'can_' + perm_type, False)
                 addr_obj.save()
 
-    print('Synced {} permissions'.format(len(permissions)))
+    log.debug('Synced {} permissions'.format(len(permissions)))
 
+
+PROFILE_DB.create_tables([Profile], True)
+DATA_DB.create_tables([Address, Block, VotingRound], True)
 
 if __name__ == '__main__':
     Block.sync()
-    addr_obj = Address.select().first()
-    print(addr_obj.blocks_mined())
-    blk_obj = Block.select().first()
-    print(blk_obj.time)
-    sync_permissions()
     Address.sync_aliases()
+    sync_permissions()

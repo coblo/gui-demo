@@ -1,8 +1,8 @@
 from PyQt5 import QtWidgets
 
-from app import settings
-from app.backend.updater import Updater
+from app.models import Profile
 from app.ui.wallet_header import Ui_widget_wallet_header
+from app.updater import Updater
 
 
 class WalletHeader(QtWidgets.QWidget, Ui_widget_wallet_header):
@@ -11,13 +11,12 @@ class WalletHeader(QtWidgets.QWidget, Ui_widget_wallet_header):
         super().__init__(parent)
         self.setupUi(self)
 
+        self.pofile = parent.profile
+        assert isinstance(self.profile, Profile)
+
         # Recover stored settings
-        balance = settings.value('balance')
-        if balance:
-            self.label_wallet_balance.setText(self.format_balance(balance))
-        address = settings.value('address')
-        if address:
-            self.label_wallet_address.setText(address)
+        self.label_wallet_balance.setText(self.format_balance(self.profile.balance))
+        self.label_wallet_address.setText(self.profile.address)
 
         # Listen to balance/address updates
         self.updater = parent.updater
@@ -30,11 +29,9 @@ class WalletHeader(QtWidgets.QWidget, Ui_widget_wallet_header):
 
     def on_balance_changed(self, balance):
         self.label_wallet_balance.setText(self.format_balance(balance))
-        settings.setValue('balance', balance)
 
     def on_address_changed(self, address):
         self.label_wallet_address.setText(address)
-        settings.setValue('address', address)
 
 
 if __name__ == '__main__':

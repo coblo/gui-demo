@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 import decimal
 import json
-from decimal import Decimal
 import logging
 import requests
-from config import rpcuser, rpcpassword, host, port
+from decimal import Decimal
 from typing import Optional
-
-# Disable SSL warning with self signed certificates
-requests.packages.urllib3.disable_warnings()
+# Don´t remove this import. Its a hack for cx freezing
+from multiprocessing import Queue
 
 
 log = logging.getLogger(__name__)
+
+
+def get_active_rpc_client(override=None):
+    from app.models import Profile
+    profile = override or Profile.get_active()
+    assert isinstance(profile, Profile)
+    return RpcClient(
+        profile.rpc_host, profile.rpc_port, profile.rpc_user, profile.rpc_password, profile.rpc_use_ssl
+    )
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -21,9 +28,10 @@ class DecimalEncoder(json.JSONEncoder):
             return float(o)
         return super(DecimalEncoder, self).default(o)
 
+
 class RpcClient:
 
-    def __init__(self, host, port, user, pwd, use_ssl=False):
+    def __init__(self, host=None, port=None, user=None, pwd=None, use_ssl=False):
         self.host = host
         self.port = port
         self.user = user
@@ -34,7 +42,19 @@ class RpcClient:
     # RPC API methods #
     ###################
 
-    def getaddresses(self, verbose=False):
+    def appendrawchange(self, tx_hex, address, native_fee=0.0001):
+        return self._call('appendrawchange', tx_hex, address, native_fee)
+
+    def createrawtransaction(self, inputs, payment, data=(), action=''):
+        return self._call('createrawtransaction', inputs, payment, data, action)
+
+    def createrawsendfrom(self, from_addr, to, data=tuple(), action=""):
+        return self._call('createrawsendfrom', from_addr, to, data, action)
+
+    def decoderawtransaction(self, tx_hex):
+        return self._call('decoderawtransaction', tx_hex)
+
+    def getaddresses(self, verbose=True):
         return self._call('getaddresses', verbose)
 
     def getaddressbalances(self, address, minconf=1, includelocked=False):
@@ -59,7 +79,7 @@ class RpcClient:
         return self._call('getinfo')
 
     def getmultibalances(self, addresses='*', assets='*', minconf=0, includeWatchOnly=False, includeLocked=False):
-        return self._call('getmultibalances', addresses, assets, minconf, includeWatchOnly, includeLocked )
+        return self._call('getmultibalances', addresses, assets, minconf, includeWatchOnly, includeLocked)
 
     def getnewaddress(self):
         return self._call('getnewaddress')
@@ -67,14 +87,23 @@ class RpcClient:
     def getruntimeparams(self):
         return self._call('getruntimeparams')
 
-    def listaddresses(self, addresses='*', verbose=False, count=100, start=0):
+    def grant(self, addresses, permissions, native_amount=0, start_block=0, end_block=0, comment=None, comment_to=None):
+        return self._call('grant', addresses, permissions, native_amount, start_block, end_block, comment, comment_to)
+
+    def grantwithdata(self, addresses, permissions, data_hex, native_amount=0, start_block=0, end_block=4294967295):
+        return self._call('grantwithdata', addresses, permissions, data_hex, native_amount, start_block, end_block)
+
+    def listaddresses(self, addresses='*', verbose=True, count=100, start=0):
         return self._call('listaddresses', addresses, verbose, count, start)
 
-    def listblocks(self, blocks='-4294967295', verbose=False):
+    def listblocks(self, blocks='-3', verbose=True):
         return self._call('listblocks', blocks, verbose)
 
-    def listpermissions(self, permissions='*', addresses='*', verbose=False):
+    def listpermissions(self, permissions='*', addresses='*', verbose=True):
         return self._call('listpermissions', permissions, addresses, verbose)
+
+    def liststreamitems(self, stream, verbose=False, count=10000000, start=0, local_ordering=False):
+        return self._call('liststreamitems', stream, verbose, count, start, local_ordering)
 
     def liststreamkeys(self, stream, keys='*', verbose=False, count=10000000, start=0, local_ordering=False):
         return self._call('liststreamkeys', stream, keys, verbose, count, start, local_ordering)
@@ -85,6 +114,9 @@ class RpcClient:
     def publish(self, stream, key, data):
         return self._call('publish', stream, key, data)
 
+    def revoke(self, addresses, permissions, native_amount=0, comment=None, comment_to=None):
+        return self._call('revoke', addresses, permissions, native_amount, comment, comment_to)
+
     def send(self, address, amount, comment=None, comment_to=None):
         """
         Note: 'comment' fields are local to the node and not
@@ -92,8 +124,14 @@ class RpcClient:
         """
         return self._call('send', address, amount, comment, comment_to)
 
+    def signrawtransaction(self, tx_hex):
+        return self._call('signrawtransaction', tx_hex)
+
+    def sendrawtransaction(self, tx_hex):
+        return self._call('sendrawtransaction', tx_hex)
+
     def stop(self) -> Optional[str]:
-        result = self._call('stop')['result']
+        return self._call('stop')['result']
 
     def validateaddress(self, address):
         return self._call('validateaddress', address)
@@ -115,18 +153,25 @@ class RpcClient:
         return response.json(parse_float=Decimal)
 
 
-client = RpcClient(host, port, rpcuser, rpcpassword, use_ssl=False)
-
-
 if __name__ == '__main__':
     from pprint import pprint
+    from app import helpers
+    from app import models
+    helpers.init_logging()
+    helpers.init_data_dir()
+    models.init_profile_db()
+    helpers.init_node_data_dir()
+    models.init_data_db()
+    print(models.Profile.get_active())
+    client = get_active_rpc_client(models.Profile.get(name='default'))
+
     # pprint(client.getaddresses(verbose=True))
     # pprint(client.getbalance())
     # pprint(client.getblockchaininfo())
     # pprint(client.getblockchainparams())
     # pprint(client.getinfo())
     # pprint(client.getmultibalances())
-    # pprint(client.listwallettransactions(1, verbose=False))
+    # pprint(client.listwallettransactions(10000, verbose=False))
     # pprint(client.getnewaddress())
     # pprint(client.getruntimeparams())
     # pprint(client.listaddresses(verbose=True))
@@ -135,4 +180,5 @@ if __name__ == '__main__':
     # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
     # pprint(client.getmultibalances())
     # pprint(client.getblockcount())
-    pprint(client.liststreamkeys('alias', verbose=True))
+    # pprint(client.liststreamkeys('alias'))
+    # pprint(client.liststreamitems('alias', start=1, count=3))

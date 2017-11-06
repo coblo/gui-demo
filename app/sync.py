@@ -311,12 +311,6 @@ def listblocks() -> int:
 
 
 if __name__ == '__main__':
-    init_logging()
-    init_data_dir()
-    init_profile_db()
-    init_data_db()
-    getinfo()
-    # listwallettransactions()
-    # listpermissions()
-    # liststreamitems_alias()
-    #print(listblocks())
+    import app
+    app.init()
+    print(listblocks())

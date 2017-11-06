@@ -71,7 +71,7 @@ class PermissionModel(QAbstractTableModel):
             return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
-                return "{} of {}".format(perm_obj.address.num_validator_revokes(), math.ceil(Permission.num_guardians() * 0.51))
+                return "{} of {}".format(perm_obj.address.num_validator_revokes(), math.ceil(Permission.num_guardians() * 0.17))
             else:
                 return "{} of {}".format(perm_obj.address.num_guardian_revokes(), math.ceil(Permission.num_guardians() * 0.51))
 

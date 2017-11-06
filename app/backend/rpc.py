@@ -155,30 +155,10 @@ class RpcClient:
 
 if __name__ == '__main__':
     from pprint import pprint
-    from app import helpers
-    from app import models
-    helpers.init_logging()
-    helpers.init_data_dir()
-    models.init_profile_db()
-    helpers.init_node_data_dir()
-    models.init_data_db()
-    print(models.Profile.get_active())
-    client = get_active_rpc_client(models.Profile.get(name='default'))
-
-    # pprint(client.getaddresses(verbose=True))
-    # pprint(client.getbalance())
-    # pprint(client.getblockchaininfo())
-    # pprint(client.getblockchainparams())
-    # pprint(client.getinfo())
-    # pprint(client.getmultibalances())
-    # pprint(client.listwallettransactions(10000, verbose=False))
-    # pprint(client.getnewaddress())
-    # pprint(client.getruntimeparams())
-    # pprint(client.listaddresses(verbose=True))
-    # pprint(client.validateaddress('1X8meKHXVUpsvgim3q7BJ24Xz7ymSDJnriqt7B'))
-    # pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))
-    # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
-    # pprint(client.getmultibalances())
-    # pprint(client.getblockcount())
-    # pprint(client.liststreamkeys('alias'))
-    # pprint(client.liststreamitems('alias', start=1, count=3))
+    import app
+    from app.models import Profile
+    app.init()
+    print(Profile.get_active())
+    client = get_active_rpc_client()
+    pprint(client.getmultibalances('*', '*', 1, False, False))
+    pprint(client.getmultibalances('*', '*', 0, False, True))

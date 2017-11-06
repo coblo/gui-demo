@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import logging
+import math
 import timeago
 from datetime import datetime
 from PyQt5 import QtWidgets, QtGui
@@ -70,9 +71,9 @@ class PermissionModel(QAbstractTableModel):
             return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
-                return "{} of {}".format(perm_obj.address.num_validator_revokes(), Permission.num_guardians())
+                return "{} of {}".format(perm_obj.address.num_validator_revokes(), math.ceil(Permission.num_guardians() * 0.51))
             else:
-                return "{} of {}".format(perm_obj.address.num_guardian_revokes(), Permission.num_guardians())
+                return "{} of {}".format(perm_obj.address.num_guardian_revokes(), math.ceil(Permission.num_guardians() * 0.51))
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:

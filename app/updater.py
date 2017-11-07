@@ -37,6 +37,7 @@ class Updater(QtCore.QThread):
                 sync.listwallettransactions,
                 sync.listpermissions,
                 sync.liststreamitems_alias,
+                sync.getblock,
             )
 
             for sync_func in sync_funcs:

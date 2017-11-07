@@ -26,8 +26,10 @@ class Address(peewee.Model):
     @classmethod
     def verbose(cls):
         """Return annotated queryset"""
-        from app.models import Block
-        return cls.select().annotate(Block, fn.MAX(Block.time).alias('last_mined'))
+        from app.models import Block, Vote
+        return cls.select()\
+            .annotate(Block, fn.MAX(Block.time).alias('last_mined'))\
+            .annotate(Vote, fn.MAX(Vote.time).alias('last_voted'))
 
     def last_mined(self):
         from app.models import Block
@@ -36,7 +38,10 @@ class Address(peewee.Model):
             return latest_block.time
 
     def last_voted(self):
-        return 'TODO find out :)'
+        from app.models import Vote
+        latest_vote = self.votes_given.order_by(Vote.time.desc()).first()
+        if latest_vote:
+            return latest_vote.time
 
     def num_validator_revokes(self):
         from app.models import VotingRound, Permission

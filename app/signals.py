@@ -25,6 +25,8 @@ class Signals(QObject):
     liststreamitems_alias = pyqtSignal()
     listblocks = pyqtSignal()
 
+    votes_changed = pyqtSignal()
+
     # custom signals
 
     #: profile changed

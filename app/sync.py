@@ -3,6 +3,8 @@
 import logging
 from binascii import unhexlify
 from datetime import datetime
+
+from app.models.vote import Vote
 from app.tools.address import public_key_to_address
 from app.responses import Getblockchaininfo
 from app.signals import signals
@@ -273,6 +275,8 @@ getblock_proccessed_height = 1
 def getblock():
     """Process detailed data from individual blocks to find last votes from guardians"""
 
+    # TODO cleanup this deeply nested mess :)
+
     client = get_active_rpc_client()
     global getblock_proccessed_height
     blockchain_params = client.getblockchainparams()['result']
@@ -281,33 +285,54 @@ def getblock():
 
     block_objs = Block.multi_tx_blocks().where(Block.height > getblock_proccessed_height)
 
-    for block_obj in block_objs:
-        height = block_obj.height
-        block_info = client.getblock("{}".format(height))['result']
-        for txid in block_info['tx']:
-            transaction = client.getrawtransaction(txid, 4)
-            if transaction['error'] is None:
-                if 'vout' in transaction['result']:
-                    vout = transaction['result']['vout']
-                    permissions = []
-                    start_block = None
-                    end_block = None
-                    for vout_key, entry in enumerate(vout):
-                        if len(entry['permissions']) > 0:
-                            for key, perm in entry['permissions'][0].items():
-                                if perm and key in permission_candidates:
-                                    permissions.append(key)
-                                if key == 'startblock':
-                                    start_block = perm
-                                if key == 'endblock':
-                                    end_block = perm
-                            in_entry = transaction['result']['vin'][vout_key]
-                            public_key = in_entry['scriptSig']['asm'].split(' ')[1]
-                            from_pubkey = public_key_to_address(public_key, pubkeyhash_version, checksum_value)
-                            given_to = entry['scriptPubKey']['addresses']
-                            print('Grant or Revoke ', permissions, 'given by ', from_pubkey, 'to ', given_to, 'at time', block_obj.time)
+    votes_changed = False
 
-        getblock_proccessed_height = height
+    with data_db.atomic():
+        for block_obj in block_objs:
+            height = block_obj.height
+            block_info = client.getblock("{}".format(height))['result']
+            for txid in block_info['tx']:
+                transaction = client.getrawtransaction(txid, 4)
+                if transaction['error'] is None:
+                    if 'vout' in transaction['result']:
+                        vout = transaction['result']['vout']
+                        permissions = []
+                        start_block = None
+                        end_block = None
+                        for vout_key, entry in enumerate(vout):
+                            if len(entry['permissions']) > 0:
+                                for key, perm in entry['permissions'][0].items():
+                                    if perm and key in permission_candidates:
+                                        permissions.append(key)
+                                    if key == 'startblock':
+                                        start_block = perm
+                                    if key == 'endblock':
+                                        end_block = perm
+                                in_entry = transaction['result']['vin'][vout_key]
+                                public_key = in_entry['scriptSig']['asm'].split(' ')[1]
+                                from_pubkey = public_key_to_address(public_key, pubkeyhash_version, checksum_value)
+                                given_to = entry['scriptPubKey']['addresses']
+                                for addr in given_to:
+                                    log.debug(
+                                        'Grant or Revoke {} given by {} to {} at time {}'.format(
+                                            permissions, from_pubkey, addr, block_obj.time)
+                                    )
+                                    addr_from_obj, _ = Address.get_or_create(address=from_pubkey)
+                                    addr_to_obj, _ = Address.get_or_create(address=addr)
+                                    vote_obj, created = Vote.get_or_create(
+                                        txid=txid, defaults=dict(
+                                            from_address=addr_from_obj,
+                                            to_address_id=addr_to_obj,
+                                            time=block_obj.time
+                                        )
+                                    )
+                                    if created:
+                                        votes_changed = True
+
+            getblock_proccessed_height = height
+
+    if votes_changed:
+        signals.votes_changed.emit()
 
 
 def listblocks() -> int:

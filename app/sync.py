@@ -3,24 +3,20 @@
 import logging
 from binascii import unhexlify
 from datetime import datetime
-from hashlib import sha256, new
-
-import base58
-
-from app.tools.address import sha256d, xor_bytes
-
-permission_candidates = ['admin', 'mine', 'issue', 'create']
-
+from app.tools.address import public_key_to_address
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
 from app.enums import Stream
-from app.helpers import init_logging, init_data_dir, batchwise
-from app.models import Address, Permission, Transaction, VotingRound, init_profile_db, init_data_db, data_db, Block, \
-    Profile
+from app.helpers import batchwise
+from app.models import Address, Permission, Transaction, VotingRound, data_db, Block, Profile
 from app.tools.validators import is_valid_username
 
+
 log = logging.getLogger(__name__)
+
+
+permission_candidates = ['admin', 'mine', 'issue', 'create']
 
 
 def getinfo():
@@ -271,35 +267,6 @@ def liststreamitems_alias():
     return len(changed_addrs)
 
 
-def otherToAddr(pubkey, pubkeyhash_version, checksum_value):
-    # Work with raw bytes
-    pubkey_raw = unhexlify(pubkey)
-    pkhv_raw = unhexlify(pubkeyhash_version)
-    cv_raw = unhexlify(checksum_value)
-
-    # Hash public key
-    ripemd160 = new('ripemd160')
-    ripemd160.update(sha256(pubkey_raw).digest())
-    pubkey_raw_hashed = ripemd160.digest()
-
-    # Extend
-    steps = 20 // len(pkhv_raw)
-    chunks = [pubkey_raw_hashed[i:i + steps] for i in range(0, len(pubkey_raw_hashed), steps)]
-    pubkey_raw_extended = b''
-    for idx, b in enumerate(unhexlify(pubkeyhash_version), start=0):
-        pubkey_raw_extended += b.to_bytes(1, 'big') + chunks[idx]
-
-    # Double SHA256
-    pubkey_raw_sha256d = sha256d(pubkey_raw_extended)
-
-    # XOR first 4 bytes with address-checksum-value for postfix
-    postfix = xor_bytes(pubkey_raw_sha256d[:4], cv_raw)
-
-    # Compose final address
-    address_bin = pubkey_raw_extended + postfix
-    return base58.b58encode(address_bin)
-
-
 def processTransaction(client, txid, pubkeyhash_version, checksum_value):
     transaction = client.getrawtransaction(txid, 4)
     if transaction['error'] is None:
@@ -319,7 +286,7 @@ def processTransaction(client, txid, pubkeyhash_version, checksum_value):
                             end_block = perm
                     in_entry = transaction['result']['vin'][vout_key]
                     public_key = in_entry['scriptSig']['asm'].split(' ')[1]
-                    from_pubkey = otherToAddr(public_key, pubkeyhash_version, checksum_value)
+                    from_pubkey = public_key_to_address(public_key, pubkeyhash_version, checksum_value)
                     given_to = entry['scriptPubKey']['addresses']
                     print(permissions, given_to, from_pubkey)
 

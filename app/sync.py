@@ -6,6 +6,9 @@ from datetime import datetime
 from hashlib import sha256, new
 
 import base58
+
+from app.tools.address import sha256d, xor_bytes
+
 permission_candidates = ['admin', 'mine', 'issue', 'create']
 
 from app.responses import Getblockchaininfo
@@ -268,17 +271,6 @@ def liststreamitems_alias():
     return len(changed_addrs)
 
 
-def sha256d(data):
-    return sha256(sha256(data).digest()).digest()
-
-
-def xor_bytes(a, b):
-    result = bytearray()
-    for b1, b2 in zip(a, b):
-        result.append(b1 ^ b2)
-    return bytes(result)
-
-
 def otherToAddr(pubkey, pubkeyhash_version, checksum_value):
     # Work with raw bytes
     pubkey_raw = unhexlify(pubkey)
@@ -306,6 +298,7 @@ def otherToAddr(pubkey, pubkeyhash_version, checksum_value):
     # Compose final address
     address_bin = pubkey_raw_extended + postfix
     return base58.b58encode(address_bin)
+
 
 def processTransaction(client, txid, pubkeyhash_version, checksum_value):
     transaction = client.getrawtransaction(txid, 4)

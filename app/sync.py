@@ -267,28 +267,47 @@ def liststreamitems_alias():
     return len(changed_addrs)
 
 
-def processTransaction(client, txid, pubkeyhash_version, checksum_value):
-    transaction = client.getrawtransaction(txid, 4)
-    if transaction['error'] is None:
-        if 'vout' in transaction['result']:
-            vout = transaction['result']['vout']
-            permissions = []
-            start_block = None
-            end_block = None
-            for vout_key, entry in enumerate(vout):
-                if len(entry['permissions']) > 0:
-                    for key, perm in entry['permissions'][0].items():
-                        if perm and key in permission_candidates:
-                            permissions.append(key)
-                        if key == 'startblock':
-                            start_block = perm
-                        if key == 'endblock':
-                            end_block = perm
-                    in_entry = transaction['result']['vin'][vout_key]
-                    public_key = in_entry['scriptSig']['asm'].split(' ')[1]
-                    from_pubkey = public_key_to_address(public_key, pubkeyhash_version, checksum_value)
-                    given_to = entry['scriptPubKey']['addresses']
-                    print(permissions, given_to, from_pubkey)
+getblock_proccessed_height = 1
+
+
+def getblock():
+    """Process detailed data from individual blocks to find last votes from guardians"""
+
+    client = get_active_rpc_client()
+    global getblock_proccessed_height
+    blockchain_params = client.getblockchainparams()['result']
+    pubkeyhash_version = blockchain_params['address-pubkeyhash-version']
+    checksum_value = blockchain_params['address-checksum-value']
+
+    block_objs = Block.multi_tx_blocks().where(Block.height > getblock_proccessed_height)
+
+    for block_obj in block_objs:
+        height = block_obj.height
+        block_info = client.getblock("{}".format(height))['result']
+        for txid in block_info['tx']:
+            transaction = client.getrawtransaction(txid, 4)
+            if transaction['error'] is None:
+                if 'vout' in transaction['result']:
+                    vout = transaction['result']['vout']
+                    permissions = []
+                    start_block = None
+                    end_block = None
+                    for vout_key, entry in enumerate(vout):
+                        if len(entry['permissions']) > 0:
+                            for key, perm in entry['permissions'][0].items():
+                                if perm and key in permission_candidates:
+                                    permissions.append(key)
+                                if key == 'startblock':
+                                    start_block = perm
+                                if key == 'endblock':
+                                    end_block = perm
+                            in_entry = transaction['result']['vin'][vout_key]
+                            public_key = in_entry['scriptSig']['asm'].split(' ')[1]
+                            from_pubkey = public_key_to_address(public_key, pubkeyhash_version, checksum_value)
+                            given_to = entry['scriptPubKey']['addresses']
+                            print('Grant or Revoke ', permissions, 'given by ', from_pubkey, 'to ', given_to, 'at time', block_obj.time)
+
+        getblock_proccessed_height = height
 
 
 def listblocks() -> int:
@@ -313,21 +332,12 @@ def listblocks() -> int:
 
     synced = 0
 
-    blockchain_params = client.getblockchainparams()['result']
-    pubkeyhash_version = blockchain_params['address-pubkeyhash-version']
-    checksum_value = blockchain_params['address-checksum-value']
-
     for batch in batchwise(range(height_db, height_node), 100):
 
         new_blocks = client.listblocks(batch)
 
         with data_db.atomic():
             for block in new_blocks['result']:
-                if block['txcount'] > 1:
-                    height = block['height']
-                    block_info = client.getblock("{}".format(height))['result']
-                    for txid in block_info['tx']:
-                        processTransaction(client, txid, pubkeyhash_version, checksum_value)
 
                 addr_obj, adr_created = Address.get_or_create(address=block['miner'])
                 block_obj, blk_created = Block.get_or_create(
@@ -350,4 +360,4 @@ def listblocks() -> int:
 if __name__ == '__main__':
     import app
     app.init()
-    print(listblocks())
+    print(getblock())

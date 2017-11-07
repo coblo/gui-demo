@@ -63,6 +63,9 @@ class RpcClient:
     def getbalance(self):
         return self._call('getbalance')
 
+    def getbestblockhash(self):
+        return self._call('getbestblockhash')
+
     def getblock(self, hash_or_height, verbose=1):
         """
         :param str|int hash_or_height: block hash or height on current active chain
@@ -170,5 +173,7 @@ if __name__ == '__main__':
     app.init()
     print(Profile.get_active())
     client = get_active_rpc_client()
-    pprint(client.getmultibalances('*', '*', 1, False, False))
-    pprint(client.getmultibalances('*', '*', 0, False, True))
+    # pprint(client.getmultibalances('*', '*', 1, False, False))
+    # pprint(client.getmultibalances('*', '*', 0, False, True))
+    print(client.getbestblockhash())
+    pprint(client.listwallettransactions(1))

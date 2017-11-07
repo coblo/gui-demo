@@ -49,7 +49,7 @@ def public_key_to_address(public_key: str, pkhv, cv):
     steps = 20 // len(pkhv_raw)
     chunks = [pubkey_raw_hashed[i:i+steps] for i in range(0, len(pubkey_raw_hashed), steps)]
     pubkey_raw_extended = b''
-    for idx, b in enumerate(unhexlify(ADDRESS_PUBKEYHASH_VERSION), start=0):
+    for idx, b in enumerate(unhexlify(pkhv), start=0):
         pubkey_raw_extended += b.to_bytes(1, 'big') + chunks[idx]
 
     # Double SHA256

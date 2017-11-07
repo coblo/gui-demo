@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 class Vote(peewee.Model):
 
-    txid = peewee.CharField()
+    txid = peewee.CharField(primary_key=True)
     from_address = peewee.ForeignKeyField(Address, related_name='votes_given')
     to_address = peewee.ForeignKeyField(Address, related_name='votes_received')
     time = peewee.DateTimeField()

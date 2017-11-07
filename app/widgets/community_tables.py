@@ -67,6 +67,10 @@ class PermissionModel(QAbstractTableModel):
                 last_mined = perm_obj.address.get_last_mined()
                 if last_mined:
                     return timeago.format(last_mined, datetime.now())
+            if self._perm_type == Permission.ADMIN:
+                last_voted = perm_obj.address.get_last_voted()
+                if last_voted:
+                    return timeago.format(last_voted, datetime.now())
             return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:

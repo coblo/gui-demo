@@ -26,6 +26,10 @@ class PermissionModel(QAbstractTableModel):
 
         signals.listpermissions.connect(self.listpermissions)
 
+        if perm_type == Permission.ADMIN:
+            # Update guardians table if votes have changed
+            signals.votes_changed.connect(self.listpermissions)
+
     def load_data(self):
         if self._perm_type == Permission.MINE:
             return list(Permission.validators())

@@ -23,3 +23,7 @@ class Block(peewee.Model):
 
     def __repr__(self):
         return "Block(h=%s, t=%s, txs=%s)" % (self.height, self.time, self.txcount)
+
+    @classmethod
+    def multi_tx_blocks(cls):
+        return cls.select().where(cls.txcount > 1)

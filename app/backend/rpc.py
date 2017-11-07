@@ -63,6 +63,13 @@ class RpcClient:
     def getbalance(self):
         return self._call('getbalance')
 
+    def getblock(self, hash_or_height, verbose=1):
+        """
+        :param str|int hash_or_height: block hash or height on current active chain
+        :param verbose: Verbisity 1 - 4
+        """
+        return self._call('getblock', hash_or_height, verbose)
+
     def getblockchaininfo(self) -> Optional[dict]:
         return self._call('getblockchaininfo')
 
@@ -83,6 +90,9 @@ class RpcClient:
 
     def getnewaddress(self):
         return self._call('getnewaddress')
+
+    def getrawtransaction(self, txid, verbose=0):
+        return self._call('getrawtransaction', txid, verbose)
 
     def getruntimeparams(self):
         return self._call('getruntimeparams')

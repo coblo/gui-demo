@@ -21,9 +21,22 @@ def create_address(private_key, pkhv, cv, compressed=True):
     pubkey = privtopub(private_key)
     if compressed:
         pubkey = compress(pubkey)
+    return public_key_to_address(pubkey, pkhv, cv)
+
+
+def public_key_to_address(public_key: str, pkhv, cv):
+    """Create Address from a public key.
+
+    Implementation of http://bit.ly/2hH1UUY
+
+    :param str public_key: hex encoded ECDSA public key
+    :param str pkhv: address-pubkeyhash-version of chain
+    :param str cv: address-checksum-value of chain
+    :return str: address
+    """
 
     # Work with raw bytes
-    pubkey_raw = unhexlify(pubkey)
+    pubkey_raw = unhexlify(public_key)
     pkhv_raw = unhexlify(pkhv)
     cv_raw = unhexlify(cv)
 
@@ -36,7 +49,7 @@ def create_address(private_key, pkhv, cv, compressed=True):
     steps = 20 // len(pkhv_raw)
     chunks = [pubkey_raw_hashed[i:i+steps] for i in range(0, len(pubkey_raw_hashed), steps)]
     pubkey_raw_extended = b''
-    for idx, b in enumerate(unhexlify(ADDRESS_PUBKEYHASH_VERSION), start=0):
+    for idx, b in enumerate(unhexlify(pkhv), start=0):
         pubkey_raw_extended += b.to_bytes(1, 'big') + chunks[idx]
 
     # Double SHA256

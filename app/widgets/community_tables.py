@@ -27,6 +27,10 @@ class PermissionModel(QAbstractTableModel):
 
         signals.listpermissions.connect(self.listpermissions)
 
+        if perm_type == Permission.ADMIN:
+            # Update guardians table if votes have changed
+            signals.votes_changed.connect(self.listpermissions)
+
     def load_data(self):
         if self._perm_type == Permission.MINE:
             return list(Permission.validators())
@@ -65,9 +69,13 @@ class PermissionModel(QAbstractTableModel):
             return perm_obj.address_id
         if idx.column() == 2:
             if self._perm_type == Permission.MINE:
-                last_mined = perm_obj.address.last_mined()
+                last_mined = perm_obj.address.get_last_mined()
                 if last_mined:
                     return timeago.format(last_mined, datetime.now())
+            if self._perm_type == Permission.ADMIN:
+                last_voted = perm_obj.address.get_last_voted()
+                if last_voted:
+                    return timeago.format(last_voted, datetime.now())
             return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:

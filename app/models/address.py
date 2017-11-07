@@ -24,20 +24,24 @@ class Address(peewee.Model):
         return 'Address(%s, %s)' % (self.address, self.alias)
 
     @classmethod
-    def verbose(cls):
-        """Return annotated queryset"""
-        from app.models import Block, Vote
-        return cls.select()\
-            .annotate(Block, fn.MAX(Block.time).alias('last_mined'))\
-            .annotate(Vote, fn.MAX(Vote.time).alias('last_voted'))
+    def with_last_mined(cls):
+        """Queryset annotated with .last_mined"""
+        from app.models import Block
+        return cls.select().annotate(Block, fn.MAX(Block.time).alias('last_mined'))
 
-    def last_mined(self):
+    @classmethod
+    def with_last_voted(cls):
+        """Queryset annotated with .last_voted"""
+        from app.models import Vote
+        return cls.select().annotate(Vote, fn.MAX(Vote.time).alias('last_voted'))
+
+    def get_last_mined(self):
         from app.models import Block
         latest_block = self.mined_blocks.order_by(Block.time.desc()).first()
         if latest_block:
             return latest_block.time
 
-    def last_voted(self):
+    def get_last_voted(self):
         from app.models import Vote
         latest_vote = self.votes_given.order_by(Vote.time.desc()).first()
         if latest_vote:

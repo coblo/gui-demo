@@ -20,7 +20,7 @@ class Signals(QObject):
     getruntimeparams = pyqtSignal(object)
 
     # database rpc syncs
-    listwallettransactions = pyqtSignal()
+    listwallettransactions = pyqtSignal(list, list)
     listpermissions = pyqtSignal()
     liststreamitems_alias = pyqtSignal()
     listblocks = pyqtSignal()

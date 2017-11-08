@@ -2,6 +2,7 @@
 import logging
 
 from PyQt5.QtWidgets import QWidget, QMessageBox
+from PyQt5.QtCore import pyqtSlot
 
 from decimal import Decimal, ROUND_DOWN
 from app.ui.my_account import Ui_MyAccount
@@ -32,6 +33,7 @@ class MyAccount(QWidget, Ui_MyAccount):
         self.btn_wallet_alias_edit_save.clicked.connect(self.save_alias)
         self.lbl_wallet_address.setText(self.profile.address)
 
+    @pyqtSlot(Profile)
     def on_profile_changed(self, new_profile):
         self.profile = new_profile
         self.lbl_wallet_alias.setText(self.profile.alias)

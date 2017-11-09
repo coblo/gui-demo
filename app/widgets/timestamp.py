@@ -5,12 +5,13 @@ from datetime import datetime
 
 from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent
-from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView, QMessageBox
 
 from app.api import get_timestamps, put_timestamp
 from app.ui.timestamp import Ui_WidgetTimestamping
 from hashlib import sha256
 
+from exceptions import RpcResponseError
 
 log = logging.getLogger(__name__)
 
@@ -95,7 +96,12 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.progress_bar.setMaximum(0)
 
         # Check for existing timestamps:
-        timestamps = get_timestamps(self.current_fingerprint)
+        try:
+            timestamps = get_timestamps(self.current_fingerprint)
+        except RpcResponseError as e:
+            QMessageBox.warning(self, 'Error reading timestamp stream', str(e))
+            timestamps = None
+
         if timestamps:
             self.label_verification.setText('Found existing timestamps for document:')
             self.gbox_verification.setEnabled(True)

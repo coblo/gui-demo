@@ -8,7 +8,7 @@ import ubjson
 
 from app.backend.rpc import get_active_rpc_client
 from app.enums import Permission
-
+from exceptions import RpcResponseError
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +54,10 @@ def put_timestamp(hexhash: str, comment: str='', stream='timestamp') -> Optional
 def get_timestamps(hash_value: str, stream='timestamp') -> Optional[List]:
     client = get_active_rpc_client()
     response = client.liststreamkeyitems(stream, hash_value, verbose=True, count=1000, start=-1000)
+
+    if response['error'] is not None:
+        raise RpcResponseError(response['error']['message'])
+
     result = response['result']
     timestamps = []
     for entry in result:

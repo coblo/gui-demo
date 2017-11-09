@@ -35,7 +35,7 @@ def apply_for(perm: Permission, form: Form) -> Optional[TxId]:
 # timestamp api
 
 
-def put_timestamp(hexhash: str, comment: str='', stream='test') -> Optional[TxId]:
+def put_timestamp(hexhash: str, comment: str='', stream='timestamp') -> Optional[TxId]:
 
     client = get_active_rpc_client()
 
@@ -51,7 +51,7 @@ def put_timestamp(hexhash: str, comment: str='', stream='test') -> Optional[TxId
     return TxId(response['result'])
 
 
-def get_timestamps(hash_value: str, stream='test') -> Optional[List]:
+def get_timestamps(hash_value: str, stream='timestamp') -> Optional[List]:
     client = get_active_rpc_client()
     response = client.liststreamkeyitems(stream, hash_value, verbose=True, count=1000, start=-1000)
     result = response['result']

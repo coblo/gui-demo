@@ -130,10 +130,10 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
             self.label_register_comment.setText(
                 'Timestamp registered. Transaction ID is: %s' % txid
             )
-        except Exception:
+        except Exception as e:
             self.edit_comment.hide()
             self.label_register_comment.setText(
-                'Registration failed'
+                'Registration failed: %s' % e
             )
 
     @pyqtSlot()

@@ -41,12 +41,14 @@ def put_timestamp(hexhash: str, comment: str='', stream='timestamp') -> Optional
 
     if comment:
         data = dict(comment=comment)
-        data_hex = hexlify(ubjson.dumpb(data)).decode('utf8')
+        serialized = ubjson.dumpb(data)
+        data_hex = hexlify(serialized).decode('utf-8')
         response = client.publish(stream, hexhash, data_hex)
     else:
         response = client.publish(stream, hexhash)
 
-    # Todo raise custom RPC Error if response contains an error code/message
+    if response['error'] is not None:
+        raise RpcResponseError(response['error']['message'])
 
     return TxId(response['result'])
 
@@ -64,7 +66,7 @@ def get_timestamps(hash_value: str, stream='timestamp') -> Optional[List]:
         if entry['data']:
             if not isinstance(entry['data'], str):
                 log.warning('Stream item data is not a string: %s' % entry['data'])
-                # Todo investigate dict wit size, txid, vout in stream item data
+                # Todo investigate dict with size, txid, vout in stream item data
                 continue
             data = ubjson.loadb(unhexlify(entry['data']))
             comment = data.get('comment', '')

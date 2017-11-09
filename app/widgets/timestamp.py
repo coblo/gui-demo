@@ -72,7 +72,6 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.progress_bar.setValue(0)
         self.progress_bar.show()
         self.label_processing_status.setText('Calculating fingerprint ...')
-        # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
         self.hash_thread = Hasher(file_path)
         self.hash_thread.hashing_progress.connect(self.progress_bar.setValue)
         self.hash_thread.finished.connect(self.hash_thread_finished)
@@ -112,7 +111,6 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
             self.table_verification.hide()
             self.label_verification.setText('No previous timestamps found for this document.')
 
-        # self.gbox_processing_status.hide()
         self.progress_bar.hide()
         self.label_processing_status.setText('Fingerprint: %s' % self.current_fingerprint)
         self.gbox_timestamp.setEnabled(True)
@@ -169,12 +167,13 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
                 return self.reject_drag(event, 'Directories not supported. Try again!')
 
             event.accept()
-            # self.button_dropzone.setStyleSheet('background-color: green; color: white;')
+            self.button_dropzone.setStyleSheet(
+                'QPushButton:enabled {background-color: #0183ea; color: white;}'
+            )
             self.button_dropzone.setText('Just drop it :)')
 
     def on_drag_leave(self, obj: QObject, event: QDragLeaveEvent):
         self.button_dropzone.setText('Drop your file here or click to choose.')
-        # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
         self.button_dropzone.style().polish(self.button_dropzone)
 
     def on_drop(self, obj: QObject, event: QDropEvent):
@@ -183,7 +182,9 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
     def reject_drag(self, event, message):
         self.button_dropzone.setText(message)
-        # self.button_dropzone.setStyleSheet('background-color: red; color: white;')
+        self.button_dropzone.setStyleSheet(
+            'QPushButton:enabled {background-color: red; color: white;}'
+        )
         event.ignore()
 
     @pyqtSlot()
@@ -219,7 +220,6 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.edit_comment.setEnabled(True)
         self.button_reset.setEnabled(True)
         self.button_register.setEnabled(True)
-        # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
 
 
 if __name__ == '__main__':

@@ -31,6 +31,7 @@ class MyAccount(QWidget, Ui_MyAccount):
         self.btn_wallet_alias_edit_start.clicked.connect(self.start_edit_alias)
         self.btn_wallet_alias_edit_cancel.clicked.connect(self.stop_edit_alias)
         self.btn_wallet_alias_edit_save.clicked.connect(self.save_alias)
+        self.edit_alias.returnPressed.connect(self.save_alias)
         self.lbl_wallet_address.setText(self.profile.address)
 
     @pyqtSlot(Profile)

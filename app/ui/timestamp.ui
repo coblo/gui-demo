@@ -46,6 +46,12 @@
         <property name="acceptDrops">
          <bool>true</bool>
         </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton:enabled {
+	background-color: #0183ea;
+	color: white;
+}</string>
+        </property>
         <property name="text">
          <string>Drop your file here or click to choose.</string>
         </property>
@@ -144,9 +150,6 @@
         </property>
         <property name="alternatingRowColors">
          <bool>true</bool>
-        </property>
-        <property name="showGrid">
-         <bool>false</bool>
         </property>
         <attribute name="horizontalHeaderStretchLastSection">
          <bool>true</bool>

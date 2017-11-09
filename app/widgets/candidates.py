@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
+from functools import partial
+
 from PyQt5 import QtGui
 
 from PyQt5 import QtWidgets
 from collections import OrderedDict
 
-from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt
+from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView
 
 from app.signals import signals
@@ -24,7 +26,7 @@ class CandidateModel(QAbstractTableModel):
         self.update_data()
         self.headers = ('Alias', 'Address', 'Skill', 'Grants', 'Action')
 
-        signals.votes_changed.connect(self.update_data)
+        signals.votes_changed.connect(self.votes_changed)
 
     def update_data(self):
         client = get_active_rpc_client()
@@ -48,6 +50,11 @@ class CandidateModel(QAbstractTableModel):
         for key in deleted_keys:
             del self.db[key]
 
+    def flags(self, idx: QModelIndex):
+        if idx.column() == 1:
+            return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        return super().flags(idx)
+
     def headerData(self, col: int, orientation=Qt.Horizontal, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.headers[col]
@@ -62,9 +69,21 @@ class CandidateModel(QAbstractTableModel):
         if not idx.isValid():
             return None
 
+        if role == Qt.TextAlignmentRole and idx.column() in (3, 4):
+            return Qt.AlignCenter
+
+        if role == Qt.EditRole and idx.column() in (1, 4):
+            return self.db[list(self.db.keys())[idx.row()]][1]
+
         if role == Qt.DisplayRole:
             return self.db[list(self.db.keys())[idx.row()]][idx.column()]
 
+    @pyqtSlot()
+    def votes_changed(self):
+        self.beginResetModel()
+        self.update_data()
+        self.endResetModel()
+        self.parent().create_table_buttons()
 
 class ButtonDelegate(QtWidgets.QStyledItemDelegate):
 
@@ -74,16 +93,16 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
     def createEditor(self, parent, option, idx):
         btn = QtWidgets.QPushButton('Grant', parent)
         btn.setStyleSheet("QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
-        address = idx.data(Qt.EditRole)
-        btn.setObjectName(address)
-        btn.clicked.connect(self.on_grant_clicked)
+        db = self.parent().table_model.db
+        db_entry = db[list(db.keys())[idx.row()]]
+        btn.setObjectName(db_entry[1])
+        btn.clicked.connect(partial(self.on_grant_clicked, db_entry[2]))
         return btn
 
-    def on_grant_clicked(self):
+    def on_grant_clicked(self, skill):
         sender = self.sender()
         address = sender.objectName()
-        # skill = self.parent().skill todo: find skill
-        log.debug('TODO: grant %s for %s' % ('todo', address))
+        log.debug('TODO: grant %s for %s' % (skill, address))
         # client = get_active_rpc_client()
         # response = client.revoke(address, perm_type)
 

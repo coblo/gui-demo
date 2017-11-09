@@ -12,6 +12,7 @@ from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
+from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
@@ -64,6 +65,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_guardians.setParent(None)
         table_guardians = CommunityTableView(self, perm_type=Permission.ADMIN)
         self.tab_guardians.layout().insertWidget(0, table_guardians)
+
+        self.table_candidates.setParent(None)
+        table_candidates = CandidateTableView(self)
+        self.tab_candidates.layout().insertWidget(0, table_candidates)
 
         invite_dialog = InviteDialog(self)
         self.button_invite_canditate.clicked.connect(invite_dialog.exec)

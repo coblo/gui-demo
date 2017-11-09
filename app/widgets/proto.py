@@ -12,6 +12,7 @@ from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
+from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
@@ -25,14 +26,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.setupUi(self)
-
         # Basic initialization
         self.data_dir = helpers.init_data_dir()
         self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()
         self.data_db = models.init_data_db()
         self.profile = Profile.get_active()
+
+        # Setup Widgets
+        self.setupUi(self)
+
         self.on_profile_changed(self.profile)
         signals.profile_changed.connect(self.on_profile_changed)
 
@@ -63,6 +66,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         table_guardians = CommunityTableView(self, perm_type=Permission.ADMIN)
         self.tab_guardians.layout().insertWidget(0, table_guardians)
 
+        self.table_candidates.setParent(None)
+        table_candidates = CandidateTableView(self)
+        self.tab_candidates.layout().insertWidget(0, table_candidates)
+
         invite_dialog = InviteDialog(self)
         self.button_invite_canditate.clicked.connect(invite_dialog.exec)
 
@@ -91,7 +98,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.show()
         self.statusbar.showMessage(app.APP_DIR, 10000)
 
-    @pyqtSlot()
+    @pyqtSlot(Profile)
     def on_profile_changed(self, new_profile):
         """Read current active profile and set gui labels"""
         self.profile = new_profile

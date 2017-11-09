@@ -175,6 +175,7 @@ def listpermissions():
 
     # Todo: maybe only trigger table updates on actual change?
     signals.listpermissions.emit()  # triggers community tab updates
+    signals.votes_changed.emit()  # triggers community tab updates
     return {'new_perms': new_perms, 'new_votes': new_votes}
 
 

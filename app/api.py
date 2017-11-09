@@ -5,6 +5,7 @@ from binascii import hexlify, unhexlify
 from typing import Optional, NewType, List
 from decimal import Decimal
 import ubjson
+from PyQt5.QtWidgets import QMessageBox, QWidget
 
 from app.backend.rpc import get_active_rpc_client
 from app.enums import Permission
@@ -54,22 +55,26 @@ def put_timestamp(hexhash: str, comment: str='', stream='timestamp') -> Optional
 def get_timestamps(hash_value: str, stream='timestamp') -> Optional[List]:
     client = get_active_rpc_client()
     response = client.liststreamkeyitems(stream, hash_value, verbose=True, count=1000, start=-1000)
-    result = response['result']
-    timestamps = []
-    for entry in result:
-        if entry['data']:
-            if not isinstance(entry['data'], str):
-                log.warning('Stream item data is not a string: %s' % entry['data'])
-                # Todo investigate dict wit size, txid, vout in stream item data
-                continue
-            data = ubjson.loadb(unhexlify(entry['data']))
-            comment = data.get('comment', '')
-        else:
-            comment = ''
+    if response['error'] is None:
+        result = response['result']
+        timestamps = []
+        for entry in result:
+            if entry['data']:
+                if not isinstance(entry['data'], str):
+                    log.warning('Stream item data is not a string: %s' % entry['data'])
+                    # Todo investigate dict wit size, txid, vout in stream item data
+                    continue
+                data = ubjson.loadb(unhexlify(entry['data']))
+                comment = data.get('comment', '')
+            else:
+                comment = ''
 
-        for publisher in entry['publishers']:
-            timestamps.append((entry['time'], publisher, comment))
-    return timestamps
+            for publisher in entry['publishers']:
+                timestamps.append((entry['time'], publisher, comment))
+        return timestamps
+    else:
+        QMessageBox.warning(QWidget(), 'Error reading timestamp stream', response['error']['message'])
+        return None
 
 
 if __name__ == '__main__':

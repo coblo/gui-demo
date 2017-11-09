@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import QHeaderView
 from app.models import Permission, Profile
 from app.signals import signals
 
+from app import ADMIN_CONSENUS_MINE, ADMIN_CONSENUS_ADMIN
+
 
 log = logging.getLogger(__name__)
 
@@ -79,9 +81,9 @@ class PermissionModel(QAbstractTableModel):
             return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
-                return "{} of {}".format(perm_obj.address.num_validator_revokes(), math.ceil(Permission.num_guardians() * 0.17))
+                return "{} of {}".format(perm_obj.address.num_validator_revokes(), math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE))
             else:
-                return "{} of {}".format(perm_obj.address.num_guardian_revokes(), math.ceil(Permission.num_guardians() * 0.51))
+                return "{} of {}".format(perm_obj.address.num_guardian_revokes(), math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN))
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:

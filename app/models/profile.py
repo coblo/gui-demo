@@ -10,6 +10,8 @@ import app
 from app.helpers import gen_password
 from app.models.db import profile_db
 from app.signals import signals
+from app.backend.rpc import get_active_rpc_client
+from app.tools.validators import is_valid_username
 
 log = logging.getLogger(__name__)
 
@@ -42,13 +44,24 @@ class Profile(peewee.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        signals.profile_changed.emit()
+        signals.profile_changed.emit(self)
 
     def set_active(self):
         with profile_db.atomic():
             Profile.update(active=False).execute()
             self.active = True
             self.save()
+
+    def update_alias(self, new_alias) -> bool:
+        if not is_valid_username(new_alias):
+            return False
+
+        get_active_rpc_client().publish("alias", new_alias, "")
+        with profile_db.atomic():
+            Profile.update(alias=new_alias).execute()
+            self.alias = new_alias
+            self.save()
+            return True
 
     @property
     def data_db_filepath(self):

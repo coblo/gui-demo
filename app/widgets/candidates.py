@@ -36,7 +36,13 @@ class CandidateModel(QAbstractTableModel):
 
     def update_data(self):
         client = get_active_rpc_client()
-        perms_data = client.listpermissions()['result']
+        # TODO try to avoid this api call by storing/getting needed info from database
+        try:
+            perms_data = client.listpermissions()['result']
+        except Exception:
+            log.debug('could not get permission data via rpc')
+            return
+
         old_keys = set(self.db.keys())
         new_keys = set()
         for data in perms_data:

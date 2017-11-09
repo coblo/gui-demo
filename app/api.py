@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """High level api functions for reading and writing blockchain data."""
+import logging
 from binascii import hexlify, unhexlify
 from typing import Optional, NewType, List
 from decimal import Decimal
@@ -7,6 +8,9 @@ import ubjson
 
 from app.backend.rpc import get_active_rpc_client
 from app.enums import Permission
+
+
+log = logging.getLogger(__name__)
 
 
 TxId = NewType('TxID', str)
@@ -41,7 +45,9 @@ def put_timestamp(hexhash: str, comment: str='', stream='test') -> Optional[TxId
         response = client.publish(stream, hexhash, data_hex)
     else:
         response = client.publish(stream, hexhash)
-    print(response)
+
+    # Todo raise custom RPC Error if response contains an error code/message
+
     return TxId(response['result'])
 
 
@@ -52,6 +58,10 @@ def get_timestamps(hash_value: str, stream='test') -> Optional[List]:
     timestamps = []
     for entry in result:
         if entry['data']:
+            if not isinstance(entry['data'], str):
+                log.warning('Stream item data is not a string: %s' % entry['data'])
+                # Todo investigate dict wit size, txid, vout in stream item data
+                continue
             data = ubjson.loadb(unhexlify(entry['data']))
             comment = data.get('comment', '')
         else:
@@ -63,14 +73,5 @@ def get_timestamps(hash_value: str, stream='test') -> Optional[List]:
 
 
 if __name__ == '__main__':
-    from pprint import pprint
     import app
     app.init()
-    client = get_active_rpc_client()
-    # pprint(client.publish('test', 'key only'))
-
-    # pprint(
-    #     put_timestamp('a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e', 'An update')
-    # )
-    # pprint(client.liststreamkeyitems('test', 'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e', verbose=True))
-    pprint(get_timestamps('a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e', 'test'))

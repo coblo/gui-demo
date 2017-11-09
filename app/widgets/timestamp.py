@@ -7,7 +7,7 @@ from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal,
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView
 
-from app.api import get_timestamps
+from app.api import get_timestamps, put_timestamp
 from app.ui.timestamp import Ui_WidgetTimestamping
 from hashlib import sha256
 
@@ -119,7 +119,19 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
     @pyqtSlot()
     def register_timestamp(self):
-        log.debug('Todo Register Timestamp')
+        self.button_register.setDisabled(True)
+        self.edit_comment.setDisabled(True)
+        try:
+            txid = put_timestamp(self.current_fingerprint, self.edit_comment.text())
+            self.edit_comment.hide()
+            self.label_register_comment.setText(
+                'Timestamp registered. Transaction ID is: %s' % txid
+            )
+        except Exception:
+            self.edit_comment.hide()
+            self.label_register_comment.setText(
+                'Registration failed'
+            )
 
     @pyqtSlot()
     def file_select_dialog(self):
@@ -178,19 +190,35 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
     def reset(self):
         self.current_fingerprint = None
         self.current_filepath = None
+
+        # Dropzone
         self.gbox_dropzone.setEnabled(True)
         self.button_dropzone.setEnabled(True)
         self.button_dropzone.setText('Drop your file here or click to choose.')
+
+        # Processing Status
         self.gbox_processing_status.show()
         self.gbox_processing_status.setDisabled(True)
-
         self.label_processing_status.setText('Waiting for document to process')
         self.progress_bar.hide()
+
+        # Verification results
         self.gbox_verification.setDisabled(True)
         self.label_verification.setText('Waiting for document to verify')
         self.table_verification.clearContents()
+        self.table_verification.setRowCount(0)
+        self.table_verification.show()
+
+        # Timestamp Form
         self.gbox_timestamp.setDisabled(True)
+        self.label_register_comment.setText(
+            'You may add a public comment to your timestamp if you wish'
+        )
         self.edit_comment.clear()
+        self.edit_comment.show()
+        self.edit_comment.setEnabled(True)
+        self.button_reset.setEnabled(True)
+        self.button_register.setEnabled(True)
         # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
 
 

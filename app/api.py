@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """High level api functions for reading and writing blockchain data."""
 import logging
-from binascii import hexlify, unhexlify
-from typing import Optional, NewType, List
-from decimal import Decimal
 import ubjson
+from binascii import hexlify, unhexlify
+from decimal import Decimal
+from typing import Optional, NewType, List
 
 from app.backend.rpc import get_active_rpc_client
 from app.enums import Permission
-from exceptions import RpcResponseError
+from app.exceptions import RpcResponseError
 
 log = logging.getLogger(__name__)
 

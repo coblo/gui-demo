@@ -2,16 +2,15 @@
 import logging
 import os
 from datetime import datetime
+from hashlib import sha256
 
 from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView, QMessageBox
 
 from app.api import get_timestamps, put_timestamp
+from app.exceptions import RpcResponseError
 from app.ui.timestamp import Ui_WidgetTimestamping
-from hashlib import sha256
-
-from exceptions import RpcResponseError
 
 log = logging.getLogger(__name__)
 

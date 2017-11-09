@@ -8,3 +8,4 @@ peewee==2.10.2
 appdirs==1.4.3
 timeago==1.0.7
 base58==0.2.5
+py-ubjson==0.10.0

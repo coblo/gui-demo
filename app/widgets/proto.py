@@ -25,14 +25,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.setupUi(self)
-
         # Basic initialization
         self.data_dir = helpers.init_data_dir()
         self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()
         self.data_db = models.init_data_db()
         self.profile = Profile.get_active()
+
+        # Setup Widgets
+        self.setupUi(self)
+
         self.on_profile_changed(self.profile)
         signals.profile_changed.connect(self.on_profile_changed)
 

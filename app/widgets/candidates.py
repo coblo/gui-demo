@@ -8,6 +8,7 @@ from collections import OrderedDict
 from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView
 
+from app.signals import signals
 from app.models import Address
 
 from app.backend.rpc import get_active_rpc_client
@@ -22,6 +23,8 @@ class CandidateModel(QAbstractTableModel):
         self.db = OrderedDict()
         self.update_data()
         self.headers = ('Alias', 'Address', 'Skill', 'Grants', 'Action')
+
+        signals.votes_changed.connect(self.update_data)
 
     def update_data(self):
         client = get_active_rpc_client()
@@ -40,7 +43,7 @@ class CandidateModel(QAbstractTableModel):
                     required = vote_round['required']
                     key = (address, skill)
                     new_keys.add(key)
-                    self.db[key] = [alias, address, skill, "{} of {}".format(votes, votes + required), 'Grant']
+                    self.db[key] = [alias, address, skill, "{} of {}".format(votes, votes + required), '']
         deleted_keys = old_keys - new_keys
         for key in deleted_keys:
             del self.db[key]

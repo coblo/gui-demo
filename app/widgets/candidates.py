@@ -50,7 +50,7 @@ class CandidateModel(QAbstractTableModel):
                     votes = len(vote_round['admins'])
                     required = vote_round['required']
                     key = (address, skill)
-                    already_voted = Profile.address in vote_round['admins']
+                    already_voted = Profile.get_active().address in vote_round['admins']
                     new_keys.add(key)
                     self.db[key] = [alias, address, skill, "{} of {}".format(votes, votes + required), already_voted]
         deleted_keys = old_keys - new_keys

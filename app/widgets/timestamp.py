@@ -4,6 +4,8 @@ import os
 from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent
 from PyQt5.QtWidgets import QWidget, QFileDialog
+
+from app.backend.rpc import get_active_rpc_client
 from app.ui.timestamp import Ui_WidgetTimestamping
 from hashlib import sha256
 
@@ -44,6 +46,8 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.setupUi(self)
         self.reset()
         self.hash_thread = None
+        self.current_fingerprint = None
+        self.current_filepath = None
 
         # Intercept drag & drop events from button
         self.button_dropzone.installEventFilter(self)
@@ -54,20 +58,40 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
     def process_file(self, file_path):
         log.debug('proccess file %s' % file_path)
+        self.current_filepath = file_path
         self.button_dropzone.setText("Current File: %s" % os.path.basename(file_path))
         self.gbox_processing_status.setEnabled(True)
         self.progress_bar.setMaximum(os.path.getsize(file_path))
         self.progress_bar.setValue(0)
         self.progress_bar.show()
         self.label_processing_status.setText('Calculating fingerprint ...')
-        self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
+        # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
         self.hash_thread = Hasher(file_path)
         self.hash_thread.hashing_progress.connect(self.progress_bar.setValue)
         self.hash_thread.finished.connect(self.hash_thread_finished)
+
+        # Disable dropzone
+        self.gbox_dropzone.setDisabled(True)
+        self.button_dropzone.setDisabled(True)
+
         self.hash_thread.start()
 
     @pyqtSlot()
     def hash_thread_finished(self):
+        self.current_fingerprint = self.hash_thread.result
+
+        status_text = 'Checking timpestamp records for %s' % self.current_fingerprint
+        self.label_processing_status.setText(status_text)
+
+        # Set progress to indicate processing of undefined duration
+        self.progress_bar.setValue(0)
+        self.progress_bar.setMaximum(0)
+
+        # Check chain:
+        client = get_active_rpc_client()
+
+
+
         log.debug('hashing finished with: %s' % self.hash_thread.result)
 
 
@@ -107,12 +131,12 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
                 return self.reject_drag(event, 'Directories not supported. Try again!')
 
             event.accept()
-            self.button_dropzone.setStyleSheet('background-color: green; color: white;')
+            # self.button_dropzone.setStyleSheet('background-color: green; color: white;')
             self.button_dropzone.setText('Just drop it :)')
 
     def on_drag_leave(self, obj: QObject, event: QDragLeaveEvent):
         self.button_dropzone.setText('Drop your file here or click to choose.')
-        self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
+        # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
         self.button_dropzone.style().polish(self.button_dropzone)
 
     def on_drop(self, obj: QObject, event: QDropEvent):
@@ -121,7 +145,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
     def reject_drag(self, event, message):
         self.button_dropzone.setText(message)
-        self.button_dropzone.setStyleSheet('background-color: red; color: white;')
+        # self.button_dropzone.setStyleSheet('background-color: red; color: white;')
         event.ignore()
 
     @pyqtSlot()
@@ -130,7 +154,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.gbox_dropzone.setEnabled(True)
         self.gbox_verification.setDisabled(True)
         self.gbox_timestamp.setDisabled(True)
-        self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
+        # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
         self.button_dropzone.setText('Drop your file here or click to choose.')
 
 

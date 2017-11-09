@@ -79,6 +79,9 @@
         <property name="text">
          <string>Waiting for document to process</string>
         </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
         <property name="textInteractionFlags">
          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
         </property>
@@ -139,6 +142,12 @@
           <pointsize>10</pointsize>
          </font>
         </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="showGrid">
+         <bool>false</bool>
+        </property>
         <attribute name="horizontalHeaderStretchLastSection">
          <bool>true</bool>
         </attribute>
@@ -189,6 +198,12 @@
         </property>
         <property name="text">
          <string>You may add a public comment to your Timestamp if you wish:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
         </property>
        </widget>
       </item>

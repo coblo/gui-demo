@@ -91,7 +91,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.show()
         self.statusbar.showMessage(app.APP_DIR, 10000)
 
-    @pyqtSlot()
+    @pyqtSlot(Profile)
     def on_profile_changed(self, new_profile):
         """Read current active profile and set gui labels"""
         self.profile = new_profile

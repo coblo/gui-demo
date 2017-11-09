@@ -14,6 +14,7 @@ from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
 from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView
+from app.widgets.timestamp import WidgetTimestamping
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
 from app.widgets.invite import InviteDialog
@@ -41,8 +42,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Init Navigation
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
-        self.btn_grp_nav.setId(self.btn_nav_community, 1)
-        self.btn_grp_nav.setId(self.btn_nav_settings, 2)
+        self.btn_grp_nav.setId(self.btn_nav_timestamp, 1)
+        self.btn_grp_nav.setId(self.btn_nav_community, 2)
+        self.btn_grp_nav.setId(self.btn_nav_settings, 3)
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
 
@@ -57,6 +59,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         wallet_history = WalletHistory(self)
         self.lout_page_wallet_v.addWidget(wallet_history)
+
+        widget_timestamp = WidgetTimestamping(self)
+        self.lout_page_timestamp_v.addWidget(widget_timestamp)
 
         self.table_validators.setParent(None)
         table_validators = CommunityTableView(self, perm_type=Permission.MINE)
@@ -125,7 +130,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             event.ignore()
             self.hide()
-
 
     def setting_changed_exit_on_close(self, state):
         self.profile.exit_on_close = state == 2

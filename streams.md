@@ -32,3 +32,14 @@ All stream items not conforming to these rules must be ignored.
 If a publisher announces a new alias the old becomes available
 to be re-assigned. Applications must be aware of the fact that
 address-alias mappings change over time.
+
+## timestamp
+The `timestamp` stream is open and used to publish document hashes as
+proof of existence. The timestamp key must be published as a hex encoded
+sha256 hash of the document to be timestamped. The data_hex value is optional.
+If data_hex is included it must be a ubjson encoded datamapping. Currently
+the only Recognized key in that datamapping is `comment` which can be any
+comment about the timestamped document like document name, version or
+reason for timestamping. The maximum processed length of `comment` is
+280 characters.
+

@@ -161,6 +161,47 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="btn_nav_timestamp">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {text-align: left; padding: 6 10 6 10;}</string>
+         </property>
+         <property name="text">
+          <string>Timestamping</string>
+         </property>
+         <property name="icon">
+          <iconset resource="resources.qrc">
+           <normaloff>:/images/resources/certificate_black.svg</normaloff>:/images/resources/certificate_black.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="autoExclusive">
+          <bool>true</bool>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">btn_grp_nav</string>
+         </attribute>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btn_nav_community">
          <property name="font">
           <font>
@@ -610,6 +651,16 @@ QLabel[enabled=&quot;true&quot;] {
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="wgt_page_timestamp">
+       <layout class="QVBoxLayout" name="lout_page_timestamp_v">
+        <property name="spacing">
+         <number>9</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
       <widget class="QWidget" name="wgt_page_community">
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <property name="spacing">
@@ -1026,17 +1077,13 @@ QLabel[enabled=&quot;true&quot;] {
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>402</x>
-     <y>240</y>
+     <x>484</x>
+     <y>269</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btn_grp_nav">
-   <property name="exclusive">
-    <bool>true</bool>
-   </property>
-  </buttongroup>
+  <buttongroup name="btn_grp_nav"/>
  </buttongroups>
 </ui>

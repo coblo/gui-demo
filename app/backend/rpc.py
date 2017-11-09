@@ -121,11 +121,14 @@ class RpcClient:
     def liststreamkeys(self, stream, keys='*', verbose=False, count=10000000, start=0, local_ordering=False):
         return self._call('liststreamkeys', stream, keys, verbose, count, start, local_ordering)
 
+    def liststreamkeyitems(self, stream, key, verbose=False, count=10, start=-10, local_ordering=False):
+        return self._call('liststreamkeyitems', stream, key, verbose, count, start, local_ordering)
+
     def listwallettransactions(self, count=10, skip=0, include_watch_only=False, verbose=False):
         return self._call('listwallettransactions', count, skip, include_watch_only, verbose)
 
-    def publish(self, stream, key, data):
-        return self._call('publish', stream, key, data)
+    def publish(self, stream, key, hex_data=''):
+        return self._call('publish', stream, key, hex_data)
 
     def revoke(self, addresses, permissions, native_amount=0, comment=None, comment_to=None):
         return self._call('revoke', addresses, permissions, native_amount, comment, comment_to)

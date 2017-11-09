@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from datetime import datetime
+
 from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent
-from PyQt5.QtWidgets import QWidget, QFileDialog
+from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView
 
-from app.backend.rpc import get_active_rpc_client
+from app.api import get_timestamps
 from app.ui.timestamp import Ui_WidgetTimestamping
 from hashlib import sha256
 
@@ -48,6 +50,10 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.hash_thread = None
         self.current_fingerprint = None
         self.current_filepath = None
+        self.current_comment = None
+
+        # Ui Tweaks
+        self.table_verification.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
 
         # Intercept drag & drop events from button
         self.button_dropzone.installEventFilter(self)
@@ -55,6 +61,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         # Connections
         self.button_dropzone.clicked.connect(self.file_select_dialog)
         self.button_reset.clicked.connect(self.reset)
+        self.button_register.clicked.connect(self.register_timestamp)
 
     def process_file(self, file_path):
         log.debug('proccess file %s' % file_path)
@@ -78,8 +85,9 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
     @pyqtSlot()
     def hash_thread_finished(self):
-        self.current_fingerprint = self.hash_thread.result
+        log.debug('hash thread finished with: %s' % self.hash_thread.result)
 
+        self.current_fingerprint = self.hash_thread.result
         status_text = 'Checking timpestamp records for %s' % self.current_fingerprint
         self.label_processing_status.setText(status_text)
 
@@ -87,13 +95,31 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.progress_bar.setValue(0)
         self.progress_bar.setMaximum(0)
 
-        # Check chain:
-        client = get_active_rpc_client()
+        # Check for existing timestamps:
+        timestamps = get_timestamps(self.current_fingerprint)
+        if timestamps:
+            self.label_verification.setText('Found existing timestamps for document:')
+            self.gbox_verification.setEnabled(True)
+            self.table_verification.setRowCount(len(timestamps))
+            for row_id, row in enumerate(timestamps):
+                for col_id, col in enumerate(row):
+                    if col_id == 0:
+                        content = QTableWidgetItem('%s' % datetime.fromtimestamp(col))
+                    else:
+                        content = QTableWidgetItem(col)
+                    self.table_verification.setItem(row_id, col_id, content)
+        else:
+            self.table_verification.hide()
+            self.label_verification.setText('No previous timestamps found for this document.')
 
+        # self.gbox_processing_status.hide()
+        self.progress_bar.hide()
+        self.label_processing_status.setText('Fingerprint: %s' % self.current_fingerprint)
+        self.gbox_timestamp.setEnabled(True)
 
-
-        log.debug('hashing finished with: %s' % self.hash_thread.result)
-
+    @pyqtSlot()
+    def register_timestamp(self):
+        log.debug('Todo Register Timestamp')
 
     @pyqtSlot()
     def file_select_dialog(self):
@@ -150,12 +176,22 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
     @pyqtSlot()
     def reset(self):
-        self.progress_bar.hide()
+        self.current_fingerprint = None
+        self.current_filepath = None
         self.gbox_dropzone.setEnabled(True)
-        self.gbox_verification.setDisabled(True)
-        self.gbox_timestamp.setDisabled(True)
-        # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
+        self.button_dropzone.setEnabled(True)
         self.button_dropzone.setText('Drop your file here or click to choose.')
+        self.gbox_processing_status.show()
+        self.gbox_processing_status.setDisabled(True)
+
+        self.label_processing_status.setText('Waiting for document to process')
+        self.progress_bar.hide()
+        self.gbox_verification.setDisabled(True)
+        self.label_verification.setText('Waiting for document to verify')
+        self.table_verification.clearContents()
+        self.gbox_timestamp.setDisabled(True)
+        self.edit_comment.clear()
+        # self.button_dropzone.setStyleSheet('background-color: #0183ea; color: white;')
 
 
 if __name__ == '__main__':

@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
 import sys
 import logging
+import math
+from functools import partial
+
 import timeago
 from datetime import datetime
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QHeaderView
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QWidget
+
+from app.backend.rpc import get_active_rpc_client
 from app.models import Permission, Profile
 from app.signals import signals
-
 
 log = logging.getLogger(__name__)
 
 
 class PermissionModel(QAbstractTableModel):
-
     # TODO: make permissions table model sortable (keep sort order on data update)
 
     def __init__(self, parent, perm_type=Permission.MINE):
@@ -25,6 +32,10 @@ class PermissionModel(QAbstractTableModel):
         self._data = self.load_data()
 
         signals.listpermissions.connect(self.listpermissions)
+
+        if perm_type == Permission.ADMIN:
+            # Update guardians table if votes have changed
+            signals.votes_changed.connect(self.listpermissions)
 
     def load_data(self):
         if self._perm_type == Permission.MINE:
@@ -64,15 +75,21 @@ class PermissionModel(QAbstractTableModel):
             return perm_obj.address_id
         if idx.column() == 2:
             if self._perm_type == Permission.MINE:
-                last_mined = perm_obj.address.last_mined()
+                last_mined = perm_obj.address.get_last_mined()
                 if last_mined:
                     return timeago.format(last_mined, datetime.now())
-            return 'Go find out'
+            if self._perm_type == Permission.ADMIN:
+                last_voted = perm_obj.address.get_last_voted()
+                if last_voted:
+                    return timeago.format(last_voted, datetime.now())
+            return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
-                return "{} of {}".format(perm_obj.address.num_validator_revokes(), Permission.num_guardians())
+                return "{} of {}".format(perm_obj.address.num_validator_revokes(),
+                                         math.ceil(Permission.num_guardians() * 0.17))
             else:
-                return "{} of {}".format(perm_obj.address.num_guardian_revokes(), Permission.num_guardians())
+                return "{} of {}".format(perm_obj.address.num_guardian_revokes(),
+                                         math.ceil(Permission.num_guardians() * 0.51))
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:
@@ -88,29 +105,56 @@ class PermissionModel(QAbstractTableModel):
 
 
 class ButtonDelegate(QtWidgets.QStyledItemDelegate):
-
     def __init__(self, parent):
         QtWidgets.QStyledItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, idx):
         btn = QtWidgets.QPushButton('Revoke', parent)
-        btn.setStyleSheet("QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+        btn.setStyleSheet(
+            "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         address = idx.data(Qt.EditRole)
         btn.setObjectName(address)
         btn.clicked.connect(self.on_revoke_clicked)
+        btn.setCursor(QCursor(Qt.PointingHandCursor))
+        # todo: disable button when user has already voted
         return btn
 
     def on_revoke_clicked(self):
         sender = self.sender()
         address = sender.objectName()
         perm_type = self.parent().perm_type
-        log.debug('TODO: revoke %s for %s' % (perm_type, address))
-        # client = get_active_rpc_client()
-        # response = client.revoke(address, perm_type)
+        skill_name = perm_type
+        if perm_type == 'admin':
+            skill_name = 'guardian'
+        elif perm_type == 'mine':
+            skill_name = 'validator'
+        message_box = QMessageBox()
+        answer = message_box.question(QWidget(), "Revoke Skills",
+                                      "Are you sure you want to revoke {} skills from {}?".format(skill_name, address),
+                                      message_box.Yes | message_box.No)
+        if answer == message_box.Yes:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            client = get_active_rpc_client()
+            try:
+                response = client.revoke(address, perm_type)
+                if response['error'] is not None:
+                    err_msg = response['error']['message']
+                    raise RuntimeError(err_msg)
+                else:
+                    sender.setDisabled(True)
+                    sender.setStyleSheet("QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                QApplication.restoreOverrideCursor()
+            except Exception as e:
+                err_msg = str(e)
+                error_dialog = QMessageBox()
+                error_dialog.setWindowTitle('Error while revoking')
+                error_dialog.setText(err_msg)
+                error_dialog.setIcon(QMessageBox.Warning)
+                QApplication.restoreOverrideCursor()
+                error_dialog.exec_()
 
 
 class CommunityTableView(QtWidgets.QTableView):
-
     # TODO: show number of "blocks mined"/"votes given" in last 24h in validator/guardian tables
 
     def __init__(self, *args, **kwargs):
@@ -175,6 +219,7 @@ class CommunityTableView(QtWidgets.QTableView):
 if __name__ == '__main__':
     from app.models import init_profile_db, init_data_db
     from app.helpers import init_logging
+
     init_logging()
     # from app.tools.runner import run_widget
     init_profile_db()

@@ -9,6 +9,7 @@ from app.models.permission import Permission
 from app.models.transaction import Transaction
 from app.models.votinground import VotingRound
 from app.models.profile import Profile
+from app.models.vote import Vote
 from app.models.db import data_db, profile_db
 
 log = logging.getLogger(__name__)
@@ -35,11 +36,10 @@ def init_data_db():
     log.debug('init data db at: {}'.format(fp))
     data_db.initialize(peewee.SqliteDatabase(fp))
     data_db.connect()
-    data_db.create_tables([Address], safe=True)
-    data_db.create_tables([Block], safe=True)
-    data_db.create_tables([Permission], safe=True)
-    data_db.create_tables([Transaction], safe=True)
-    data_db.create_tables([VotingRound], safe=True)
+    data_db.create_tables(
+        [Address, Block, Permission, Transaction, VotingRound, Vote],
+        safe=True
+    )
     return data_db
 
 

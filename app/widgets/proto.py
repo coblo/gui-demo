@@ -1,6 +1,5 @@
 import logging
 from PyQt5 import QtWidgets
-from decimal import Decimal, ROUND_DOWN
 
 from PyQt5.QtCore import pyqtSlot
 
@@ -13,6 +12,7 @@ from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
+from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
@@ -26,16 +26,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.setupUi(self)
-
         # Basic initialization
         self.data_dir = helpers.init_data_dir()
         self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()
         self.data_db = models.init_data_db()
-        self.profile = None
-        self.load_profile()
-        signals.profile_changed.connect(self.load_profile)
+        self.profile = Profile.get_active()
+
+        # Setup Widgets
+        self.setupUi(self)
+
+        self.on_profile_changed(self.profile)
+        signals.profile_changed.connect(self.on_profile_changed)
 
         # Init Navigation
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
@@ -63,6 +65,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_guardians.setParent(None)
         table_guardians = CommunityTableView(self, perm_type=Permission.ADMIN)
         self.tab_guardians.layout().insertWidget(0, table_guardians)
+
+        self.table_candidates.setParent(None)
+        table_candidates = CandidateTableView(self)
+        self.tab_candidates.layout().insertWidget(0, table_candidates)
 
         invite_dialog = InviteDialog(self)
         self.button_invite_canditate.clicked.connect(invite_dialog.exec)
@@ -92,21 +98,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.show()
         self.statusbar.showMessage(app.APP_DIR, 10000)
 
-    @pyqtSlot()
-    def load_profile(self):
+    @pyqtSlot(Profile)
+    def on_profile_changed(self, new_profile):
         """Read current active profile and set gui labels"""
-        self.profile = Profile.get_active()
+        self.profile = new_profile
         log.debug('load current profile %s' % self.profile)
-
-        self.lbl_wallet_alias.setText(self.profile.alias)
-        self.lbl_wallet_address.setText(self.profile.address)
-
-        normalized = self.profile.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
-        display = "{0:n} {1}".format(normalized, app.CURRENCY_CODE)
-        self.lbl_wallet_balance.setText(display)
-        self.lbl_wallet_balance.setToolTip("{0:n} {1}".format(
-            self.profile.balance, app.CURRENCY_CODE)
-        )
 
         self.lbl_skill_is_admin.setEnabled(self.profile.is_admin)
         self.lbl_skill_is_miner.setEnabled(self.profile.is_miner)
@@ -123,16 +119,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_apply_guardian.setVisible(not self.profile.is_admin)
         self.button_invite_canditate.setVisible(self.profile.is_admin)
 
-    def format_balance(self, balance):
-        display = "{0:n}".format(balance.normalize()) if balance is not ' ' else balance
-        return display + ' CHM'
-
     def closeEvent(self, event):
         if self.profile.exit_on_close:
             QtWidgets.qApp.quit()
         else:
             event.ignore()
             self.hide()
+
 
     def setting_changed_exit_on_close(self, state):
         self.profile.exit_on_close = state == 2

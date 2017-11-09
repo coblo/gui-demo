@@ -63,6 +63,16 @@ class RpcClient:
     def getbalance(self):
         return self._call('getbalance')
 
+    def getbestblockhash(self):
+        return self._call('getbestblockhash')
+
+    def getblock(self, hash_or_height, verbose=1):
+        """
+        :param str|int hash_or_height: block hash or height on current active chain
+        :param verbose: Verbisity 1 - 4
+        """
+        return self._call('getblock', hash_or_height, verbose)
+
     def getblockchaininfo(self) -> Optional[dict]:
         return self._call('getblockchaininfo')
 
@@ -84,10 +94,13 @@ class RpcClient:
     def getnewaddress(self):
         return self._call('getnewaddress')
 
+    def getrawtransaction(self, txid, verbose=0):
+        return self._call('getrawtransaction', txid, verbose)
+
     def getruntimeparams(self):
         return self._call('getruntimeparams')
 
-    def grant(self, addresses, permissions, native_amount=0, start_block=0, end_block=0, comment=None, comment_to=None):
+    def grant(self, addresses, permissions, native_amount=0, start_block=0, end_block=4294967295, comment=None, comment_to=None):
         return self._call('grant', addresses, permissions, native_amount, start_block, end_block, comment, comment_to)
 
     def grantwithdata(self, addresses, permissions, data_hex, native_amount=0, start_block=0, end_block=4294967295):
@@ -155,30 +168,12 @@ class RpcClient:
 
 if __name__ == '__main__':
     from pprint import pprint
-    from app import helpers
-    from app import models
-    helpers.init_logging()
-    helpers.init_data_dir()
-    models.init_profile_db()
-    helpers.init_node_data_dir()
-    models.init_data_db()
-    print(models.Profile.get_active())
-    client = get_active_rpc_client(models.Profile.get(name='default'))
-
-    # pprint(client.getaddresses(verbose=True))
-    # pprint(client.getbalance())
-    # pprint(client.getblockchaininfo())
-    # pprint(client.getblockchainparams())
-    # pprint(client.getinfo())
-    # pprint(client.getmultibalances())
-    # pprint(client.listwallettransactions(10000, verbose=False))
-    # pprint(client.getnewaddress())
-    # pprint(client.getruntimeparams())
-    # pprint(client.listaddresses(verbose=True))
-    # pprint(client.validateaddress('1X8meKHXVUpsvgim3q7BJ24Xz7ymSDJnriqt7B'))
-    # pprint(client.listpermissions(addresses='1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP', verbose=True))
-    # pprint(client.getaddressbalances('1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP'))
-    # pprint(client.getmultibalances())
-    # pprint(client.getblockcount())
-    # pprint(client.liststreamkeys('alias'))
-    # pprint(client.liststreamitems('alias', start=1, count=3))
+    import app
+    from app.models import Profile
+    app.init()
+    print(Profile.get_active())
+    client = get_active_rpc_client()
+    # pprint(client.getmultibalances('*', '*', 1, False, False))
+    # pprint(client.getmultibalances('*', '*', 0, False, True))
+    print(client.getbestblockhash())
+    pprint(client.listwallettransactions(1))

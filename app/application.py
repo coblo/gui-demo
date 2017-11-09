@@ -91,4 +91,4 @@ class Application(QtWidgets.QApplication):
     def on_tray_activated(self, reason):
         if reason == QtWidgets.QSystemTrayIcon.DoubleClick:
             self.ui.show()
-            self.activateWindow()
+            self.ui.activateWindow()

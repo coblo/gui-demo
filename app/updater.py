@@ -14,6 +14,17 @@ class Updater(QtCore.QThread):
 
     UPDATE_INTERVALL = 3
 
+    sync_funcs = (
+        sync.getinfo,
+        sync.getruntimeparams,
+        sync.getblockchaininfo,
+        sync.listblocks,
+        sync.listwallettransactions,
+        sync.listpermissions,
+        sync.liststreamitems_alias,
+        sync.getblock,
+    )
+
     def __init__(self, parent=None):
         super().__init__(parent)
         log.debug('init updater')
@@ -27,23 +38,47 @@ class Updater(QtCore.QThread):
         return get_active_rpc_client()
 
     def run(self):
+
+        synced_blockhash = ''
+        synced_txid = ''
+        blockchain_downloading = False
+
         while True:
 
-            sync_funcs = (
-                sync.getinfo,
-                sync.getruntimeparams,
-                sync.getblockchaininfo,
-                sync.listblocks,
-                sync.listwallettransactions,
-                sync.listpermissions,
-                sync.liststreamitems_alias,
-            )
+            log.debug('check for new block or new local wallet updates')
+            try:
+                # This triggers Network Info widget update that we allways want
+                blockchain_info = sync.getblockchaininfo()
+                # The node is downloading blocks if it has more headers than blocks
+                blockchain_downloading = blockchain_info['blocks'] != blockchain_info['headers']
+                node_block_hash = blockchain_info['bestblockhash']
+            except Exception:
+                log.debug('cannot get bestblock via rpc')
+                self.sleep(self.UPDATE_INTERVALL)
+                continue
 
-            for sync_func in sync_funcs:
-                try:
-                    log.debug('updating %s' % sync_func.__name__)
-                    sync_func()
-                except Exception as e:
-                    log.exception(e)
+            if blockchain_downloading:
+                log.debug('blockchain syncing - skip exspensive rpc calls')
+                self.sleep(self.UPDATE_INTERVALL)
+                continue
 
-            time.sleep(self.UPDATE_INTERVALL)
+            try:
+                node_txid = self.client.listwallettransactions(1)['result'][0]['txid']
+            except (KeyError, IndexError):
+                log.debug('no wallet transactions found')
+                node_txid = ''
+
+            if node_block_hash != synced_blockhash or node_txid != synced_txid:
+                log.debug('starting full sync round')
+
+                for sync_func in self.sync_funcs:
+                    try:
+                        log.debug('updating %s' % sync_func.__name__)
+                        sync_func()
+                    except Exception as e:
+                        log.exception(e)
+
+                synced_blockhash = node_block_hash
+                synced_txid = node_txid
+
+            self.sleep(self.UPDATE_INTERVALL)

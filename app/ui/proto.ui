@@ -403,144 +403,7 @@ QLabel[enabled=&quot;true&quot;] {
          <number>0</number>
         </property>
         <item>
-         <layout class="QHBoxLayout" name="lout_wallet_header_h" stretch="7,3">
-          <item>
-           <widget class="QGroupBox" name="gbox_wallet_my_account">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <family>Oswald</family>
-              <pointsize>9</pointsize>
-             </font>
-            </property>
-            <property name="title">
-             <string>MY ACCOUNT</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-            </property>
-            <layout class="QGridLayout" name="gridLayout" columnstretch="2,8">
-             <item row="0" column="0">
-              <widget class="QLabel" name="lbl_wallet_alias_title">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="font">
-                <font>
-                 <family>Roboto Light</family>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Alias</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-               </property>
-               <property name="textInteractionFlags">
-                <set>Qt::NoTextInteraction</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="lbl_wallet_alias">
-               <property name="font">
-                <font>
-                 <family>Roboto Light</family>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Undefined</string>
-               </property>
-               <property name="textInteractionFlags">
-                <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="lbl_wallet_address_title">
-               <property name="font">
-                <font>
-                 <family>Roboto Light</family>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Address:</string>
-               </property>
-               <property name="textInteractionFlags">
-                <set>Qt::NoTextInteraction</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="lbl_wallet_address">
-               <property name="font">
-                <font>
-                 <family>Roboto Condensed</family>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Loading ...</string>
-               </property>
-               <property name="textInteractionFlags">
-                <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="gbox_wallet_my_balance">
-            <property name="font">
-             <font>
-              <family>Oswald</family>
-              <pointsize>9</pointsize>
-             </font>
-            </property>
-            <property name="title">
-             <string>MY BALANCE</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-            </property>
-            <layout class="QHBoxLayout" name="lout_gbox_wallet_balance_h">
-             <item>
-              <widget class="QLabel" name="lbl_wallet_balance">
-               <property name="font">
-                <font>
-                 <family>Roboto Condensed</family>
-                 <pointsize>21</pointsize>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>0.00 CHM</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="textInteractionFlags">
-                <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-         </layout>
+         <widget class="MyAccount" name="widget" native="true"/>
         </item>
         <item>
          <widget class="QGroupBox" name="gbox_wallet_send">
@@ -1130,6 +993,14 @@ QLabel[enabled=&quot;true&quot;] {
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyAccount</class>
+   <extends>QWidget</extends>
+   <header>app.widgets.my_account</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>btn_nav_wallet</tabstop>
   <tabstop>btn_nav_community</tabstop>

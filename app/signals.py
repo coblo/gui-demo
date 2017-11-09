@@ -30,7 +30,7 @@ class Signals(QObject):
     # custom signals
 
     #: profile changed
-    profile_changed = pyqtSignal()
+    profile_changed = pyqtSignal(object)
 
     block_sync_changed = pyqtSignal(dict)
     transactions_changed = pyqtSignal(list)

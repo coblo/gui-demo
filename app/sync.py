@@ -38,6 +38,7 @@ def getblockchaininfo():
     result = client.getblockchaininfo()['result']
     # Todo: Maybe track headers/blocks on Profile db model
     signals.getblockchaininfo.emit(Getblockchaininfo(**result))
+    return result
 
 
 def getruntimeparams():

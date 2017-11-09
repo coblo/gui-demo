@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from PyQt5 import QtCore
 from functools import partial
 
 from PyQt5 import QtGui
@@ -8,10 +9,14 @@ from PyQt5 import QtWidgets
 from collections import OrderedDict
 
 from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView
 
+from app.models import Profile
 from app.signals import signals
-from app.models import Address
+from app.models import Address, VotingRound
 
 from app.backend.rpc import get_active_rpc_client
 
@@ -44,8 +49,9 @@ class CandidateModel(QAbstractTableModel):
                     votes = len(vote_round['admins'])
                     required = vote_round['required']
                     key = (address, skill)
+                    already_voted = Profile.address in vote_round['admins']
                     new_keys.add(key)
-                    self.db[key] = [alias, address, skill, "{} of {}".format(votes, votes + required), '']
+                    self.db[key] = [alias, address, skill, "{} of {}".format(votes, votes + required), already_voted]
         deleted_keys = old_keys - new_keys
         for key in deleted_keys:
             del self.db[key]
@@ -91,20 +97,53 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
         QtWidgets.QStyledItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, idx):
-        btn = QtWidgets.QPushButton('Grant', parent)
-        btn.setStyleSheet("QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         db = self.parent().table_model.db
         db_entry = db[list(db.keys())[idx.row()]]
+        btn = QtWidgets.QPushButton('Grant', parent)
+        btn.setStyleSheet("QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         btn.setObjectName(db_entry[1])
         btn.clicked.connect(partial(self.on_grant_clicked, db_entry[2]))
+        if db_entry[4]:
+            btn.setStyleSheet("QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+            btn.setDisabled(db_entry[4])
+        else:
+            btn.setCursor(QCursor(Qt.PointingHandCursor))
         return btn
 
     def on_grant_clicked(self, skill):
         sender = self.sender()
         address = sender.objectName()
-        log.debug('TODO: grant %s for %s' % (skill, address))
-        # client = get_active_rpc_client()
-        # response = client.revoke(address, perm_type)
+        skill_name = skill
+        if skill == 'admin':
+            skill_name = 'guardian'
+        elif skill == 'mine':
+            skill_name = 'validator'
+        message_box = QMessageBox()
+        message_box.setIcon(QMessageBox.Question)
+        message_box.setText("Are you sure you want to grant {} skills to {}?".format(skill_name, address))
+        message_box.setWindowTitle("Grant Skills")
+        message_box.setStandardButtons(message_box.Yes | message_box.No)
+        message_box.buttonClicked.connect(partial(self.on_message_answered, address, skill, message_box))
+        message_box.exec_()
+
+    def on_message_answered(self, address, skill, message_box):
+        if message_box.clickedButton().text() != '&No':
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            client = get_active_rpc_client()
+            try:
+                response = client.grant(address, skill)
+                if response['error'] is not None:
+                    err_msg = response['error']['message']
+                    raise RuntimeError(err_msg)
+                QApplication.restoreOverrideCursor()
+            except Exception as e:
+                err_msg = str(e)
+                error_dialog = QMessageBox()
+                error_dialog.setWindowTitle('Error while granting')
+                error_dialog.setText(err_msg)
+                error_dialog.setIcon(QMessageBox.Warning)
+                QApplication.restoreOverrideCursor()
+                error_dialog.exec_()
 
 class CandidateTableView(QTableView):
 

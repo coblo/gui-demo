@@ -6,6 +6,7 @@ import timeago
 from datetime import datetime
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
+from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QHeaderView
 from app.models import Permission, Profile
 from app.signals import signals
@@ -107,6 +108,8 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
         address = idx.data(Qt.EditRole)
         btn.setObjectName(address)
         btn.clicked.connect(self.on_revoke_clicked)
+        btn.setCursor(QCursor(Qt.PointingHandCursor))
+        # todo: disable button when user has already voted
         return btn
 
     def on_revoke_clicked(self):

@@ -13,6 +13,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView
+from PyQt5.QtWidgets import QWidget
 
 from app.models import Profile
 from app.signals import signals
@@ -119,15 +120,11 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
         elif skill == 'mine':
             skill_name = 'validator'
         message_box = QMessageBox()
-        message_box.setIcon(QMessageBox.Question)
-        message_box.setText("Are you sure you want to grant {} skills to {}?".format(skill_name, address))
-        message_box.setWindowTitle("Grant Skills")
-        message_box.setStandardButtons(message_box.Yes | message_box.No)
-        message_box.buttonClicked.connect(partial(self.on_message_answered, address, skill, message_box))
-        message_box.exec_()
+        answer = message_box.question(QWidget(), "Grant Skills",
+                                      "Are you sure you want to grant {} skills to {}?".format(skill_name, address),
+                                      message_box.Yes | message_box.No)
 
-    def on_message_answered(self, address, skill, message_box):
-        if message_box.clickedButton().text() != '&No':
+        if answer == message_box.Yes:
             QApplication.setOverrideCursor(Qt.WaitCursor)
             client = get_active_rpc_client()
             try:
@@ -135,6 +132,9 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
                 if response['error'] is not None:
                     err_msg = response['error']['message']
                     raise RuntimeError(err_msg)
+                else:
+                    sender.setDisabled(True)
+                    sender.setStyleSheet("QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
                 QApplication.restoreOverrideCursor()
             except Exception as e:
                 err_msg = str(e)

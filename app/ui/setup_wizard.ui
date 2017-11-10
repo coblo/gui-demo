@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SetupWizard</class>
+ <widget class="QWizard" name="SetupWizard">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Roboto</family>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>Content Blockchain Demo - Setup Wizard</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/images/resources/app_icon.png</normaloff>:/images/resources/app_icon.png</iconset>
+  </property>
+  <property name="wizardStyle">
+   <enum>QWizard::ModernStyle</enum>
+  </property>
+  <property name="options">
+   <set>QWizard::CancelButtonOnLeft|QWizard::NoBackButtonOnStartPage</set>
+  </property>
+  <widget class="QWizardPage" name="page1_welcome">
+   <property name="locale">
+    <locale language="English" country="Germany"/>
+   </property>
+   <property name="title">
+    <string>Content Blockchain Demo - Setup</string>
+   </property>
+   <property name="subTitle">
+    <string>The Conent Blockchain is  ...</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">1</string>
+   </attribute>
+  </widget>
+  <widget class="QWizardPage" name="page2_choose">
+   <property name="title">
+    <string>How do you want to join the Network</string>
+   </property>
+   <property name="subTitle">
+    <string>You can setup a full blockchain node on this computer or connect to an existing node.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">2</string>
+   </attribute>
+  </widget>
+  <widget class="QWizardPage" name="page3a_connect">
+   <property name="title">
+    <string>Connect to an existing node</string>
+   </property>
+   <property name="subTitle">
+    <string>Please provide your connection data.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">3a</string>
+   </attribute>
+  </widget>
+  <widget class="QWizardPage" name="page3b_choose">
+   <property name="title">
+    <string>Setup blockchain node</string>
+   </property>
+   <property name="subTitle">
+    <string>You may create a new account or import an existing account.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">3b</string>
+   </attribute>
+  </widget>
+  <widget class="QWizardPage" name="page4a_import">
+   <property name="title">
+    <string>Import existing account</string>
+   </property>
+   <property name="subTitle">
+    <string>Please paste your 24 recovery seed.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">4a</string>
+   </attribute>
+  </widget>
+  <widget class="QWizardPage" name="page4b_create">
+   <property name="title">
+    <string>Create a new account</string>
+   </property>
+   <property name="subTitle">
+    <string>Make sure you write down your 24 word recovery seed</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">4b</string>
+   </attribute>
+  </widget>
+  <widget class="QWizardPage" name="page5_sync">
+   <property name="title">
+    <string>Initial Syncronization</string>
+   </property>
+   <property name="subTitle">
+    <string>Please be patient while initial synchronization is running.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">5</string>
+   </attribute>
+  </widget>
+ </widget>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

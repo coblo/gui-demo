@@ -313,6 +313,9 @@ p, li { white-space: pre-wrap; }
            <property name="text">
             <string>RPC Port</string>
            </property>
+           <property name="buddy">
+            <cstring>edit_rpc_port</cstring>
+           </property>
           </widget>
          </item>
          <item row="1" column="1">
@@ -644,7 +647,7 @@ p, li { white-space: pre-wrap; }
   </widget>
   <widget class="QWizardPage" name="page7_sync">
    <property name="title">
-    <string>Initial Syncronization</string>
+    <string>Initial Synchronization</string>
    </property>
    <property name="subTitle">
     <string>Please be patient while initial synchronization is running.</string>
@@ -652,19 +655,22 @@ p, li { white-space: pre-wrap; }
   </widget>
  </widget>
  <tabstops>
-  <tabstop>text_license</tabstop>
-  <tabstop>radio_accept_license</tabstop>
-  <tabstop>radio_decline_icense</tabstop>
-  <tabstop>cbox_use_ssl</tabstop>
-  <tabstop>button_connect_node</tabstop>
-  <tabstop>edit_rpc_password</tabstop>
+  <tabstop>edit_rpc_host</tabstop>
+  <tabstop>edit_rpc_port</tabstop>
   <tabstop>edit_rpc_user</tabstop>
-  <tabstop>button_setup_node</tabstop>
+  <tabstop>edit_rpc_password</tabstop>
+  <tabstop>cbox_use_ssl</tabstop>
+  <tabstop>button_reset_connection_form</tabstop>
+  <tabstop>button_test_connection</tabstop>
   <tabstop>button_account_import</tabstop>
   <tabstop>button_account_create</tabstop>
   <tabstop>edit_seed</tabstop>
   <tabstop>edit_new_seed</tabstop>
-  <tabstop>edit_rpc_host</tabstop>
+  <tabstop>button_connect_node</tabstop>
+  <tabstop>button_setup_node</tabstop>
+  <tabstop>radio_decline_icense</tabstop>
+  <tabstop>radio_accept_license</tabstop>
+  <tabstop>text_license</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>

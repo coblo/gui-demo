@@ -9,6 +9,7 @@ from app.ui.setup_wizard import Ui_SetupWizard
 from PyQt5.QtWidgets import QWizard
 from app.ui import resources_rc
 
+
 log = logging.getLogger(__name__)
 
 
@@ -30,6 +31,7 @@ class SetupWizard(QWizard, Ui_SetupWizard):
 
         # Wizard state
         self._connection_tested = False
+        self._sync_ready = False
 
         # Global connections
         self.currentIdChanged.connect(self.current_id_changed)
@@ -50,6 +52,8 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         # Page 4 Choose Account Create or Import
         self.button_group_choose_account.buttonClicked.connect(self.next)
 
+        # Page 7 Initial Sync
+        self.page7_sync.isComplete = self.page7_sync_is_complete
 
     @pyqtSlot(int)
     def current_id_changed(self, page_id: int):
@@ -66,6 +70,10 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         # Verify connection to rpc host
         log.debug('Page 3 completion check request')
         return self._connection_tested
+
+    @pyqtSlot()
+    def page7_sync_is_complete(self):
+        return self._sync_ready
 
     @pyqtSlot()
     def test_connection(self):
@@ -115,6 +123,8 @@ class SetupWizard(QWizard, Ui_SetupWizard):
                 return self.P3_CONNECT
             if self.button_setup_node.isChecked():
                 return self.P4_CHOOSE_ACCOUNT
+        if self.currentId() == self.P3_CONNECT:
+            return self.P7_SYNC
         if self.currentId() == self.P4_CHOOSE_ACCOUNT:
             if self.button_account_create.isChecked():
                 return self.P6_CREATE_ACCOUNT

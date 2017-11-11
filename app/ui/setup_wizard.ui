@@ -256,14 +256,14 @@ p, li { white-space: pre-wrap; }
   </widget>
   <widget class="QWizardPage" name="page3_connect">
    <property name="title">
-    <string>Connect to an existing node</string>
+    <string>Connect to existing node</string>
    </property>
    <property name="subTitle">
     <string>Please provide your connection data.</string>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
-     <widget class="QGroupBox" name="groupBox">
+     <widget class="QGroupBox" name="gbox_connect">
       <property name="font">
        <font>
         <family>Oswald</family>
@@ -275,9 +275,9 @@ p, li { white-space: pre-wrap; }
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <layout class="QFormLayout" name="formLayout">
+        <layout class="QFormLayout" name="layout_connection_form">
          <item row="0" column="0">
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="label_rpc_host">
            <property name="font">
             <font>
              <family>Roboto Light</family>
@@ -285,12 +285,15 @@ p, li { white-space: pre-wrap; }
             </font>
            </property>
            <property name="text">
-            <string>Host</string>
+            <string>RPC Host</string>
+           </property>
+           <property name="buddy">
+            <cstring>edit_rpc_host</cstring>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QLineEdit" name="lineEdit">
+          <widget class="QLineEdit" name="edit_rpc_host">
            <property name="font">
             <font>
              <family>Roboto Light</family>
@@ -300,7 +303,7 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="label_rpc_port">
            <property name="font">
             <font>
              <family>Roboto Light</family>
@@ -308,12 +311,12 @@ p, li { white-space: pre-wrap; }
             </font>
            </property>
            <property name="text">
-            <string>RPC User</string>
+            <string>RPC Port</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit_3">
+          <widget class="QLineEdit" name="edit_rpc_port">
            <property name="font">
             <font>
              <family>Roboto Light</family>
@@ -323,7 +326,33 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="2" column="0">
-          <widget class="QLabel" name="label_2">
+          <widget class="QLabel" name="label_rpc_user">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>RPC User</string>
+           </property>
+           <property name="buddy">
+            <cstring>edit_rpc_user</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="edit_rpc_user">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_rpc_password">
            <property name="font">
             <font>
              <family>Roboto Light</family>
@@ -333,20 +362,29 @@ p, li { white-space: pre-wrap; }
            <property name="text">
             <string>RPC Password</string>
            </property>
+           <property name="buddy">
+            <cstring>edit_rpc_password</cstring>
+           </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="lineEdit_2">
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="edit_rpc_password">
            <property name="font">
             <font>
              <family>Roboto Light</family>
              <pointsize>10</pointsize>
             </font>
            </property>
+           <property name="inputMethodHints">
+            <set>Qt::ImhHiddenText|Qt::ImhNoAutoUppercase|Qt::ImhNoPredictiveText|Qt::ImhSensitiveData</set>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Password</enum>
+           </property>
           </widget>
          </item>
-         <item row="3" column="1">
-          <widget class="QCheckBox" name="checkBox">
+         <item row="4" column="1">
+          <widget class="QCheckBox" name="cbox_use_ssl">
            <property name="font">
             <font>
              <family>Roboto Light</family>
@@ -362,6 +400,81 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <spacer name="spacer_connect">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="button_reset_connection_form">
+        <property name="font">
+         <font>
+          <family>Roboto Light</family>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Reset</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="button_test_connection">
+        <property name="font">
+         <font>
+          <family>Roboto Light</family>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Test Connection</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_test_connection">
+      <property name="font">
+       <font>
+        <family>Roboto Light</family>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Please test the connection to proceed.</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <spacer name="spacer_page3_v">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
     </item>
    </layout>
   </widget>
@@ -538,6 +651,21 @@ p, li { white-space: pre-wrap; }
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>text_license</tabstop>
+  <tabstop>radio_accept_license</tabstop>
+  <tabstop>radio_decline_icense</tabstop>
+  <tabstop>cbox_use_ssl</tabstop>
+  <tabstop>button_connect_node</tabstop>
+  <tabstop>edit_rpc_password</tabstop>
+  <tabstop>edit_rpc_user</tabstop>
+  <tabstop>button_setup_node</tabstop>
+  <tabstop>button_account_import</tabstop>
+  <tabstop>button_account_create</tabstop>
+  <tabstop>edit_seed</tabstop>
+  <tabstop>edit_new_seed</tabstop>
+  <tabstop>edit_rpc_host</tabstop>
+ </tabstops>
  <resources>
   <include location="resources.qrc"/>
  </resources>

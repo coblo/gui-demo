@@ -15,6 +15,16 @@ class SetupWizard(QWizard, Ui_SetupWizard):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
+        self.setPixmap(QWizard.LogoPixmap, QPixmap(':/images/resources/wizard_logo.png'))
+        self.setPixmap(QWizard.BannerPixmap, QPixmap(':/images/resources/wizard_banner.png'))
+
+        # Page 1 License agreement
+        self.page1_welcome.isComplete = self.page1_is_complete
+        self.radio_accept_license.clicked.connect(self.page1_welcome.completeChanged)
+        self.radio_decline_icense.clicked.connect(self.page1_welcome.completeChanged)
+
+    def page1_is_complete(self):
+        return self.radio_accept_license.isChecked()
 
 
 if __name__ == '__main__':

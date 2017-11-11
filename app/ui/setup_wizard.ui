@@ -41,7 +41,7 @@
   <property name="options">
    <set>QWizard::CancelButtonOnLeft|QWizard::NoBackButtonOnStartPage</set>
   </property>
-  <widget class="QWizardPage" name="page1_welcome">
+  <widget class="QWizardPage" name="page1_license">
    <property name="locale">
     <locale language="English" country="Germany"/>
    </property>
@@ -51,15 +51,12 @@
    <property name="subTitle">
     <string>A decentralized platfrom for the media economy.</string>
    </property>
-   <attribute name="pageId">
-    <string notr="true">1</string>
-   </attribute>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
      <number>9</number>
     </property>
     <item>
-     <widget class="QLabel" name="label_header">
+     <widget class="QLabel" name="label_header_p1">
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;CHARM&lt;/span&gt; is a &lt;span style=&quot; font-weight:600; color:#aa0000;&quot;&gt;proof of concept software&lt;/span&gt; that allows you to run a full content blockchain node and wallet on your computer and participate in testing the plattform.&lt;/p&gt;&lt;p&gt;Copyright (c) 2017 The Content Blockchain Project.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;License Agreement&lt;/span&gt;&lt;/p&gt;&lt;p&gt;To proceed you must accept the following license terms:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
@@ -69,7 +66,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QTextBrowser" name="textBrowser">
+     <widget class="QTextBrowser" name="text_license">
       <property name="html">
        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -215,75 +212,338 @@ p, li { white-space: pre-wrap; }
     </item>
    </layout>
   </widget>
-  <widget class="QWizardPage" name="page2_choose">
+  <widget class="QWizardPage" name="page2_choose_mode">
    <property name="title">
     <string>How do you want to join the Network</string>
    </property>
    <property name="subTitle">
     <string>You can setup a full blockchain node on this computer or connect to an existing node.</string>
    </property>
-   <attribute name="pageId">
-    <string notr="true">2</string>
-   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QCommandLinkButton" name="button_setup_node">
+      <property name="text">
+       <string>Setup and run a full node</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="description">
+       <string>This will install and initialize a full node on your computer. The node will participate in the network and synchronize a full copy of the blockchain.</string>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">button_group_choose_mode</string>
+      </attribute>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCommandLinkButton" name="button_connect_node">
+      <property name="text">
+       <string>Connect to existing an node</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="description">
+       <string>If you have a full node installed on a separate computer you may connect to it instead of running a node on your local machine.</string>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">button_group_choose_mode</string>
+      </attribute>
+     </widget>
+    </item>
+   </layout>
   </widget>
-  <widget class="QWizardPage" name="page3a_connect">
+  <widget class="QWizardPage" name="page3_connect">
    <property name="title">
     <string>Connect to an existing node</string>
    </property>
    <property name="subTitle">
     <string>Please provide your connection data.</string>
    </property>
-   <attribute name="pageId">
-    <string notr="true">3a</string>
-   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="font">
+       <font>
+        <family>Oswald</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="title">
+       <string>CONNECT TO EXISTING NODE</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Host</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="lineEdit">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>RPC User</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="lineEdit_3">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>RPC Password</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="lineEdit_2">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QCheckBox" name="checkBox">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Use SSL</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
   </widget>
-  <widget class="QWizardPage" name="page3b_choose">
+  <widget class="QWizardPage" name="page4_choose_account">
    <property name="title">
     <string>Setup blockchain node</string>
    </property>
    <property name="subTitle">
     <string>You may create a new account or import an existing account.</string>
    </property>
-   <attribute name="pageId">
-    <string notr="true">3b</string>
-   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
+     <widget class="QCommandLinkButton" name="button_account_create">
+      <property name="text">
+       <string>Create new account</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="description">
+       <string>This will create a new random blockchain address that will serve as your account on the network</string>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">button_group_choose_account</string>
+      </attribute>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCommandLinkButton" name="button_account_import">
+      <property name="text">
+       <string>Import existing account</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="description">
+       <string>Provide your 24 word seed to recover your existing account.</string>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">button_group_choose_account</string>
+      </attribute>
+     </widget>
+    </item>
+   </layout>
   </widget>
-  <widget class="QWizardPage" name="page4a_import">
+  <widget class="QWizardPage" name="page5_import_account">
    <property name="title">
     <string>Import existing account</string>
    </property>
    <property name="subTitle">
     <string>Please paste your 24 recovery seed.</string>
    </property>
-   <attribute name="pageId">
-    <string notr="true">4a</string>
-   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_7">
+    <item>
+     <widget class="QGroupBox" name="gbox_import_account">
+      <property name="font">
+       <font>
+        <family>Oswald</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="title">
+       <string>IMPORT EXISTING ACCOUNT</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QLabel" name="label_seed_input">
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Please type or paste your 24 word seed</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="edit_seed">
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="spacer_page5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
   </widget>
-  <widget class="QWizardPage" name="page4b_create">
+  <widget class="QWizardPage" name="page6_create_account">
    <property name="title">
     <string>Create a new account</string>
    </property>
    <property name="subTitle">
     <string>Make sure you write down your 24 word recovery seed</string>
    </property>
-   <attribute name="pageId">
-    <string notr="true">4b</string>
-   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_9">
+    <item>
+     <widget class="QGroupBox" name="gbox_create_account">
+      <property name="font">
+       <font>
+        <family>Oswald</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="title">
+       <string>CREATE NEW ACCOUNT</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_8">
+       <item>
+        <widget class="QPlainTextEdit" name="edit_new_seed"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_new_seed_info">
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto Light'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;This is your 24 word recovery seed. Make sure you create a backup of this seed. It is important to understand that anybody who has access to this 24 words can control your account. You will also need these words if you ever want to restore your account on another device. &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="spacer_create_account">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
   </widget>
-  <widget class="QWizardPage" name="page5_sync">
+  <widget class="QWizardPage" name="page7_sync">
    <property name="title">
     <string>Initial Syncronization</string>
    </property>
    <property name="subTitle">
     <string>Please be patient while initial synchronization is running.</string>
    </property>
-   <attribute name="pageId">
-    <string notr="true">5</string>
-   </attribute>
   </widget>
  </widget>
  <resources>
   <include location="resources.qrc"/>
  </resources>
  <connections/>
+ <buttongroups>
+  <buttongroup name="button_group_choose_mode"/>
+  <buttongroup name="button_group_choose_account"/>
+ </buttongroups>
 </ui>

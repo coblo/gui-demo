@@ -57,6 +57,7 @@ class SetupWizard(QWizard, Ui_SetupWizard):
 
         # Page 5 Import Existing Account
         self.page5_import_account.isComplete = self.page5_import_account_is_complete
+        self.page5_import_account.cleanupPage = self.page5_import_account_cleanup
         self.edit_seed.textChanged.connect(self.page5_import_account.completeChanged)
 
         # Page 6 Create Account
@@ -103,10 +104,16 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         validator = Mnemonic('english')
         if validator.check(words):
             self.edit_seed.setStyleSheet('background-color: #c4df9b;')
+            self._mnemonic = words
             return True
         else:
             self.edit_seed.setStyleSheet('background-color: #fff79a;')
             return False
+
+    def page5_import_account_cleanup(self):
+        self.edit_seed.setPlainText('')
+        self.edit_seed.setStyleSheet('background-color: white;')
+        self._mnemonic = None
 
     def page6_create_account_is_complete(self):
         return self._mnemonic is not None
@@ -180,6 +187,8 @@ class SetupWizard(QWizard, Ui_SetupWizard):
                 return self.P6_CREATE_ACCOUNT
             if self.button_account_import.isChecked():
                 return self.P5_IMPORT_ACCOUNT
+        if self.currentId() == self.P5_IMPORT_ACCOUNT:
+            return self.P7_SYNC
         return super().nextId()
 
 

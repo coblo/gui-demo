@@ -24,6 +24,43 @@ def create_address(private_key, pkhv, cv, compressed=True):
     return public_key_to_address(pubkey, pkhv, cv)
 
 
+def create_wif(private_key, pkv, acv, compressed=True):
+    """Create a 'Wallet Import Format' encoded private key.
+
+    Implementation of http://bit.ly/2hH1UUY
+
+    :param str private_key: ECDSA private key (hex)
+    :param str pkv: private-key-version of chain (hex)
+    :param str acv: address-checksum-value of chain (hex)
+    :param bool compressed: build address with compressed pubkey
+    :return str: wif encoded private_key
+    """
+    if compressed:
+        privkey = private_key + '01'
+    else:
+        privkey = private_key
+
+    privkey_raw = bytearray(unhexlify(privkey))
+    pkv_raw = bytearray(unhexlify(pkv))
+    acv_raw = unhexlify(acv)
+
+    # Extend:
+    steps = 33 // len(pkv_raw)
+    idx = 0
+    for pkv_byte in pkv_raw:
+        privkey_raw.insert(idx, pkv_byte)
+        idx += steps + 1
+
+    privkey_raw_extended = bytes(privkey_raw)
+    privkey_raw_sha256d = sha256d(privkey_raw_extended)
+
+    postfix = xor_bytes(privkey_raw_sha256d[:4], acv_raw)
+
+    # Compose final WIF
+    wif_bin = privkey_raw_extended + postfix
+    return base58.b58encode(wif_bin)
+
+
 def public_key_to_address(public_key: str, pkhv, cv):
     """Create Address from a public key.
 
@@ -47,12 +84,13 @@ def public_key_to_address(public_key: str, pkhv, cv):
 
     # Extend
     steps = 20 // len(pkhv_raw)
-    chunks = [pubkey_raw_hashed[i:i+steps] for i in range(0, len(pubkey_raw_hashed), steps)]
-    pubkey_raw_extended = b''
-    for idx, b in enumerate(unhexlify(pkhv), start=0):
-        pubkey_raw_extended += b.to_bytes(1, 'big') + chunks[idx]
+    idx = 0
+    privkey_ba = bytearray(pubkey_raw_hashed)
+    for pkhv_byte in pkhv_raw:
+        privkey_ba.insert(idx, pkhv_byte)
+        idx += steps + 1
+    pubkey_raw_extended = bytes(privkey_ba)
 
-    # Double SHA256
     pubkey_raw_sha256d = sha256d(pubkey_raw_extended)
 
     # XOR first 4 bytes with address-checksum-value for postfix
@@ -66,7 +104,7 @@ def public_key_to_address(public_key: str, pkhv, cv):
 def address_valid(address, checksum_value="d8a558e6"):
     """Validate a chain specific address.
 
-    :param str address:
+    :param str address: chain specific address or wif encoded private key
     :param str checksum_value: chain param address-checksum-value (4 bytes hex)
     :return bool:
     """
@@ -108,6 +146,7 @@ if __name__ == '__main__':
         '283D01856115B7970B622EAA6DAFF2B9ECE30F1B66927592F6EA70325929102B',
         ADDRESS_PUBKEYHASH_VERSION,
         ADDRESS_CHECKSUM_VALUE,
+        compressed=True
     ) == '1Yu2BuptuZSiBWfr2Qy4aic6qEVnwPWrdkHPEc'
 
     assert address_valid(
@@ -117,5 +156,17 @@ if __name__ == '__main__':
 
     assert address_valid(
         '1HrciBAMdcPbSfDoXDyDpDUnb44Dg8sH4WfVyP',
-        "d8a558e6",
+        'd8a558e6',
+    )
+
+    assert create_wif(
+        private_key='B69CA8FFAE36F11AD445625E35BF6AC57D6642DDBE470DD3E7934291B2000D78',
+        pkv='8025B89E',
+        acv='7B7AEF76',
+        compressed=True
+    ) == 'VEEWgYhDhqWnNnDCXXjirJYXGDFPjH1B8v6hmcnj1kLXrkpxArmz7xXw'
+
+    assert address_valid(
+        'VEEWgYhDhqWnNnDCXXjirJYXGDFPjH1B8v6hmcnj1kLXrkpxArmz7xXw',
+        '7B7AEF76',
     )

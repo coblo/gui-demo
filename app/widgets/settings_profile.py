@@ -1,6 +1,10 @@
+import getpass
+
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
+import app
+from app.helpers import gen_password
 from app.ui.settings_profile import Ui_settings_profile
 
 from app.models import Profile
@@ -26,6 +30,9 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
         for profile in self.profiles:
             self.cb_profile.addItem(profile.name)
         self.cb_profile.setCurrentText(self.active_profile.name)
+
+        self.switch_manage_mode(self.active_profile.manage_node)
+        self.check_manage_node.stateChanged.connect(self.switch_manage_mode)
 
         self.btn_add_profile.clicked.connect(self.on_add_profile)
         self.btn_change_profile.clicked.connect(self.on_change_profile)
@@ -79,6 +86,17 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
         self.btn_reset.setText("Cancel" if add_mode else "Reset")
         self.btn_reset.clicked.connect(self.on_reset_added_profile if add_mode else self.on_reset)
         self.btn_save.clicked.connect(self.on_save_added_profile if add_mode else self.on_save)
+
+    def switch_manage_mode(self, manage_node=False):
+        self.edit_rpc_user.setDisabled(manage_node)
+        self.edit_rpc_password.setDisabled(manage_node)
+        self.edit_host.setDisabled(manage_node)
+        self.edit_port.setDisabled(manage_node)
+        if manage_node:
+            self.edit_rpc_user.setText(getpass.getuser())
+            self.edit_rpc_password.setText(gen_password())
+            self.edit_host.setText(app.DEFAULT_RPC_HOST)
+            self.edit_port.setText("{}".format(app.DEFAULT_RPC_PORT))
 
     def refill_profile_form(self, profile=None):
         if profile is not None:

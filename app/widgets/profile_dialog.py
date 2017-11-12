@@ -1,12 +1,12 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
-from app.ui.profile_dialog import Ui_ConnectionSettingsDialog
+from app.ui.profile_dialog import Ui_ProfileDialog
 
 from app.models import Profile
 
 
-class ProfileDialog(QtWidgets.QDialog, Ui_ConnectionSettingsDialog):
+class ProfileDialog(QtWidgets.QDialog, Ui_ProfileDialog):
 
     connection_settings_changed = QtCore.pyqtSignal()
 
@@ -39,4 +39,4 @@ class ProfileDialog(QtWidgets.QDialog, Ui_ConnectionSettingsDialog):
             self.check_manage_node.setChecked(self.profile.manage_node)
 
     def on_accept(self):
-        pass
+        print('saved')

@@ -10,3 +10,4 @@ timeago==1.0.7
 base58==0.2.5
 py-ubjson==0.10.0
 mnemonic==0.18
+pycoin==0.80

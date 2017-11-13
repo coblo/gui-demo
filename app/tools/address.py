@@ -3,7 +3,66 @@
 from hashlib import sha256, new
 from binascii import unhexlify
 from bitcoin import privtopub, compress
+from mnemonic import Mnemonic
 import base58
+from pycoin.key.BIP32Node import BIP32Node
+import app
+
+
+MAIN_BIP44_PATH_TESTNET = '44H/1H/0H/0/0'
+
+
+def main_address_from_mnemonic(words: str) -> str:
+    """Returns the main address from a 24 word mnemonic (Testnet only).
+
+    The main address is the first address in the BIP44 derivation path.
+    We use it as our handshakelocal address in the node.
+    :param str words: BIP-0039 - 24 word mnemonic
+    :return str: multichain encoded testnet address for handshake local
+    """
+    priv_key = ecdsa_pk_from_mnemonic(words)
+    return create_address(
+        priv_key,
+        app.TESTNET_ADDRESS_PUBKEYHASH_VERSION,
+        app.TESTNET_ADDRESS_CHECKSUM_VALUE,
+    )
+
+
+def main_wif_from_mnemonic(words: str) -> str:
+    """Returns wif encoded private key of main address from a
+    24 word mnemonic (Testnet only).
+
+    The main address is the first address in the BIP44 derivation path.
+    We use it as our handshakelocal address in the node.
+    :param str words: BIP-0039 - 24 word mnemonic
+    :return str: multichain encoded wif private key for handshake local
+    """
+    priv_key = ecdsa_pk_from_mnemonic(words)
+    return create_wif(
+        priv_key,
+        app.TESTNET_PRIVATE_KEY_VERSION,
+        app.TESTNET_ADDRESS_CHECKSUM_VALUE,
+    )
+
+
+def ecdsa_pk_from_mnemonic(words: str) -> str:
+    """
+    Returns the hex encoded ecdsa private key for the main address
+    from a 24 word mnemonic.
+
+    The main address is the first address in the BIP44 derivation path.
+    We use it as our handshakelocal address in the node.
+
+    :param str words: BIP-0039 - 24 word mnemonic
+    :return str: hex encoded ecdsa private key
+    """
+    seeder = Mnemonic('english')
+    bip_39_seed = seeder.to_seed(words)
+    # This currently uses BTC Network settings
+    bip_32_root_key = BIP32Node.from_master_secret(bip_39_seed, 'BTC')
+    main_address_key = bip_32_root_key.subkey_for_path(MAIN_BIP44_PATH_TESTNET)
+    ecdsa_private_key = hex(main_address_key.secret_exponent())[2:]
+    return ecdsa_private_key
 
 
 def create_address(private_key, pkhv, cv, compressed=True):
@@ -170,3 +229,10 @@ if __name__ == '__main__':
         'VEEWgYhDhqWnNnDCXXjirJYXGDFPjH1B8v6hmcnj1kLXrkpxArmz7xXw',
         '7B7AEF76',
     )
+
+    assert ecdsa_pk_from_mnemonic(
+        'december tobacco prize tunnel mammal mixture '
+        'attend clap jeans inch hybrid apple '
+        'suspect tube library soap trick scatter '
+        'wise accident obvious wash alarm fire'
+    ) == 'ccffdefc1cf59552d44bb40098d9aa0c8bbc355ee71eac6776715be1ba209d5e'

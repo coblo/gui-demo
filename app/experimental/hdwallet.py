@@ -70,6 +70,7 @@ default-network-port = 8375
 address-checksum-value	d8a558e6
 address-pubkeyhash-version	0046e454
 address-scripthash-version	054b9e59
+private-key-version = 807c3b9f
 
 DEFAULT_ARGS_ORDER = (
     'code', 'network_name', 'subnet_name',
@@ -101,7 +102,7 @@ def ecdsa_key_from_seed(seed, netcode, coinid):
 
 
 print('ecdsa_key_from_seed BTC: ', ecdsa_key_from_seed(seed, 'BTC', 0))
-print('ecdsa_key_from_seed CHM: ', ecdsa_key_from_seed(seed, 'CHM', 0))
+print('ecdsa_key_from_seed CHM Testnet: ', ecdsa_key_from_seed(seed, 'CHM', 1))
 
 
 

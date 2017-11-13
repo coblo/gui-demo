@@ -113,6 +113,7 @@ def listpermissions():
     new_perms, new_votes = False, False
 
     Permission.delete().execute()
+    VotingRound.delete().execute()
 
     admin_addresses = set()
     miner_addresses = set()

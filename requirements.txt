@@ -11,3 +11,5 @@ base58==0.2.5
 py-ubjson==0.10.0
 mnemonic==0.18
 pycoin==0.80
+qrcode==5.3
+Pillow==4.3.0

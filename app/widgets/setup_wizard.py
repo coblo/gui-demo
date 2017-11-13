@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
+import qrcode
+import webbrowser
+from PIL.ImageQt import ImageQt
 from mnemonic import Mnemonic
 
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QPixmap
 
 from app.backend.rpc import RpcClient
+from app.tools.address import main_address_from_mnemonic
 from app.ui.setup_wizard import Ui_SetupWizard
 from PyQt5.QtWidgets import QWizard
 from app.ui import resources_rc
@@ -34,6 +38,7 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self._connection_tested = False
         self._sync_ready = False
         self._mnemonic = None
+        self._address = None
 
         # Global connections
         self.currentIdChanged.connect(self.current_id_changed)
@@ -66,7 +71,9 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self.page6_create_account.cleanupPage = self.page6_create_account_cleanup
 
         # Page 7 Initial Sync
+        self.page7_sync.initializePage = self.page7_sync_initialize_page
         self.page7_sync.isComplete = self.page7_sync_is_complete
+        self.button_get_coins.clicked.connect(lambda: webbrowser.open(app.GET_COINS_URL))
 
     @pyqtSlot(int)
     def current_id_changed(self, page_id: int):
@@ -128,6 +135,13 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         )
         self.edit_new_seed.setPlainText('')
         self.button_generate_mnemonic.show()
+
+    def page7_sync_initialize_page(self):
+        if self._mnemonic:
+            self._address = main_address_from_mnemonic(self._mnemonic)
+            self.label_address.setText(self._address)
+            img = ImageQt(qrcode.make(self._address, box_size=3))
+            self.label_qr_code.setPixmap(QPixmap.fromImage(img))
 
     def page7_sync_is_complete(self):
         return self._sync_ready

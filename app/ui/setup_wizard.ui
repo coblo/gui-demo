@@ -239,7 +239,7 @@ p, li { white-space: pre-wrap; }
     <item>
      <widget class="QCommandLinkButton" name="button_connect_node">
       <property name="text">
-       <string>Connect to existing an node</string>
+       <string>Connect to an existing node</string>
       </property>
       <property name="checkable">
        <bool>true</bool>
@@ -638,7 +638,7 @@ p, li { white-space: pre-wrap; }
          <property name="font">
           <font>
            <family>Roboto Light</family>
-           <pointsize>14</pointsize>
+           <pointsize>12</pointsize>
           </font>
          </property>
          <property name="cursor" stdset="0">
@@ -684,6 +684,9 @@ p, li { white-space: pre-wrap; }
              <pointsize>10</pointsize>
             </font>
            </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
            <property name="text">
             <string>Create New Account</string>
            </property>
@@ -716,6 +719,218 @@ p, li { white-space: pre-wrap; }
    <property name="subTitle">
     <string>Please be patient while initial synchronization is running.</string>
    </property>
+   <layout class="QVBoxLayout" name="verticalLayout_12">
+    <item alignment="Qt::AlignTop">
+     <widget class="QGroupBox" name="gbox_welcome">
+      <property name="font">
+       <font>
+        <family>Oswald</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="title">
+       <string>WELCOME TO THE CONTENT BLOCKCHAIN</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item alignment="Qt::AlignTop">
+        <widget class="QLabel" name="label_qr_code">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_11">
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_address_title">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Your Content Blockchain Address:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_address">
+           <property name="font">
+            <font>
+             <family>Roboto Condensed</family>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="cursor">
+            <cursorShape>IBeamCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string>Unspecified</string>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_address_info">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Your address is similar to a bank account number. If you want to receive funds you will have to give your address to the payer. &lt;span style=&quot; color:#aa0000;&quot;&gt;To be able to make use of transactions on the Content Blockchain you will first need to get some funds.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::RichText</enum>
+           </property>
+           <property name="scaledContents">
+            <bool>false</bool>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::NoTextInteraction</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item alignment="Qt::AlignRight">
+          <widget class="QPushButton" name="button_get_coins">
+           <property name="font">
+            <font>
+             <family>Roboto Light</family>
+             <pointsize>11</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+	background-color: red;
+	color: white;
+	padding: 5 12 5 12; 
+	font: 11pt &quot;Roboto Light&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>Get Your First Coins</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="gbox_sync">
+      <property name="font">
+       <font>
+        <family>Oswald</family>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="title">
+       <string>SETUP AND INITIAL SYNCHRONIZATION</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_10">
+       <item>
+        <widget class="QProgressBar" name="progress_bar_initial_sync">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>24</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>24</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+           <pointsize>8</pointsize>
+           <stylestrategy>PreferAntialias</stylestrategy>
+          </font>
+         </property>
+         <property name="maximum">
+          <number>0</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="textVisible">
+          <bool>true</bool>
+         </property>
+         <property name="invertedAppearance">
+          <bool>false</bool>
+         </property>
+         <property name="format">
+          <string>%v/%m blocks (%p%)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="edit_setup_log">
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <tabstops>

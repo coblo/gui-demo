@@ -36,6 +36,8 @@ TESTNET_ADDRESS_SCRIPTHASH_VERSION = '054b9e59'
 TESTNET_ADDRESS_CHECKSUM_VALUE = 'd8a558e6'
 TESTNET_PRIVATE_KEY_VERSION = '807c3b9f'
 
+GET_COINS_URL = 'https://content-blockchain.org'
+
 
 def init():
     import sys

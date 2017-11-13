@@ -59,9 +59,8 @@ def listwallettransactions():
         log.warning('no transactions from api')
         return
     balance = 0
-    transactions = []
-    has_new = False
-    Transaction.delete().execute()
+    new_transactions = []
+    new_confirmations = []
     with data_db.atomic():
         for tx in txs['result']:
             if tx['valid']:
@@ -94,12 +93,15 @@ def listwallettransactions():
                     )
                 )
                 if created:
-                    has_new = True
-                else:
+                    new_transactions.append(tx_obj)
+                elif tx_obj.confirmations == 0 and confirmations != 0:
+                    tx_obj.confirmations = confirmations
+                    new_confirmations.append(tx_obj)
                     tx_obj.save()
-    if has_new:
-        signals.listwallettransactions.emit()
-    return has_new
+
+    if len(new_transactions) > 0 or len(new_confirmations) > 0:
+        signals.listwallettransactions.emit(new_transactions, new_confirmations)
+    return len(new_transactions) != 0
 
 
 def listpermissions():

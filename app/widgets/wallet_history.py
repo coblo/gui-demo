@@ -105,11 +105,12 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.endInsertRows()
 
         # update confirmations column
-        for tx in new_confirmations:
+        if len(new_confirmations) > 0:
+            confirmations_map = {i.txid: i for i in new_confirmations}
             for index, tx_1 in enumerate(self.txs):
-                if tx_1[self.TXID] == tx.txid:
+                if tx_1[self.TXID] in confirmations_map:
                     lst = list(self.txs[index])
-                    lst[self.CONFIRMATIONS] = tx.confirmations
+                    lst[self.CONFIRMATIONS] = confirmations_map[tx_1[self.TXID]].confirmations
                     self.txs[index] = tuple(lst)
                     self.dataChanged.emit(self.index(index, self.CONFIRMATIONS), self.index(index, self.CONFIRMATIONS), [Qt.DisplayRole])
                     break

@@ -45,6 +45,9 @@ class Signals(QObject):
     # Emmits synched_block_height, node_block_height ints
     database_blocks_updated = pyqtSignal(int, int)
 
+    # Signals standard output from managed node process
+    node_message = pyqtSignal(str)
+
 
 
 signals = Signals()

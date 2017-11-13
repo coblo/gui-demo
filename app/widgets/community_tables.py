@@ -2,17 +2,13 @@
 import sys
 import logging
 import math
-from functools import partial
 
 import timeago
 from datetime import datetime
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QHeaderView
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget
 
 from app.backend.rpc import get_active_rpc_client
 from app.models import Permission, Profile
@@ -107,6 +103,26 @@ class PermissionModel(QAbstractTableModel):
 class ButtonDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, parent):
         QtWidgets.QStyledItemDelegate.__init__(self, parent)
+        self.already_voted = []
+        signals.listpermissions.connect(self.listpermissions)
+        self.listpermissions()
+
+    def listpermissions(self):
+        # TODO try to avoid this api call by storing/getting needed info from database
+        client = get_active_rpc_client()
+        try:
+            perms_data = client.listpermissions()['result']
+            for perm in perms_data:
+                for pending in perm['pending']:
+                    if pending['startblock'] == 0 and pending['endblock'] == 0:
+                        if Profile.get_active().address in pending['admins'] and perm['address'] not in self.already_voted:
+                            self.already_voted.append({
+                                'address': perm['address'],
+                                'perm_type': perm['type']
+                            })
+        except Exception:
+            log.debug('could not get permission data via rpc')
+            return
 
     def createEditor(self, parent, option, idx):
         btn = QtWidgets.QPushButton('Revoke', parent)
@@ -116,7 +132,11 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
         btn.setObjectName(address)
         btn.clicked.connect(self.on_revoke_clicked)
         btn.setCursor(QCursor(Qt.PointingHandCursor))
-        # todo: disable button when user has already voted
+        for vote in self.already_voted:
+            if vote['address'] == address and vote['perm_type'] == self.parent().perm_type:
+                btn.setDisabled(True)
+                btn.setStyleSheet(
+                    "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         return btn
 
     def on_revoke_clicked(self):

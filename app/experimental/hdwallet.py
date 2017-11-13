@@ -8,14 +8,21 @@ See also:
 https://github.com/satoshilabs/slips/blob/master/slip-0044.md
 https://en.bitcoin.it/wiki/List_of_address_prefixes
 https://github.com/libbitcoin/libbitcoin/wiki/Altcoin-Version-Mappings
+https://bitcore.io/playground/#/address
+https://brainwalletx.github.io/#generator
+https://bitcoin.stackexchange.com/a/53579
 
 bitcoin bip32 private key: b'\x04\x88\xAD\xE4'
 """
 import mnemonic
 from binascii import hexlify
 from pycoin.key.BIP32Node import BIP32Node
+from pycoin.networks.network import Network
+from pycoin.networks import register_network
 import bitcoin
-
+from pycoin.serialize import h2b
+from pycoin.tx.Tx import Tx as CharmTx
+from pycoin.block import Block as CharmBlock
 
 m = mnemonic.Mnemonic('english')
 # words = m.generate(256)
@@ -56,11 +63,45 @@ priv_key = hex(handshake.secret_exponent())[2:]
 print('private key for our address generation: ', priv_key)
 
 
-def ecdsa_key_from_seed(seed):
-    bip32_root_key = BIP32Node.from_master_secret(seed, 'BTC')
-    main_handshake_key = bip32_root_key.subkey_for_path('44H/0H/0H/0/0')
+"""
+Charm Testnet:
+network-message-start = f4f3e3fa  
+default-network-port = 8375
+address-checksum-value	d8a558e6
+address-pubkeyhash-version	0046e454
+address-scripthash-version	054b9e59
+
+DEFAULT_ARGS_ORDER = (
+    'code', 'network_name', 'subnet_name',
+    'wif', 'address', 'pay_to_script', 'prv32', 'pub32',
+    'tx', 'block',
+    'magic_header', 'default_port', 'dns_bootstrap',
+    'address_wit', 'pay_to_script_wit',
+    'bech32_hrp'
+)
+"""
+
+
+charm = Network(
+    'CHM', "charm", "testnet",
+    h2b('807C3B9F'), h2b('0046E454'), h2b('054B9E59'), h2b("0488ADE4"), h2b("0488B21E"),
+    CharmTx, CharmBlock,
+    h2b('F4F3E3FA'), 8375, [],
+    bech32_hrp='ch'
+)
+
+register_network(charm)
+
+
+def ecdsa_key_from_seed(seed, netcode, coinid):
+    bip32_root_key = BIP32Node.from_master_secret(seed, netcode)
+    main_handshake_key = bip32_root_key.subkey_for_path('44H/{}H/0H/0/0'.format(coinid))
     ecdsa_private_key = hex(main_handshake_key.secret_exponent())[2:]
     return ecdsa_private_key
 
 
-print('ecdsa_key_from_seed: ', ecdsa_key_from_seed(seed))
+print('ecdsa_key_from_seed BTC: ', ecdsa_key_from_seed(seed, 'BTC', 0))
+print('ecdsa_key_from_seed CHM: ', ecdsa_key_from_seed(seed, 'CHM', 0))
+
+
+

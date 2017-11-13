@@ -26,7 +26,7 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
         self.active_profile = Profile.get_active()
         self.refill_profile_form(self.active_profile)
 
-        self.fill_checkbox()
+        self.fill_combobox()
 
         self.switch_manage_mode(self.active_profile.manage_node)
         self.check_manage_node.stateChanged.connect(self.switch_manage_mode)
@@ -76,9 +76,28 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
                 error_dialog.exec_()
 
         else:
-            # todo: save change of active profile
-            pass
-        self.fill_checkbox()
+            try:
+                Profile.update(
+                        name=self.edit_name.text(),
+                        rpc_host=self.edit_host.text(),
+                        rpc_port=int(self.edit_port.text()),
+                        rpc_user=self.edit_rpc_user.text(),
+                        rpc_password=self.edit_rpc_password.text(),
+                        rpc_use_ssl=self.check_box_use_ssl.checkState() == Qt.Checked,
+                        manage_node=self.check_manage_node.checkState() == Qt.Checked,
+                        exit_on_close=self.check_exit_close.checkState() == Qt.Checked,
+                        active=True
+                ).where(Profile.name == self.active_profile.name).execute()
+            except Exception as e:
+                err_msg = str(e)
+                error_dialog = QMessageBox()
+                error_dialog.setWindowTitle('Error while creating Profile')
+                error_dialog.setText(err_msg)
+                error_dialog.setIcon(QMessageBox.Warning)
+                error_dialog.exec_()
+
+        self.fill_combobox()
+        self.active_profile = Profile.get_active()
 
     def on_reset(self):
         if self.adding_profile:
@@ -129,6 +148,7 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
             self.edit_rpc_password.setText(profile.rpc_password)
             self.check_box_use_ssl.setChecked(profile.rpc_use_ssl)
             self.check_manage_node.setChecked(profile.manage_node)
+            self.check_exit_close.setChecked(profile.exit_on_close)
 
         else:
             self.label_text_profile.setText("You are adding a new profile")
@@ -140,8 +160,9 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
             self.edit_rpc_password.clear()
             self.check_box_use_ssl.setChecked(False)
             self.check_manage_node.setChecked(False)
+            self.check_exit_close.setChecked(False)
 
-    def fill_checkbox(self):
+    def fill_combobox(self):
         self.cb_profile.clear()
         profiles = Profile.select()
         for profile in profiles:

@@ -5,6 +5,7 @@ import logging
 from PyQt5 import QtCore
 from app import sync
 from app.backend.rpc import get_active_rpc_client
+from app.signals import signals
 
 
 log = logging.getLogger(__name__)
@@ -80,5 +81,6 @@ class Updater(QtCore.QThread):
 
                 synced_blockhash = node_block_hash
                 synced_txid = node_txid
+                signals.sync_cycle_finished.emit()
 
             self.sleep(self.UPDATE_INTERVALL)

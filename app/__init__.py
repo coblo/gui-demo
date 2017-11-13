@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Global constants and pre-app initialization stuff."""
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, exists
 import sys
 import appdirs
 
@@ -49,3 +49,11 @@ def init():
     helpers.init_data_dir()
     models.init_profile_db()
     models.init_data_db()
+
+
+def is_first_start():
+    """Check if the applications needs to be configured"""
+    if not exists(PROFILE_DB_FILEPATH):
+        return True
+    else:
+        return False

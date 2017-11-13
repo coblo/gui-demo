@@ -15,16 +15,17 @@ from app.models.db import data_db, profile_db
 log = logging.getLogger(__name__)
 
 
-def init_profile_db():
+def init_profile_db(create_default_profile=True):
     fp = app.PROFILE_DB_FILEPATH
     log.debug('init profile db at {}'.format(fp))
     profile_db.initialize(peewee.SqliteDatabase(fp))
     profile_db.connect()
     profile_db.create_tables([Profile], safe=True)
-    if not Profile.get_active():
-        log.debug('no default profile... creating one.')
-        with profile_db.atomic():
-            Profile.create_default_profile()
+    if create_default_profile:
+        if not Profile.get_active():
+            log.debug('no default profile... creating one.')
+            with profile_db.atomic():
+                Profile.create_default_profile()
     return profile_db
 
 

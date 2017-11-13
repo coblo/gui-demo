@@ -378,8 +378,9 @@ def listblocks() -> int:
                 )
                 if blk_created:
                     synced += 1
-                log.debug('Synced block {}'.format(block_obj.height))
 
+                log.debug('Synced block {}'.format(block_obj.height))
+                signals.database_blocks_updated.emit(block_obj.height, height_node)
     log.debug('Synced {} blocks total.'.format(synced))
     return synced
 

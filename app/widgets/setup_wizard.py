@@ -9,11 +9,13 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QPixmap
 
 from app.backend.rpc import RpcClient
+from app.models import Profile, init_profile_db, init_data_db
+from app.signals import signals
 from app.tools.address import main_address_from_mnemonic
 from app.ui.setup_wizard import Ui_SetupWizard
 from PyQt5.QtWidgets import QWizard
 from app.ui import resources_rc
-
+from app.updater import Updater
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +44,7 @@ class SetupWizard(QWizard, Ui_SetupWizard):
 
         # Global connections
         self.currentIdChanged.connect(self.current_id_changed)
+        signals.sync_cycle_finished.connect(self.on_sync_finished)
 
         # Page 1 License agreement
         self.page1_license.isComplete = self.page1_license_is_complete
@@ -74,6 +77,23 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self.page7_sync.initializePage = self.page7_sync_initialize_page
         self.page7_sync.isComplete = self.page7_sync_is_complete
         self.button_get_coins.clicked.connect(lambda: webbrowser.open(app.GET_COINS_URL))
+        signals.database_blocks_updated.connect(self.on_database_blocks_updated)
+
+    @pyqtSlot()
+    def on_sync_finished(self):
+        self._sync_ready = True
+        self.log('Inital setup ans sync is ready!')
+        self.page7_sync.completeChanged.emit()
+
+    @pyqtSlot(int, int)
+    def on_database_blocks_updated(self, current_height, total_blocks):
+        self.progress_bar_initial_sync.setMaximum(total_blocks)
+        self.progress_bar_initial_sync.setValue(current_height)
+        if current_height == total_blocks:
+            # Back to undefined progress
+            self.progress_bar_initial_sync.setMaximum(0)
+            self.progress_bar_initial_sync.setValue(0)
+            self.log('Finished block sync. Next up streams.')
 
     @pyqtSlot(int)
     def current_id_changed(self, page_id: int):
@@ -137,14 +157,48 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self.button_generate_mnemonic.show()
 
     def page7_sync_initialize_page(self):
-        if self._mnemonic:
+        if self._mnemonic and not self._address:
             self._address = main_address_from_mnemonic(self._mnemonic)
-            self.label_address.setText(self._address)
-            img = ImageQt(qrcode.make(self._address, box_size=3))
-            self.label_qr_code.setPixmap(QPixmap.fromImage(img))
+
+        self.label_address.setText(self._address)
+        img = ImageQt(qrcode.make(self._address, box_size=3))
+        self.label_qr_code.setPixmap(QPixmap.fromImage(img))
+
+        if self._connection_tested:
+
+            self.log('Creating data dir at: %s' % app.DATA_DIR)
+            init_data_dir()
+
+            self.log('Creating settings database at: %s' % app.PROFILE_DB_FILEPATH)
+            init_profile_db(create_default_profile=False)
+
+            self.log('Creating default settings.')
+            p_obj, created = Profile.get_or_create(
+                name=self.edit_rpc_host.text(),
+                defaults=dict(
+                    rpc_host=self.edit_rpc_host.text(),
+                    rpc_port=self.edit_rpc_port.text(),
+                    rpc_user=self.edit_rpc_user.text(),
+                    rpc_password=self.edit_rpc_password.text(),
+                    rpc_use_ssl=self.cbox_use_ssl.isChecked(),
+                    manage_node=False,
+                    exit_on_close=True,
+                    active=True,
+                )
+            )
+
+            self.log('Creating sync database')
+            init_data_db()
+
+            self.log('Synchronizing local database')
+            updater = Updater(self)
+            updater.start()
 
     def page7_sync_is_complete(self):
         return self._sync_ready
+
+    def log(self, msg):
+        self.edit_setup_log.appendPlainText(msg)
 
     @pyqtSlot()
     def test_connection(self):
@@ -156,17 +210,19 @@ class SetupWizard(QWizard, Ui_SetupWizard):
             use_ssl=self.cbox_use_ssl.isChecked(),
         )
         try:
-            response = client.getinfo()
+            response = client.getruntimeparams()
             assert response['error'] is None
         except Exception as e:
-            self.label_test_connection.setText(str(e))
+            log.exception(e)
+            self.label_test_connection.setText('Connection error')
             return
 
-        msg = 'Successfully connected to %s' % response['result']['description']
+        msg = 'Successfully connected to %s' % self.edit_rpc_host.text()
         self.label_test_connection.setText(msg)
         self.button_test_connection.setDisabled(True)
         self.gbox_connect.setEnabled(False)
         self._connection_tested = True
+        self._address = response['result']['handshakelocal']
         self.page3_connect.completeChanged.emit()
 
     @pyqtSlot()
@@ -179,6 +235,7 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self.label_test_connection.setText('Please test the connection to proceed.')
         self.button_test_connection.setEnabled(True)
         self._connection_tested = False
+        self._address = None
         self.gbox_connect.setEnabled(True)
         self.page3_connect.completeChanged.emit()
 
@@ -208,11 +265,10 @@ class SetupWizard(QWizard, Ui_SetupWizard):
 
 if __name__ == '__main__':
     import sys
-    from PyQt5 import QtWidgets, QtCore
-    from app.helpers import init_logging
+    from PyQt5 import QtWidgets
+    from app.helpers import init_logging, init_data_dir
     import app
-    app.init()
-    # init_logging()
+    init_logging()
     wrapper = QtWidgets.QApplication(sys.argv)
     wrapper.setStyle('fusion')
     wizard = SetupWizard()

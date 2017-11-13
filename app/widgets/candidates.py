@@ -51,6 +51,11 @@ class CandidateModel(QAbstractTableModel):
             address = data['address']
             alias = Address.select().where(Address.address==address).first().alias
             skill = data['type']
+            skill_name = skill
+            if skill == 'admin':
+                skill_name = 'Guardian'
+            elif skill == 'mine':
+                skill_name = 'Validator'
             for vote_round in data['pending']:
                 if vote_round['startblock'] == 0 and vote_round['endblock'] == MAX_END_BLOCK:
                     votes = len(vote_round['admins'])
@@ -58,7 +63,7 @@ class CandidateModel(QAbstractTableModel):
                     key = (address, skill)
                     already_voted = Profile.get_active().address in vote_round['admins']
                     new_keys.add(key)
-                    self.db[key] = [alias, address, skill, "{} of {}".format(votes, votes + required), already_voted]
+                    self.db[key] = [alias, address, skill_name, "{} of {}".format(votes, votes + required), already_voted]
         deleted_keys = old_keys - new_keys
         for key in deleted_keys:
             del self.db[key]
@@ -180,6 +185,8 @@ class CandidateTableView(QTableView):
         self.verticalHeader().setDefaultSectionSize(40)
 
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+
+        self.setColumnHidden(4, not Profile.get_active().is_admin)
 
         self.setFont(font)
         self.setAlternatingRowColors(True)

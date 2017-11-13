@@ -26,11 +26,16 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.edit_description.setStyleSheet('QLineEdit:focus {background-color: #fff79a}')
 
         self.btn_send_cancel.clicked.connect(self.on_cancel_clicked)
+        self.btn_send_send.setDisabled(True)
+        self.amount_valid = False
+        self.address_valid = False
         self.btn_send_send.clicked.connect(self.on_send_clicked)
 
     def on_amount_edit(self, text):
         if not text:
             self.edit_amount.setStyleSheet('QLineEdit {background-color: #fff79a}')
+            self.amount_valid = False
+            self.btn_send_send.setDisabled(not (self.amount_valid and self.address_valid))
             return
         text = '0.' if text == '.' else text
         clean = ''.join(c for c in text.replace(',', '.') if c in self.amount_symbols)
@@ -50,9 +55,11 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         except Exception as e:
             return
         if amount > self.window().profile.balance or abs(amount.as_tuple().exponent) > 8:
-            self.edit_amount.setStyleSheet('QLineEdit { background-color: #f6989d}')
+            self.edit_amount.setStyleSheet('QLineEdit { background-color: #f6989d}')    # red
         else:
-            self.edit_amount.setStyleSheet('QLineEdit { background-color: #c4df9b}')
+            self.edit_amount.setStyleSheet('QLineEdit { background-color: #c4df9b}')    # green
+        self.amount_valid = not (amount > self.window().profile.balance or abs(amount.as_tuple().exponent) > 8)
+        self.btn_send_send.setDisabled(not (self.amount_valid and self.address_valid))
 
     def check_state(self, *args, **kwargs):
         sender = self.sender()
@@ -64,6 +71,8 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
             color = '#fff79a'  # yellow
         else:
             color = '#f6989d'  # red
+        self.address_valid = state == QValidator.Acceptable
+        self.btn_send_send.setDisabled(not (self.amount_valid and self.address_valid))
         sender.setStyleSheet('QLineEdit { background-color: %s }' % color)
 
     def on_cancel_clicked(self):

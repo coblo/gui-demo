@@ -186,6 +186,8 @@ class CandidateTableView(QTableView):
 
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
 
+        self.setColumnHidden(4, not Profile.get_active().is_admin)
+
         self.setFont(font)
         self.setAlternatingRowColors(True)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)

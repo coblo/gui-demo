@@ -1,7 +1,7 @@
 from datetime import datetime
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt, pyqtSlot
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QHeaderView, QWidget, QTableView
+from PyQt5.QtWidgets import QHeaderView, QWidget
 from decimal import Decimal, ROUND_DOWN
 
 from app.models import Transaction
@@ -83,7 +83,10 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def sort(self, p_int, order=None):
         self.layoutAboutToBeChanged.emit()
-        self.txs.sort(key=lambda x: x[p_int], reverse=(order == Qt.DescendingOrder))
+        if p_int == self.AMOUNT:
+            self.txs.sort(key=lambda x: x[p_int].copy_abs(), reverse=(order != Qt.DescendingOrder))
+        else:
+            self.txs.sort(key=lambda x: x[p_int], reverse=(order != Qt.DescendingOrder))
         self.layoutChanged.emit()
 
     @pyqtSlot()

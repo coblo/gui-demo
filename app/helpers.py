@@ -36,7 +36,7 @@ def init_node_data_dir():
 
 
 def gen_password(length=36):
-    chars = string.ascii_letters + string.digits + '!@#$%^&*()'
+    chars = string.ascii_letters + string.digits
     return ''.join(random.SystemRandom().choice(chars) for _ in range(length))
 
 

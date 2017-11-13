@@ -53,8 +53,8 @@ class Updater(QtCore.QThread):
                 # The node is downloading blocks if it has more headers than blocks
                 blockchain_downloading = blockchain_info['blocks'] != blockchain_info['headers']
                 node_block_hash = blockchain_info['bestblockhash']
-            except Exception:
-                log.debug('cannot get bestblock via rpc')
+            except Exception as e:
+                log.debug('cannot get bestblock via rpc: %s' % e)
                 self.sleep(self.UPDATE_INTERVALL)
                 continue
 

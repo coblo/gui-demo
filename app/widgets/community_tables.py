@@ -29,7 +29,7 @@ class PermissionModel(QAbstractTableModel):
     def __init__(self, parent, perm_type=Permission.MINE):
         super().__init__(parent)
 
-        self._fields = ('Alias', 'Address', 'Last Active', 'Revokes', 'Action')
+        self._fields = ('Alias', 'Address', 'Last Mined' if perm_type==Permission.MINE else 'Last Voted', 'Revokes', 'Action')
         self._perm_type = perm_type
         self._data = self.load_data()
 

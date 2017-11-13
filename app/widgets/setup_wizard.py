@@ -6,16 +6,18 @@ from PIL.ImageQt import ImageQt
 from mnemonic import Mnemonic
 
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QTextCursor
+from os.path import exists
 
 from app.backend.rpc import RpcClient
 from app.models import Profile, init_profile_db, init_data_db
+from app.responses import Getblockchaininfo
 from app.signals import signals
-from app.tools.address import main_address_from_mnemonic
+from app.tools.address import main_address_from_mnemonic, main_wif_from_mnemonic
 from app.ui.setup_wizard import Ui_SetupWizard
 from PyQt5.QtWidgets import QWizard
 from app.ui import resources_rc
-from app.updater import Updater
+
 
 log = logging.getLogger(__name__)
 
@@ -31,20 +33,28 @@ class SetupWizard(QWizard, Ui_SetupWizard):
     P7_SYNC = 6
 
     def __init__(self, *args, **kwargs):
+
+        # Handles to Updater and Node
+        self.updater = kwargs.pop('updater', None)
+        self.node = kwargs.pop('node', None)
         super().__init__(*args, **kwargs)
+
         self.setupUi(self)
+
         self.setPixmap(QWizard.LogoPixmap, QPixmap(':/images/resources/wizard_logo.png'))
         self.setPixmap(QWizard.BannerPixmap, QPixmap(':/images/resources/wizard_banner.png'))
 
         # Wizard state
         self._connection_tested = False
+        self._blockchain_sync = False
+        self._database_sync = False
         self._sync_ready = False
         self._mnemonic = None
         self._address = None
+        self._manage_node = None
 
         # Global connections
         self.currentIdChanged.connect(self.current_id_changed)
-        signals.sync_cycle_finished.connect(self.on_sync_finished)
 
         # Page 1 License agreement
         self.page1_license.isComplete = self.page1_license_is_complete
@@ -61,6 +71,8 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self.button_reset_connection_form.clicked.connect(self.reset_connection_form)
 
         # Page 4 Choose Account Create or Import
+        self.page4_choose_account.initializePage = self.page4_choose_account_initialize_page
+        self.page4_choose_account.cleanupPage = self.page4_choose_account_cleanup_page
         self.button_group_choose_account.buttonClicked.connect(self.next)
 
         # Page 5 Import Existing Account
@@ -78,28 +90,54 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self.page7_sync.isComplete = self.page7_sync_is_complete
         self.button_get_coins.clicked.connect(lambda: webbrowser.open(app.GET_COINS_URL))
         signals.database_blocks_updated.connect(self.on_database_blocks_updated)
+        signals.node_message.connect(self.on_node_message)
+        signals.getblockchaininfo.connect(self.getblockchaininfo)
+        signals.node_started.connect(self.on_node_started)
 
-    @pyqtSlot()
-    def on_sync_finished(self):
-        self._sync_ready = True
-        self.log('Inital setup ans sync is ready!')
-        self.page7_sync.completeChanged.emit()
+    @pyqtSlot(object)
+    def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):
+        if self._blockchain_sync and blockchaininfo.headers > 10:
+            self.progress_bar_initial_sync.setMaximum(blockchaininfo.headers)
+            self.progress_bar_initial_sync.setValue(blockchaininfo.blocks)
+            if blockchaininfo.headers == blockchaininfo.blocks:
+                # Back to undefined progress
+                self.progress_bar_initial_sync.setMaximum(0)
+                self.progress_bar_initial_sync.setValue(0)
+                self.log('Finished blockchain sync.')
+                self._blockchain_sync = False
+                self._database_sync = True
 
     @pyqtSlot(int, int)
     def on_database_blocks_updated(self, current_height, total_blocks):
-        self.progress_bar_initial_sync.setMaximum(total_blocks)
-        self.progress_bar_initial_sync.setValue(current_height)
-        if current_height == total_blocks:
-            # Back to undefined progress
-            self.progress_bar_initial_sync.setMaximum(0)
-            self.progress_bar_initial_sync.setValue(0)
-            self.log('Finished block sync. Next up streams.')
+        if self._database_sync:
+            self.progress_bar_initial_sync.setMaximum(total_blocks)
+            self.progress_bar_initial_sync.setValue(current_height)
+            if current_height == total_blocks and current_height > 10:
+                # Back to undefined progress
+                self.progress_bar_initial_sync.setMaximum(0)
+                self.progress_bar_initial_sync.setValue(0)
+                self.log('Finished synching blocks to database.')
+                self._sync_ready = True
+                self.page7_sync.completeChanged.emit()
+
+    @pyqtSlot(str)
+    def on_node_message(self, msg):
+        self.log(msg)
+
+    @pyqtSlot()
+    def on_node_started(self):
+        self._blockchain_sync = True
+        if not self.updater.isRunning():
+            self.updater.start()
 
     @pyqtSlot(int)
     def current_id_changed(self, page_id: int):
         # Hide Next Button on Command Link Pages
         if page_id in (self.P2_CHOOSE_MODE, self.P4_CHOOSE_ACCOUNT):
             self.button(QWizard.NextButton).hide()
+        if page_id == self.P7_SYNC:
+            # Point of no return :)
+            self.button(QWizard.BackButton).hide()
 
     @pyqtSlot()
     def generate_mnemonic(self):
@@ -120,6 +158,12 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         # Verify connection to rpc host
         log.debug('Page 3 completion check request')
         return self._connection_tested
+
+    def page4_choose_account_initialize_page(self):
+        self._manage_node = True
+
+    def page4_choose_account_cleanup_page(self):
+        self._manage_node = False
 
     def page5_import_account_is_complete(self):
         words = self.edit_seed.toPlainText()
@@ -164,15 +208,16 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         img = ImageQt(qrcode.make(self._address, box_size=3))
         self.label_qr_code.setPixmap(QPixmap.fromImage(img))
 
-        if self._connection_tested:
-
+        if not exists(app.DATA_DIR):
             self.log('Creating data dir at: %s' % app.DATA_DIR)
             init_data_dir()
 
-            self.log('Creating settings database at: %s' % app.PROFILE_DB_FILEPATH)
-            init_profile_db(create_default_profile=False)
+        self.log('Initialize profile database at: %s' % app.PROFILE_DB_FILEPATH)
 
-            self.log('Creating default settings.')
+        if self._manage_node:
+            init_profile_db(create_default_profile=True)
+        elif self._connection_tested:
+            init_profile_db(create_default_profile=False)
             p_obj, created = Profile.get_or_create(
                 name=self.edit_rpc_host.text(),
                 defaults=dict(
@@ -187,18 +232,25 @@ class SetupWizard(QWizard, Ui_SetupWizard):
                 )
             )
 
-            self.log('Creating sync database')
-            init_data_db()
+        self.log('Initialize node-sync database')
+        init_data_db()
 
-            self.log('Synchronizing local database')
-            updater = Updater(self)
-            updater.start()
+        if self._manage_node:
+            self.node.start(initprivkey=main_wif_from_mnemonic(self._mnemonic))
+        else:
+            self._database_sync = True
+            if not self.updater.isRunning():
+                self.updater.start()
 
     def page7_sync_is_complete(self):
+        if self._sync_ready:
+            self.button(QWizard.FinishButton).setStyleSheet('background-color: green;')
         return self._sync_ready
 
     def log(self, msg):
+        self.edit_setup_log.moveCursor(QTextCursor.End)
         self.edit_setup_log.appendPlainText(msg)
+        self.edit_setup_log.moveCursor(QTextCursor.End)
 
     @pyqtSlot()
     def test_connection(self):
@@ -239,12 +291,6 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self.gbox_connect.setEnabled(True)
         self.page3_connect.completeChanged.emit()
 
-    def page2_next_id(self):
-        if self.button_connect_node.isChecked():
-            return self.P3_CONNECT
-        elif self.button_setup_node.isChecked():
-            return self.P4_CHOOSE_ACCOUNT
-
     def nextId(self):
         if self.currentId() == self.P2_CHOOSE_MODE:
             if self.button_connect_node.isChecked():
@@ -265,13 +311,17 @@ class SetupWizard(QWizard, Ui_SetupWizard):
 
 if __name__ == '__main__':
     import sys
+    import traceback
     from PyQt5 import QtWidgets
     from app.helpers import init_logging, init_data_dir
     import app
+    from app.updater import Updater
+    from app.node import Node
+    sys.excepthook = traceback.print_exception
     init_logging()
     wrapper = QtWidgets.QApplication(sys.argv)
     wrapper.setStyle('fusion')
-    wizard = SetupWizard()
+    wizard = SetupWizard(node=Node(), updater=Updater())
     wizard.show()
     sys.exit(wrapper.exec())
 

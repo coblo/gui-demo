@@ -211,6 +211,9 @@ p, li { white-space: pre-wrap; }
       <property name="text">
        <string>I do not accept the terms in the license agreement</string>
       </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
    </layout>
@@ -843,7 +846,7 @@ p, li { white-space: pre-wrap; }
            <property name="font">
             <font>
              <family>Roboto Light</family>
-             <pointsize>11</pointsize>
+             <pointsize>10</pointsize>
              <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
@@ -854,7 +857,7 @@ p, li { white-space: pre-wrap; }
 	background-color: red;
 	color: white;
 	padding: 5 12 5 12; 
-	font: 11pt &quot;Roboto Light&quot;;
+	font: 10pt &quot;Roboto Light&quot;;
 }</string>
            </property>
            <property name="text">
@@ -921,12 +924,21 @@ p, li { white-space: pre-wrap; }
         <widget class="QPlainTextEdit" name="edit_setup_log">
          <property name="font">
           <font>
-           <family>Roboto Light</family>
-           <pointsize>10</pointsize>
+           <family>Roboto Condensed Light</family>
+           <pointsize>9</pointsize>
           </font>
+         </property>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="lineWrapMode">
+          <enum>QPlainTextEdit::NoWrap</enum>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::TextSelectableByMouse</set>
+         </property>
+         <property name="centerOnScroll">
+          <bool>false</bool>
          </property>
         </widget>
        </item>

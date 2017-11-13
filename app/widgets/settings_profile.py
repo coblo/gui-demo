@@ -32,6 +32,7 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
         self.check_manage_node.stateChanged.connect(self.switch_manage_mode)
 
         self.adding_profile = False
+        self.check_activate_profile.setHidden(True)
 
         self.btn_add_profile.clicked.connect(self.on_add_profile)
         self.btn_change_profile.clicked.connect(self.on_change_profile)
@@ -61,7 +62,7 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
                     rpc_use_ssl=self.check_box_use_ssl.checkState() == Qt.Checked,
                     manage_node=self.check_manage_node.checkState() == Qt.Checked,
                     exit_on_close=self.check_exit_close.checkState() == Qt.Checked,
-                    active=False
+                    active=self.check_activate_profile.checkState() == Qt.Checked
                 )
                 new_profile.save()
                 self.adding_profile = False
@@ -85,9 +86,9 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
                         rpc_password=self.edit_rpc_password.text(),
                         rpc_use_ssl=self.check_box_use_ssl.checkState() == Qt.Checked,
                         manage_node=self.check_manage_node.checkState() == Qt.Checked,
-                        exit_on_close=self.check_exit_close.checkState() == Qt.Checked,
-                        active=True
+                        exit_on_close=self.check_exit_close.checkState() == Qt.Checked
                 ).where(Profile.name == self.active_profile.name).execute()
+                # todo: switch Profile
             except Exception as e:
                 err_msg = str(e)
                 error_dialog = QMessageBox()
@@ -122,6 +123,7 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
         self.cb_profile.setHidden(not edit_mode)
 
     def switch_profile_add_view(self, add_mode=False):
+        self.check_activate_profile.setHidden(not add_mode)
         self.btn_change_profile.setHidden(add_mode)
         self.btn_add_profile.setHidden(add_mode)
         self.btn_reset.setText("Cancel" if add_mode else "Reset")

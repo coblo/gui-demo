@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Background Updater Thread"""
-import time
 import logging
 from PyQt5 import QtCore
 from app import sync

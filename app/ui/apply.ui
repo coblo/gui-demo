@@ -35,12 +35,15 @@
          </font>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The &lt;span style=&quot; font-weight:600;&quot;&gt;Content Blockchain&lt;/span&gt; beta testnet is currently invite only. The mainnet launch will allow you to easily apply for validator and guardian skills. Meanwhile, If you want to participate in beta testing&lt;span style=&quot; font-weight:600;&quot;&gt; you are welcome to request validator or guardian rights&lt;/span&gt; via our telegram group: &lt;a href=&quot;http://telegram.me/ContentBlockchainBeta&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://telegram.me/ContentBlockchainBeta&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The &lt;span style=&quot; font-weight:600;&quot;&gt;Content Blockchain&lt;/span&gt; beta testnet is currently invite only. The mainnet launch will allow you to easily apply for validator and guardian skills. Meanwhile, If you want to participate in beta testing&lt;span style=&quot; font-weight:600;&quot;&gt; you are welcome to request validator or guardian skills&lt;/span&gt; via our telegram group: &lt;a href=&quot;https://t.me/ContentBlockchainBeta&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://t.me/ContentBlockchainBeta&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
         </property>
         <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="openExternalLinks">
          <bool>true</bool>
         </property>
        </widget>

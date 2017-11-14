@@ -102,6 +102,7 @@ class CandidateModel(QAbstractTableModel):
         self.endResetModel()
         self.parent().create_table_buttons()
 
+
 class ButtonDelegate(QtWidgets.QStyledItemDelegate):
 
     def __init__(self, parent):
@@ -155,6 +156,7 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
                 QApplication.restoreOverrideCursor()
                 error_dialog.exec_()
 
+
 class CandidateTableView(QTableView):
 
     def __init__(self, parent=None):
@@ -197,11 +199,15 @@ class CandidateTableView(QTableView):
         self.setCornerButtonEnabled(True)
         self.create_table_buttons()
 
-
     def create_table_buttons(self):
         self.setItemDelegateForColumn(4, ButtonDelegate(self))
         for row in range(0, self.table_model.rowCount()):
             self.openPersistentEditor(self.table_model.index(row, 4))
+        # TODO find a better way to fix button sizes collapsing on update
+        w, h = self.size().width(), self.size().height()
+        self.resize(w+1, h)
+        self.resize(w, h)
+
 
 if __name__ == '__main__':
     import sys

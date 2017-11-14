@@ -6,7 +6,7 @@ import math
 import timeago
 from datetime import datetime
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
+from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot, QSize
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget
 
@@ -231,6 +231,10 @@ class CommunityTableView(QtWidgets.QTableView):
         self.setItemDelegateForColumn(4, ButtonDelegate(self))
         for row in range(0, self.table_model.rowCount()):
             self.openPersistentEditor(self.table_model.index(row, 4))
+        # TODO find a better way to fix button sizes collapsing on update
+        w, h = self.size().width(), self.size().height()
+        self.resize(w+1, h)
+        self.resize(w, h)
 
     @pyqtSlot(bool)
     def is_admin_changed(self, is_admin):

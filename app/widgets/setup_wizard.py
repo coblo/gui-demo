@@ -5,17 +5,18 @@ import webbrowser
 from PIL.ImageQt import ImageQt
 from mnemonic import Mnemonic
 
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QPixmap, QTextCursor
 from os.path import exists
 
+import app
 from app.backend.rpc import RpcClient
 from app.models import Profile, init_profile_db, init_data_db
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.tools.address import main_address_from_mnemonic, main_wif_from_mnemonic
 from app.ui.setup_wizard import Ui_SetupWizard
-from PyQt5.QtWidgets import QWizard
+from PyQt5.QtWidgets import QWizard, QLineEdit, QCheckBox, QApplication
 from app.ui import resources_rc
 
 
@@ -32,14 +33,20 @@ class SetupWizard(QWizard, Ui_SetupWizard):
     P6_CREATE_ACCOUNT = 5
     P7_SYNC = 6
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent=None, flags=Qt.WindowFlags(), **kwargs):
 
-        # Handles to Updater and Node
-        self.updater = kwargs.pop('updater', None)
-        self.node = kwargs.pop('node', None)
-        super().__init__(*args, **kwargs)
+        if parent:
+            self.updater = parent.updater
+            self.node = parent.node
+        else:
+            self.updater = kwargs.pop('updater', None)
+            self.node = kwargs.pop('node', None)
+        super().__init__(parent, flags)
 
         self.setupUi(self)
+
+        screen = QApplication.desktop().screenGeometry()
+        self.move(screen.center() - self.rect().center())
 
         self.setPixmap(QWizard.LogoPixmap, QPixmap(':/images/resources/wizard_logo.png'))
         self.setPixmap(QWizard.BannerPixmap, QPixmap(':/images/resources/wizard_banner.png'))
@@ -280,9 +287,9 @@ class SetupWizard(QWizard, Ui_SetupWizard):
     @pyqtSlot()
     def reset_connection_form(self):
         for wgt in self.gbox_connect.children():
-            if isinstance(wgt, QtWidgets.QLineEdit):
+            if isinstance(wgt, QLineEdit):
                 wgt.clear()
-            if isinstance(wgt, QtWidgets.QCheckBox):
+            if isinstance(wgt, QCheckBox):
                 wgt.setChecked(False)
         self.label_test_connection.setText('Please test the connection to proceed.')
         self.button_test_connection.setEnabled(True)
@@ -312,9 +319,8 @@ class SetupWizard(QWizard, Ui_SetupWizard):
 if __name__ == '__main__':
     import sys
     import traceback
-    from PyQt5 import QtWidgets
+    from PyQt5 import QtWidgets, Qt
     from app.helpers import init_logging, init_data_dir
-    import app
     from app.updater import Updater
     from app.node import Node
     sys.excepthook = traceback.print_exception

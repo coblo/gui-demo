@@ -38,6 +38,9 @@
    <iconset resource="resources.qrc">
     <normaloff>:/images/resources/app_icon.png</normaloff>:/images/resources/app_icon.png</iconset>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <property name="wizardStyle">
    <enum>QWizard::ModernStyle</enum>
   </property>

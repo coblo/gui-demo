@@ -1,6 +1,5 @@
 import logging
 from PyQt5 import QtWidgets
-
 from PyQt5.QtCore import pyqtSlot
 
 import app
@@ -14,6 +13,7 @@ from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
 from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView
+from app.widgets.setup_wizard import SetupWizard
 from app.widgets.timestamp import WidgetTimestamping
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
@@ -27,7 +27,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Basic initialization
+
+        # Instantiate workers
+        self.updater = Updater(self)
+        self.node = Node(self)
+
+        if app.is_first_start():
+            wizard = SetupWizard(self)
+            wizard.exec()
+
+        self.launch()
+
+    def launch(self):
         self.data_dir = helpers.init_data_dir()
         self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()
@@ -89,12 +100,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         signals.listpermissions.connect(self.listpermissions)
         signals.node_started.connect(self.node_started)
 
-        # Backend processes
-        self.updater = Updater(self)
-
         if self.profile.manage_node:
             # Todo check for existing node process
-            self.node = Node(self)
             self.node.start()
         else:
             # No managed node to wait for... start updater

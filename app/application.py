@@ -41,10 +41,10 @@ class Application(QtWidgets.QApplication):
         app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)
         self.setFont(app_font)
 
+        self.aboutToQuit.connect(self.cleanup)
+
         # Initialize main window
         self.ui = main_widget() if main_widget else MainWindow()
-
-        self.aboutToQuit.connect(self.cleanup)
 
         # Init TrayIcon
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)

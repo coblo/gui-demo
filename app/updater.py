@@ -58,7 +58,7 @@ class Updater(QtCore.QThread):
                 continue
 
             if blockchain_downloading:
-                log.debug('blockchain syncing - skip exspensive rpc calls')
+                log.debug('blockchain syncing - skip expensive rpc calls')
                 self.sleep(self.UPDATE_INTERVALL)
                 continue
 

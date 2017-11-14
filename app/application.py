@@ -90,9 +90,9 @@ class Application(QtWidgets.QApplication):
 
         # Shortcuts
         if hasattr(self.ui, 'node'):
-            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+K', self.ui, self.ui.node.kill)
-            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+S', self.ui, self.ui.node.stop)
-            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+R', self.ui, self.ui.node.start)
+            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+K', self.ui, self.node.kill)
+            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+S', self.ui, self.node.stop)
+            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+R', self.ui, self.node.start)
 
     @pyqtSlot()
     def cleanup(self):

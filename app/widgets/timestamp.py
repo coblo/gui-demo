@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from hashlib import sha256
 
-from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread
+from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread, QDir
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView, QMessageBox
 
@@ -138,7 +138,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
     @pyqtSlot()
     def file_select_dialog(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file')
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir().homePath())
         if file_path:
             self.process_file(file_path)
 

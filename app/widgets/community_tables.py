@@ -222,7 +222,8 @@ class CommunityTableView(QtWidgets.QTableView):
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setShowGrid(False)
-        self.setSortingEnabled(True)
+        # TODO implement comminity tables sorting
+        self.setSortingEnabled(False)
         self.setCornerButtonEnabled(True)
         self.create_table_buttons()
 

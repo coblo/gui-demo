@@ -865,6 +865,9 @@ QLabel[enabled=&quot;true&quot;] {
                   <pointsize>9</pointsize>
                  </font>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: red ;color: white;</string>
+                </property>
                 <property name="text">
                  <string>Apply as Validator</string>
                 </property>
@@ -905,6 +908,9 @@ QLabel[enabled=&quot;true&quot;] {
                   <pointsize>9</pointsize>
                  </font>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: red ;color: white;</string>
+                </property>
                 <property name="text">
                  <string>Apply as Guardian</string>
                 </property>
@@ -944,6 +950,9 @@ QLabel[enabled=&quot;true&quot;] {
                   <family>Roboto Light</family>
                   <pointsize>9</pointsize>
                  </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: red ;color: white;</string>
                 </property>
                 <property name="text">
                  <string>Invite Participant</string>

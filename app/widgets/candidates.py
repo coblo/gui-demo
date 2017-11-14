@@ -1,28 +1,24 @@
 # -*- coding: utf-8 -*-
 import logging
-from PyQt5 import QtCore
 from functools import partial
-
 from PyQt5 import QtGui
-
 from PyQt5 import QtWidgets
 from collections import OrderedDict
-
 from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView
 from PyQt5.QtWidgets import QWidget
 
 from app.models import Profile
 from app.signals import signals
-from app.models import Address, VotingRound
+from app.models import Address
 
 from app.backend.rpc import get_active_rpc_client
 
 log = logging.getLogger(__name__)
 MAX_END_BLOCK = 4294967295
+
 
 class CandidateModel(QAbstractTableModel):
 
@@ -196,7 +192,8 @@ class CandidateTableView(QTableView):
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setShowGrid(False)
-        self.setSortingEnabled(True)
+        # TODO implement candidates table sorting
+        self.setSortingEnabled(False)
         self.setCornerButtonEnabled(True)
         self.create_table_buttons()
 

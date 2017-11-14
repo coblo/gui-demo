@@ -58,6 +58,8 @@ class Application(QtWidgets.QApplication):
     def on_application_start(self):
         self.updater = Updater(self)
         self.node = Node(self)
+        self.aboutToQuit.connect(self.cleanup)
+
         if app.is_first_start():
             wizard = SetupWizard()
             if wizard.exec() == SetupWizard.Rejected:
@@ -65,7 +67,6 @@ class Application(QtWidgets.QApplication):
                 return
 
         # Initialize main window
-        self.aboutToQuit.connect(self.cleanup)
         self.ui = self.main_widget()
 
         # Init TrayIcon
@@ -97,17 +98,21 @@ class Application(QtWidgets.QApplication):
     def cleanup(self):
         """Final application teardown/cleanup"""
         log.debug('init app teardown cleanup')
-        if hasattr(self.ui, 'node'):
+
+        if self.node is not None:
             try:
                 log.debug('attempt gracefull node shuttdown via rpc')
-                rpc_result = self.ui.node.stop()
+                rpc_result = self.node.stop()
                 log.debug('rpc stop returned: %s' % rpc_result)
                 assert rpc_result == "MultiChain server stopping"
             except Exception as e:
                 log.exception('failed rpc shutdown - try to kill node process')
-                self.ui.node.kill()
-        self.ui.data_db.close()
-        self.ui.profile_db.close()
+                self.node.kill()
+
+        if self.ui is not None:
+            self.ui.data_db.close()
+            self.ui.profile_db.close()
+
         log.debug('finished app teardown cleanup - quitting.')
 
     def on_tray_activated(self, reason):

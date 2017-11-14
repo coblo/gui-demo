@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Global constants and pre-app initialization stuff."""
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, exists
 import sys
 import appdirs
 
@@ -33,6 +33,14 @@ NODE_BOOTSTRAP = 'charm@85.197.78.50:8375'
 
 CURRENCY_CODE = 'CHM'
 
+# From current chain params.dat needed for address generation.
+TESTNET_ADDRESS_PUBKEYHASH_VERSION = '0046e454'
+TESTNET_ADDRESS_SCRIPTHASH_VERSION = '054b9e59'
+TESTNET_ADDRESS_CHECKSUM_VALUE = 'd8a558e6'
+TESTNET_PRIVATE_KEY_VERSION = '807c3b9f'
+
+GET_COINS_URL = 'https://content-blockchain.org'
+
 
 def init():
     import sys
@@ -44,3 +52,11 @@ def init():
     helpers.init_data_dir()
     models.init_profile_db()
     models.init_data_db()
+
+
+def is_first_start():
+    """Check if the applications needs to be configured"""
+    if not exists(PROFILE_DB_FILEPATH):
+        return True
+    else:
+        return False

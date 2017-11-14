@@ -1,13 +1,12 @@
 import logging
 from PyQt5 import QtWidgets
-
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QApplication
 
 import app
 from app import helpers
 from app import models
 from app.models import Profile, Permission, VotingRound
-from app.node import Node
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
@@ -28,7 +27,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Basic initialization
+
+        # Instantiate workers
+        self.updater = QApplication.instance().updater
+        self.node = QApplication.instance().node
+
         self.data_dir = helpers.init_data_dir()
         self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()
@@ -94,12 +97,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         signals.listpermissions.connect(self.listpermissions)
         signals.node_started.connect(self.node_started)
 
-        # Backend processes
-        self.updater = Updater(self)
-
         if self.profile.manage_node:
             # Todo check for existing node process
-            self.node = Node(self)
             self.node.start()
         else:
             # No managed node to wait for... start updater

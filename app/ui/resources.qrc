@@ -9,6 +9,8 @@
     <file>resources/Oswald-SemiBold.ttf</file>
   </qresource>
   <qresource prefix="images">
+    <file>resources/wizard_logo.png</file>
+    <file>resources/wizard_banner.png</file>
     <file>resources/undo_black.svg</file>
     <file>resources/undo_white.svg</file>
     <file>resources/floppy_white.svg</file>

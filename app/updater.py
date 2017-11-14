@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Background Updater Thread"""
-import time
 import logging
 from PyQt5 import QtCore
 from app import sync
 from app.backend.rpc import get_active_rpc_client
+from app.signals import signals
 
 
 log = logging.getLogger(__name__)
@@ -28,9 +28,9 @@ class Updater(QtCore.QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         log.debug('init updater')
-
-    def __del__(self):
-        self.wait()
+    #
+    # def __del__(self):
+    #     self.wait()
 
     @property
     def client(self):
@@ -52,13 +52,13 @@ class Updater(QtCore.QThread):
                 # The node is downloading blocks if it has more headers than blocks
                 blockchain_downloading = blockchain_info['blocks'] != blockchain_info['headers']
                 node_block_hash = blockchain_info['bestblockhash']
-            except Exception:
-                log.debug('cannot get bestblock via rpc')
+            except Exception as e:
+                log.debug('cannot get bestblock via rpc: %s' % e)
                 self.sleep(self.UPDATE_INTERVALL)
                 continue
 
             if blockchain_downloading:
-                log.debug('blockchain syncing - skip exspensive rpc calls')
+                log.debug('blockchain syncing - skip expensive rpc calls')
                 self.sleep(self.UPDATE_INTERVALL)
                 continue
 
@@ -80,5 +80,6 @@ class Updater(QtCore.QThread):
 
                 synced_blockhash = node_block_hash
                 synced_txid = node_txid
+                signals.sync_cycle_finished.emit()
 
             self.sleep(self.UPDATE_INTERVALL)

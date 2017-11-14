@@ -5,8 +5,12 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
 
 import app
-from app.widgets.proto import MainWindow
 from app import helpers
+from app.node import Node
+from app.updater import Updater
+from app.widgets.proto import MainWindow
+from app.widgets.setup_wizard import SetupWizard
+from app.signals import signals
 
 
 helpers.init_logging()
@@ -41,10 +45,29 @@ class Application(QtWidgets.QApplication):
         app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)
         self.setFont(app_font)
 
-        # Initialize main window
-        self.ui = main_widget() if main_widget else MainWindow()
+        # Instantiate workers
+        self.updater = None
+        self.node = None
 
+        self.main_widget = main_widget if main_widget else MainWindow
+
+        self.ui = None
+        self.tray_icon = None
+        signals.application_start.connect(self.on_application_start)
+
+    def on_application_start(self):
+        self.updater = Updater(self)
+        self.node = Node(self)
         self.aboutToQuit.connect(self.cleanup)
+
+        if app.is_first_start():
+            wizard = SetupWizard()
+            if wizard.exec() == SetupWizard.Rejected:
+                QtWidgets.qApp.quit()
+                return
+
+        # Initialize main window
+        self.ui = self.main_widget()
 
         # Init TrayIcon
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)
@@ -67,25 +90,28 @@ class Application(QtWidgets.QApplication):
 
         # Shortcuts
         if hasattr(self.ui, 'node'):
-            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+K', self.ui, self.ui.node.kill)
-            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+S', self.ui, self.ui.node.stop)
-            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+R', self.ui, self.ui.node.start)
+            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+K', self.ui, self.node.kill)
+            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+S', self.ui, self.node.stop)
+            self.ui.debug_shortcut = QtWidgets.QShortcut('Ctrl+R', self.ui, self.node.start)
 
     @pyqtSlot()
     def cleanup(self):
         """Final application teardown/cleanup"""
         log.debug('init app teardown cleanup')
-        if hasattr(self.ui, 'node'):
+
+        if self.node is not None:
             try:
                 log.debug('attempt gracefull node shuttdown via rpc')
-                rpc_result = self.ui.node.stop()
+                rpc_result = self.node.stop()
                 log.debug('rpc stop returned: %s' % rpc_result)
-                assert rpc_result == "MultiChain server stopping"
             except Exception as e:
                 log.exception('failed rpc shutdown - try to kill node process')
-                self.ui.node.kill()
-        self.ui.data_db.close()
-        self.ui.profile_db.close()
+                self.node.kill()
+
+        if self.ui is not None:
+            self.ui.data_db.close()
+            self.ui.profile_db.close()
+
         log.debug('finished app teardown cleanup - quitting.')
 
     def on_tray_activated(self, reason):

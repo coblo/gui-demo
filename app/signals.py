@@ -25,6 +25,8 @@ class Signals(QObject):
     liststreamitems_alias = pyqtSignal()
     listblocks = pyqtSignal()
 
+    application_start = pyqtSignal()
+
     votes_changed = pyqtSignal()
 
     # custom signals
@@ -37,6 +39,17 @@ class Signals(QObject):
 
     is_admin_changed = pyqtSignal(bool)
     is_miner_changed = pyqtSignal(bool)
+
+    # Emmitted by updater when a full sync cycle has been finished
+    sync_cycle_finished = pyqtSignal()
+
+    # Emmitted by sync.listblocks to report node -> db sync
+    # Emmits synched_block_height, node_block_height ints
+    database_blocks_updated = pyqtSignal(int, int)
+
+    # Signals standard output from managed node process
+    node_message = pyqtSignal(str)
+
 
 
 signals = Signals()

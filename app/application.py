@@ -104,7 +104,6 @@ class Application(QtWidgets.QApplication):
                 log.debug('attempt gracefull node shuttdown via rpc')
                 rpc_result = self.node.stop()
                 log.debug('rpc stop returned: %s' % rpc_result)
-                assert rpc_result == "MultiChain server stopping"
             except Exception as e:
                 log.exception('failed rpc shutdown - try to kill node process')
                 self.node.kill()

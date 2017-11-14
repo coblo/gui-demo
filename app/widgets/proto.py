@@ -10,7 +10,6 @@ from app.models import Profile, Permission, VotingRound
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
-from app.updater import Updater
 from app.widgets.apply import ApplyDialog
 from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView

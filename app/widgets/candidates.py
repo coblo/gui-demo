@@ -49,7 +49,10 @@ class CandidateModel(QAbstractTableModel):
             if not data['pending']:
                 continue
             address = data['address']
-            alias = Address.select().where(Address.address==address).first().alias
+            try:
+                alias = Address.select().where(Address.address==address).first().alias
+            except AttributeError:
+                alias = 'unknown'
             skill = data['type']
             skill_name = skill
             if skill == 'admin':

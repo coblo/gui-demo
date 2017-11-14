@@ -18,7 +18,6 @@ class MyAccount(QWidget, Ui_MyAccount):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
-        init_profile_db()
         self.profile = Profile.get_active()
         self.on_profile_changed(self.profile)
 

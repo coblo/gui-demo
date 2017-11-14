@@ -112,6 +112,9 @@ class Application(QtWidgets.QApplication):
             self.ui.data_db.close()
             self.ui.profile_db.close()
 
+        if self.tray_icon is not None:
+            self.tray_icon.deleteLater()
+
         log.debug('finished app teardown cleanup - quitting.')
 
     def on_tray_activated(self, reason):

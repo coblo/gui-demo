@@ -28,9 +28,9 @@ class Updater(QtCore.QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         log.debug('init updater')
-
-    def __del__(self):
-        self.wait()
+    #
+    # def __del__(self):
+    #     self.wait()
 
     @property
     def client(self):

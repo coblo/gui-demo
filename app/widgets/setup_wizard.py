@@ -7,11 +7,10 @@ from mnemonic import Mnemonic
 
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QPixmap, QTextCursor
+from PyQt5 import QtWidgets
 from os.path import exists
 
 import app
-from app.node import Node
-from app.updater import Updater
 from app.backend.rpc import RpcClient
 from app.models import Profile, init_profile_db, init_data_db
 from app.responses import Getblockchaininfo
@@ -38,9 +37,8 @@ class SetupWizard(QWizard, Ui_SetupWizard):
     def __init__(self, parent=None, flags=Qt.WindowFlags(), **kwargs):
         super().__init__(parent, flags)
 
-        # Instantiate workers
-        self.updater = Updater(self)
-        self.node = Node(self)
+        self.updater = QApplication.instance().updater
+        self.node = QApplication.instance().node
 
         self.setupUi(self)
 

@@ -6,6 +6,8 @@ from PyQt5.QtGui import QIcon
 
 import app
 from app import helpers
+from app.node import Node
+from app.updater import Updater
 from app.widgets.proto import MainWindow
 from app.widgets.setup_wizard import SetupWizard
 from app.signals import signals
@@ -43,6 +45,10 @@ class Application(QtWidgets.QApplication):
         app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)
         self.setFont(app_font)
 
+        # Instantiate workers
+        self.updater = None
+        self.node = None
+
         self.main_widget = main_widget if main_widget else MainWindow
 
         self.ui = None
@@ -50,6 +56,8 @@ class Application(QtWidgets.QApplication):
         signals.application_start.connect(self.on_application_start)
 
     def on_application_start(self):
+        self.updater = Updater(self)
+        self.node = Node(self)
         if app.is_first_start():
             wizard = SetupWizard()
             if wizard.exec() == SetupWizard.Rejected:

@@ -1,16 +1,15 @@
 import logging
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QApplication
 
 import app
 from app import helpers
 from app import models
 from app.models import Profile, Permission, VotingRound
-from app.node import Node
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
-from app.updater import Updater
 from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView
 from app.widgets.timestamp import WidgetTimestamping
@@ -28,12 +27,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super().__init__(**kwargs)
 
         # Instantiate workers
-        self.updater = Updater(self)
-        self.node = Node(self)
+        self.updater = QApplication.instance().updater
+        self.node = QApplication.instance().node
 
-        self.launch()
-
-    def launch(self):
         self.data_dir = helpers.init_data_dir()
         self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()

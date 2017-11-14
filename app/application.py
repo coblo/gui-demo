@@ -5,8 +5,10 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
 
 import app
-from app.widgets.proto import MainWindow
 from app import helpers
+from app.widgets.proto import MainWindow
+from app.widgets.setup_wizard import SetupWizard
+from app.signals import signals
 
 
 helpers.init_logging()
@@ -41,10 +43,22 @@ class Application(QtWidgets.QApplication):
         app_font.setHintingPreference(QtGui.QFont.PreferNoHinting)
         self.setFont(app_font)
 
-        self.aboutToQuit.connect(self.cleanup)
+        self.main_widget = main_widget if main_widget else MainWindow
+
+        self.ui = None
+        self.tray_icon = None
+        signals.application_start.connect(self.on_application_start)
+
+    def on_application_start(self):
+        if app.is_first_start():
+            wizard = SetupWizard()
+            if wizard.exec() == SetupWizard.Rejected:
+                QtWidgets.qApp.quit()
+                return
 
         # Initialize main window
-        self.ui = main_widget() if main_widget else MainWindow()
+        self.aboutToQuit.connect(self.cleanup)
+        self.ui = self.main_widget()
 
         # Init TrayIcon
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)

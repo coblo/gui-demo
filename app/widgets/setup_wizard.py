@@ -10,6 +10,8 @@ from PyQt5.QtGui import QPixmap, QTextCursor
 from os.path import exists
 
 import app
+from app.node import Node
+from app.updater import Updater
 from app.backend.rpc import RpcClient
 from app.models import Profile, init_profile_db, init_data_db
 from app.responses import Getblockchaininfo
@@ -34,14 +36,11 @@ class SetupWizard(QWizard, Ui_SetupWizard):
     P7_SYNC = 6
 
     def __init__(self, parent=None, flags=Qt.WindowFlags(), **kwargs):
-
-        if parent:
-            self.updater = parent.updater
-            self.node = parent.node
-        else:
-            self.updater = kwargs.pop('updater', None)
-            self.node = kwargs.pop('node', None)
         super().__init__(parent, flags)
+
+        # Instantiate workers
+        self.updater = Updater(self)
+        self.node = Node(self)
 
         self.setupUi(self)
 

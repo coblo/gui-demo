@@ -13,7 +13,6 @@ from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
 from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView
-from app.widgets.setup_wizard import SetupWizard
 from app.widgets.timestamp import WidgetTimestamping
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
@@ -31,10 +30,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Instantiate workers
         self.updater = Updater(self)
         self.node = Node(self)
-
-        if app.is_first_start():
-            wizard = SetupWizard(self)
-            wizard.exec()
 
         self.launch()
 

@@ -25,6 +25,8 @@ class Signals(QObject):
     liststreamitems_alias = pyqtSignal()
     listblocks = pyqtSignal()
 
+    application_start = pyqtSignal()
+
     votes_changed = pyqtSignal()
 
     # custom signals

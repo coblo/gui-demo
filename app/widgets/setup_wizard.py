@@ -7,11 +7,11 @@ from mnemonic import Mnemonic
 
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QPixmap, QTextCursor
-from PyQt5 import QtWidgets
 from os.path import exists
 
 import app
 from app.backend.rpc import RpcClient
+from app.helpers import init_data_dir
 from app.models import Profile, init_profile_db, init_data_db
 from app.responses import Getblockchaininfo
 from app.signals import signals
@@ -317,11 +317,12 @@ if __name__ == '__main__':
     import sys
     import traceback
     from PyQt5 import QtWidgets, Qt
-    from app.helpers import init_logging, init_data_dir
     from app.updater import Updater
     from app.node import Node
+    from app.helpers import init_logging
     sys.excepthook = traceback.print_exception
     init_logging()
+
     wrapper = QtWidgets.QApplication(sys.argv)
     wrapper.setStyle('fusion')
     wrapper.node = Node()

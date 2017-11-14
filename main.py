@@ -11,7 +11,9 @@ if __name__ == '__main__':
     from app.application import Application
     sys.excepthook = traceback.print_exception
 
+    coblo_app = Application(sys.argv)
+
     # emit signal when eventloop is started
     QTimer.singleShot(0, signals.application_start)
 
-    sys.exit(Application(sys.argv).exec())
+    sys.exit(coblo_app.exec())

@@ -12,6 +12,7 @@ from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.updater import Updater
+from app.widgets.apply import ApplyDialog
 from app.widgets.candidates import CandidateTableView
 from app.widgets.community_tables import CommunityTableView
 from app.widgets.timestamp import WidgetTimestamping
@@ -75,8 +76,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         table_candidates = CandidateTableView(self)
         self.tab_candidates.layout().insertWidget(0, table_candidates)
 
+        # Dialog Button hookups
         invite_dialog = InviteDialog(self)
         self.button_invite_canditate.clicked.connect(invite_dialog.exec)
+        apply_dialog = ApplyDialog(self)
+        self.button_apply_guardian.clicked.connect(apply_dialog.exec)
+        self.button_apply_validator.clicked.connect(apply_dialog.exec)
 
         # Settings
         self.check_box_exit_on_close.setChecked(self.profile.exit_on_close)

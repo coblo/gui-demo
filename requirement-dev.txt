@@ -1,0 +1,2 @@
+cx_Freeze==6.0b1
+pyqt5-tools==5.9.0.1.2

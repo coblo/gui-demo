@@ -15,7 +15,7 @@ APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
 
 if getattr(sys, "frozen", False):
-    APP_DIR = dirname(sys.executable)
+    APP_DIR = join(dirname(sys.executable), 'lib')
 else:
     APP_DIR = dirname(dirname(abspath(__file__)))
 

@@ -76,6 +76,9 @@
        </size>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_7">
+       <property name="spacing">
+        <number>6</number>
+       </property>
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -102,7 +105,10 @@
           <enum>QFrame::NoFrame</enum>
          </property>
          <property name="text">
-          <string>CHARM</string>
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="resources.qrc">:/images/resources/wizard_logo.png</pixmap>
          </property>
          <property name="alignment">
           <set>Qt::AlignHCenter|Qt::AlignTop</set>

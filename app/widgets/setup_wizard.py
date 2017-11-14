@@ -324,7 +324,9 @@ if __name__ == '__main__':
     init_logging()
     wrapper = QtWidgets.QApplication(sys.argv)
     wrapper.setStyle('fusion')
-    wizard = SetupWizard(node=Node(), updater=Updater())
+    wrapper.node = Node()
+    wrapper.updater = Updater()
+    wizard = SetupWizard()
     wizard.show()
     sys.exit(wrapper.exec())
 

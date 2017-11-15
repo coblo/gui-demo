@@ -18,8 +18,6 @@ from app.backend.rpc import get_active_rpc_client
 from app.models import Permission, Profile
 from app.signals import signals
 
-from app import ADMIN_CONSENUS_MINE, ADMIN_CONSENUS_ADMIN
-
 log = logging.getLogger(__name__)
 
 
@@ -88,10 +86,10 @@ class PermissionModel(QAbstractTableModel):
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
                 return "{} of {}".format(perm_obj.address.num_validator_revokes(),
-                                         math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE))
+                                         math.ceil(Permission.num_guardians() * 0.17))
             else:
                 return "{} of {}".format(perm_obj.address.num_guardian_revokes(),
-                                         math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN))
+                                         math.ceil(Permission.num_guardians() * 0.51))
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 from functools import partial
+
+import math
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from collections import OrderedDict
@@ -10,9 +12,9 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView
 from PyQt5.QtWidgets import QWidget
 
-from app.models import Profile
+from app.models import Profile, Address, CurrentVote, Permission
 from app.signals import signals
-from app.models import Address
+from app import ADMIN_CONSENUS_ADMIN, ADMIN_CONSENUS_MINE
 
 from app.backend.rpc import get_active_rpc_client
 
@@ -21,7 +23,6 @@ MAX_END_BLOCK = 4294967295
 
 
 class CandidateModel(QAbstractTableModel):
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.db = OrderedDict()
@@ -31,39 +32,31 @@ class CandidateModel(QAbstractTableModel):
         signals.votes_changed.connect(self.votes_changed)
 
     def update_data(self):
-        client = get_active_rpc_client()
-        # TODO try to avoid this api call by storing/getting needed info from database
-        try:
-            perms_data = client.listpermissions()['result']
-        except Exception:
-            log.debug('could not get permission data via rpc')
-            return
-
         old_keys = set(self.db.keys())
         new_keys = set()
-        for data in perms_data:
-            # If there is no pending or candidate has already the permission continue.
-            if not data['pending'] or (data['startblock'] == 0 and data['endblock'] == MAX_END_BLOCK):
-                continue
-            address = data['address']
+        for candidate in CurrentVote.get_candidates():
             try:
-                alias = Address.select().where(Address.address==address).first().alias
+                alias = Address.select().where(Address.address == candidate.address).first().alias
             except AttributeError:
                 alias = 'unknown'
-            skill = data['type']
-            skill_name = skill
-            if skill == 'admin':
-                skill_name = 'Guardian'
-            elif skill == 'mine':
-                skill_name = 'Validator'
-            for vote_round in data['pending']:
-                if vote_round['startblock'] == 0 and vote_round['endblock'] == MAX_END_BLOCK:
-                    votes = len(vote_round['admins'])
-                    required = vote_round['required']
-                    key = (address, skill)
-                    already_voted = Profile.get_active().address in vote_round['admins']
-                    new_keys.add(key)
-                    self.db[key] = [alias, address, skill_name, "{} of {}".format(votes, votes + required), already_voted]
+            if candidate.start_block == 0 and candidate.end_block == MAX_END_BLOCK:
+                vote_count = CurrentVote.select().where(
+                    CurrentVote.address == candidate.address,
+                    CurrentVote.start_block == 0,
+                    CurrentVote.end_block == MAX_END_BLOCK).count()
+                already_voted = CurrentVote.select().where(
+                    CurrentVote.address == candidate.address,
+                    CurrentVote.start_block == 0,
+                    CurrentVote.end_block == MAX_END_BLOCK,
+                    CurrentVote.given_from == Profile.get_active().address).count() > 0
+                if candidate.perm_type == Permission.ADMIN:
+                    required = math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN)
+                else:
+                    required = math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE)
+                key = (candidate.address, candidate.perm_type)
+                new_keys.add(key)
+                self.db[key] = [alias, candidate.address.address, candidate.perm_type,
+                                "{} of {}".format(vote_count, required), already_voted]
         deleted_keys = old_keys - new_keys
         for key in deleted_keys:
             del self.db[key]
@@ -105,7 +98,6 @@ class CandidateModel(QAbstractTableModel):
 
 
 class ButtonDelegate(QtWidgets.QStyledItemDelegate):
-
     def __init__(self, parent):
         QtWidgets.QStyledItemDelegate.__init__(self, parent)
 
@@ -113,11 +105,13 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
         db = self.parent().table_model.db
         db_entry = db[list(db.keys())[idx.row()]]
         btn = QtWidgets.QPushButton('Grant', parent)
-        btn.setStyleSheet("QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+        btn.setStyleSheet(
+            "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         btn.setObjectName(db_entry[1])
         btn.clicked.connect(partial(self.on_grant_clicked, db_entry[2]))
         if db_entry[4]:
-            btn.setStyleSheet("QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+            btn.setStyleSheet(
+                "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
             btn.setDisabled(db_entry[4])
         else:
             btn.setCursor(QCursor(Qt.PointingHandCursor))
@@ -146,7 +140,8 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
                     raise RuntimeError(err_msg)
                 else:
                     sender.setDisabled(True)
-                    sender.setStyleSheet("QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                    sender.setStyleSheet(
+                        "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
                 QApplication.restoreOverrideCursor()
             except Exception as e:
                 err_msg = str(e)
@@ -159,7 +154,6 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
 
 
 class CandidateTableView(QTableView):
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.table_model = CandidateModel(self)

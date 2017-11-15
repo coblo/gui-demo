@@ -50,3 +50,12 @@ class CurrentVote(peewee.Model):
         ).group_by(
             CurrentVote.address
         ).count()
+
+    @staticmethod
+    def get_candidates():
+        return CurrentVote.select().where(
+            CurrentVote.start_block == 0,
+            CurrentVote.end_block == CurrentVote.MAX_END_BLOCK
+        ).group_by(
+            CurrentVote.address
+        )

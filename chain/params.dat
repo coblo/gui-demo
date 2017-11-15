@@ -39,8 +39,8 @@ allow-multisig-outputs = true           # Allow bare multisignature scripts, rar
 setup-first-blocks = 1                  # Length of initial setup phase in blocks, in which mining-diversity,
                                         # admin-consensus-* and mining-requires-peers are not applied. (1 - 31536000)
 mining-diversity = 0.51                 # Miners must wait <mining-diversity>*<active miners> between blocks. (0 - 1)
-admin-consensus-upgrade = 0.51          # <admin-consensus-upgrade>*<active admins> needed to upgrade the chain. (0 - 1)
-admin-consensus-admin = 0.5             # <admin-consensus-admin>*<active admins> needed to change admin perms. (0 - 1)
+admin-consensus-upgrade = 0.628         # <admin-consensus-upgrade>*<active admins> needed to upgrade the chain. (0 - 1)
+admin-consensus-admin = 0.51            # <admin-consensus-admin>*<active admins> needed to change admin perms. (0 - 1)
 admin-consensus-activate = 0.5          # <admin-consensus-activate>*<active admins> to change activate perms. (0 - 1)
 admin-consensus-mine = 0.177245         # <admin-consensus-mine>*<active admins> to change mining permissions. (0 - 1)
 admin-consensus-create = 0.314159       # <admin-consensus-issue>*<active admins> to change create permissions. (0 - 1)

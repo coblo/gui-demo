@@ -34,7 +34,7 @@ class SetupWizard(QWizard, Ui_SetupWizard):
     P6_CREATE_ACCOUNT = 5
     P7_SYNC = 6
 
-    def __init__(self, parent=None, flags=Qt.WindowFlags(), **kwargs):
+    def __init__(self, parent=None, flags=Qt.WindowFlags()):
         super().__init__(parent, flags)
 
         self.updater = QApplication.instance().updater
@@ -146,7 +146,15 @@ class SetupWizard(QWizard, Ui_SetupWizard):
     @pyqtSlot()
     def generate_mnemonic(self):
         if self._mnemonic is None:
-            self._mnemonic = Mnemonic('english').generate(256)
+            while True:
+                m = Mnemonic('english').generate(256)
+                try:
+                    main_address_from_mnemonic(m)
+                    break
+                except AssertionError:
+                    log.warning('mnemonic failed privtopub - try another')
+                    continue
+            self._mnemonic = m
             self.label_new_seed_info.setText(
                 'This is your mnemonic. Please make sure to create a safe backup of this phrase before you proceed!'
             )

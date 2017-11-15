@@ -50,11 +50,11 @@ class Address(peewee.Model):
 
     def get_mined_last_24_hours(self):
         from app.models import Block
-        return self.mined_blocks.select().where(datetime.now() - timedelta(days=1) <= Block.time).count()
+        return self.mined_blocks.select(fn.COUNT(Block.hash)).where(datetime.now() - timedelta(days=1) <= Block.time).scalar()
 
     def get_voted_last_24_hours(self):
         from app.models import Vote
-        return self.votes_given.select().where(datetime.now() - timedelta(days=1) <= Vote.time).count()
+        return self.votes_given.select(fn.COUNT(Vote.txid)).where(datetime.now() - timedelta(days=1) <= Vote.time).scalar()
 
     def num_validator_revokes(self):
         from app.models import VotingRound, Permission

@@ -1,18 +1,28 @@
 import sys
 from cx_Freeze import Executable, setup
 
-buildOptions = dict(
-    packages=['requests', 'idna', 'timeago'],
-    excludes=[],
-)
 
 base = 'Win32GUI' if sys.platform == 'win32' else None
+
+options = {
+    'build_exe':
+        {
+            'includes': 'atexit',
+            'packages': ['requests', 'idna', 'timeago'],
+            'excludes': [],
+        },
+}
 
 executables = [
     Executable(
         'main.py',
-        # base=base,
-        targetName='charm.exe'
+        base=base,
+        initScript=None,
+        icon='app.ico',
+        targetName='coblo.exe',
+        shortcutName='Content Blockchain',
+        shortcutDir='DesktopFolder',
+        copyright='Copyright (C) 2017 The Content Blockchain Project',
     )
 ]
 
@@ -20,6 +30,6 @@ setup(
     name='Charm',
     version='0.1.1',
     description='Content Blockchain Desktop App',
-    options=dict(build_exe=buildOptions),
+    options=options,
     executables=executables
 )

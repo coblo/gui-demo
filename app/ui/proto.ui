@@ -119,6 +119,22 @@
         </widget>
        </item>
        <item>
+        <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <family>Oswald</family>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;PROOF OF CONCEPT DEMO&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="Line" name="line_sidebar_header">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>

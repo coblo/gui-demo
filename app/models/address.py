@@ -48,19 +48,23 @@ class Address(peewee.Model):
             return latest_vote.time
 
     def num_validator_revokes(self):
-        from app.models import VotingRound, Permission
-        return VotingRound.select().where(
-            (VotingRound.address == self) &
-            (VotingRound.perm_type == Permission.MINE) &
-            (VotingRound.start_block == 0) &
-            (VotingRound.end_block == 0)
+        from app.models import CurrentVote, Permission
+        return CurrentVote.select().where(
+            (CurrentVote.address == self) &
+            (CurrentVote.perm_type == Permission.MINE) &
+            (CurrentVote.start_block == 0) &
+            (CurrentVote.end_block == 0)
+        ).group_by(
+            CurrentVote.address
         ).count()
 
     def num_guardian_revokes(self):
-        from app.models import VotingRound, Permission
-        return VotingRound.select().where(
-            (VotingRound.address == self) &
-            (VotingRound.perm_type == Permission.ADMIN) &
-            (VotingRound.start_block == 0) &
-            (VotingRound.end_block == 0)
+        from app.models import CurrentVote, Permission
+        return CurrentVote.select().where(
+            (CurrentVote.address == self) &
+            (CurrentVote.perm_type == Permission.ADMIN) &
+            (CurrentVote.start_block == 0) &
+            (CurrentVote.end_block == 0)
+        ).group_by(
+            CurrentVote.address
         ).count()

@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication
 import app
 from app import helpers
 from app import models
-from app.models import Profile, Permission, VotingRound
+from app.models import Profile, Permission, CurrentVote
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
@@ -163,7 +163,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         log.debug('set num guardians %s' % num_guardians)
         self.lbl_num_guardians.setText(str(num_guardians))
 
-        num_candidates = VotingRound.num_candidates()
+        num_candidates = CurrentVote.num_candidates()
         log.debug('set num candidates %s' % num_candidates)
         self.lbl_num_candidates.setText(str(num_candidates))
 

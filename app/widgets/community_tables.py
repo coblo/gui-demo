@@ -114,7 +114,7 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
         )
         for vote in own_votes:
             self.already_voted.append({
-                'address': vote.address,
+                'address': vote.address.address,
                 'perm_type': vote.perm_type
             })
 

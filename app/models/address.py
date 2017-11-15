@@ -54,8 +54,6 @@ class Address(peewee.Model):
             (CurrentVote.perm_type == Permission.MINE) &
             (CurrentVote.start_block == 0) &
             (CurrentVote.end_block == 0)
-        ).group_by(
-            CurrentVote.address
         ).count()
 
     def num_guardian_revokes(self):
@@ -65,6 +63,4 @@ class Address(peewee.Model):
             (CurrentVote.perm_type == Permission.ADMIN) &
             (CurrentVote.start_block == 0) &
             (CurrentVote.end_block == 0)
-        ).group_by(
-            CurrentVote.address
         ).count()

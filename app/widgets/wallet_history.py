@@ -37,7 +37,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.txs = []
         self.insert_db_data(Transaction.select())
         self.sort_index = self.DATETIME
-        self.sort_order = Qt.DescendingOrder
+        self.sort_order = Qt.AscendingOrder
         self.sort(self.sort_index, self.sort_order)
         signals.listwallettransactions.connect(self.listwallettransactions)
 

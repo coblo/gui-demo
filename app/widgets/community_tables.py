@@ -6,12 +6,12 @@ import math
 import timeago
 from datetime import datetime
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot, QSize
+from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget
 
 from app.backend.rpc import get_active_rpc_client
-from app.models import Permission, Profile
+from app.models import Permission, Profile, CurrentVote
 from app.signals import signals
 
 from app import ADMIN_CONSENUS_MINE, ADMIN_CONSENUS_ADMIN
@@ -108,21 +108,15 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
         self.listpermissions()
 
     def listpermissions(self):
-        # TODO try to avoid this api call by storing/getting needed info from database
-        client = get_active_rpc_client()
-        try:
-            perms_data = client.listpermissions()['result']
-            for perm in perms_data:
-                for pending in perm['pending']:
-                    if pending['startblock'] == 0 and pending['endblock'] == 0:
-                        if Profile.get_active().address in pending['admins'] and perm['address'] not in self.already_voted:
-                            self.already_voted.append({
-                                'address': perm['address'],
-                                'perm_type': perm['type']
-                            })
-        except Exception:
-            log.debug('could not get permission data via rpc')
-            return
+        own_votes = CurrentVote.select().where(
+            CurrentVote.start_block == CurrentVote.end_block == 0,
+            CurrentVote.given_from == Profile.get_active().address
+        )
+        for vote in own_votes:
+            self.already_voted.append({
+                'address': vote.address.address,
+                'perm_type': vote.perm_type
+            })
 
     def createEditor(self, parent, option, idx):
         btn = QtWidgets.QPushButton('Revoke', parent)

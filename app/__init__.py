@@ -14,7 +14,12 @@ PATCH = 0
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
 
-if getattr(sys, "frozen", False):
+def is_frozen():
+    """Determine if application is running as frozen binary"""
+    return getattr(sys, 'frozen', False)
+
+
+if is_frozen():
     APP_DIR = join(dirname(sys.executable), 'lib')
 else:
     APP_DIR = dirname(dirname(abspath(__file__)))

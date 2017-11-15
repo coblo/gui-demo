@@ -1,3 +1,5 @@
+import sys
+import traceback
 import locale
 import logging
 from PyQt5 import QtWidgets, QtGui
@@ -22,6 +24,9 @@ class Application(QtWidgets.QApplication):
     def __init__(self, args, main_widget=None):
         log.debug('init app')
         super().__init__(args)
+
+        if not app.is_frozen():
+            sys.excepthook = traceback.print_exception
 
         self.setQuitOnLastWindowClosed(False)
 

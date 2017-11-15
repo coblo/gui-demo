@@ -40,6 +40,13 @@ class MyAccount(QWidget, Ui_MyAccount):
         self.edit_alias.setText(self.profile.alias)
         self.lbl_wallet_address.setText(self.profile.address)
 
+        # minimal amount for changing the alias
+        if self.profile.balance < 0.00001:
+            self.stop_edit_alias()
+            self.btn_wallet_alias_edit_start.setEnabled(False)
+        else:
+            self.btn_wallet_alias_edit_start.setEnabled(True)
+
         normalized = self.profile.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
         display = "{0:n} {1}".format(normalized, CURRENCY_CODE)
         self.lbl_wallet_balance.setText(display)
@@ -70,10 +77,12 @@ class MyAccount(QWidget, Ui_MyAccount):
         self.edit_alias.hide()
 
     def save_alias(self):
-        if self.profile.update_alias(self.edit_alias.text()):
+        try:
+            self.profile.update_alias(self.edit_alias.text())
             self.stop_edit_alias()
-        else:
-            QMessageBox().critical(self, 'Alias update error', "Invalid username entered")
+            QMessageBox().information(self, "New alias", "New alias registration in progress")
+        except Exception as e:
+            QMessageBox().critical(self, 'Alias update error', str(e))
 
 if __name__ == '__main__':
     import sys

@@ -6,16 +6,24 @@ The **Content Blockchain Project** is building the foundational tools that enabl
 and media start-ups to create new innovative products, services and business models in the open blockchain economy.
 
 We have started a [public testnet](https://explorer.content-blockchain.org/) and implemented 
-This proof of concept Application allows users to:
+this proof of concept application that allows users to:
 
 - Run their own blockchain-node (testnet)
 - Create an account on the blockchain
 - Test the experimental voting based consensus mechanism
 - Send and receive native blockchain coins
+- Timestamp content on the blockchain
 
 An installable version of he application is currently available for 64-Bit Windows.
-Read our [FAQ](https://content-blockchain.org/newsarchive/2017/10/24/technical-information-about-the-new-blockchain/)
+If you need help or have questions you can reach us via telegram:
+[https://t.me/ContentBlockchainBeta](https://t.me/ContentBlockchainBeta)
+
+Please report any issues at [https://github.com/coblo/gui-demo/issues](https://github.com/coblo/gui-demo/issues)
+
+## Screenshots
 
 ![Alt text](docs/screenshot_wallet.jpg?raw=true "Content Blockchain Wallet Screenshot")
 
+![Alt text](docs/screenshot_timestamp.jpg?raw=true "Content Blockchain Timestamp Screenshot")
 
+![Alt text](docs/screenshot_community.jpg?raw=true "Content Blockchain Community Screenshot")

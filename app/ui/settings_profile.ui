@@ -403,7 +403,7 @@
            </font>
           </property>
           <property name="text">
-           <string>Save</string>
+           <string>Test Connection</string>
           </property>
          </widget>
         </item>

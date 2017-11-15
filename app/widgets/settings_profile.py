@@ -1,14 +1,18 @@
 import getpass
+import logging
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox
 
 import app
+from app.backend.rpc import RpcClient
 from app.helpers import gen_password
 from app.ui.settings_profile import Ui_settings_profile
 
 from app.models import Profile
+
+log = logging.getLogger(__name__)
 
 
 class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
@@ -36,7 +40,7 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
 
         self.btn_add_profile.clicked.connect(self.on_add_profile)
         self.btn_change_profile.clicked.connect(self.on_change_profile)
-        self.btn_save.clicked.connect(self.on_save)
+        self.btn_save.clicked.connect(self.test_connection)
         self.btn_reset.clicked.connect(self.on_reset)
         self.btn_save_changed_profile.clicked.connect(self.on_save_change_profile)
         self.btn_cancel_changed_profile.clicked.connect(self.on_cancel_change_profile)
@@ -51,7 +55,6 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
 
     def on_save(self):
         if self.adding_profile:
-            # todo: should it be active?
             try:
                 new_profile = Profile.create(
                     name=self.edit_name.text(),
@@ -62,12 +65,15 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
                     rpc_use_ssl=self.check_box_use_ssl.checkState() == Qt.Checked,
                     manage_node=self.check_manage_node.checkState() == Qt.Checked,
                     exit_on_close=self.check_exit_close.checkState() == Qt.Checked,
-                    active=self.check_activate_profile.checkState() == Qt.Checked
+                    active=False
                 )
                 new_profile.save()
+                if self.check_activate_profile.checkState() == Qt.Checked:
+                    new_profile.set_active()
                 self.adding_profile = False
                 self.switch_profile_add_view(False)
                 self.refill_profile_form(profile=Profile.get_active())
+                self.switch_test_mode(True)
             except Exception as e:
                 err_msg = str(e)
                 error_dialog = QMessageBox()
@@ -88,7 +94,7 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
                         manage_node=self.check_manage_node.checkState() == Qt.Checked,
                         exit_on_close=self.check_exit_close.checkState() == Qt.Checked
                 ).where(Profile.name == self.active_profile.name).execute()
-                # todo: switch Profile
+                self.switch_test_mode(True)
             except Exception as e:
                 err_msg = str(e)
                 error_dialog = QMessageBox()
@@ -108,8 +114,8 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
 
     def on_save_change_profile(self):
         self.switch_profile_change_view(False)
-        # todo: really change profile
         new_profile = Profile.select().where(Profile.name == self.cb_profile.currentText()).first()
+        new_profile.set_active()
         self.refill_profile_form(new_profile)
 
     def on_cancel_change_profile(self):
@@ -138,6 +144,15 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
             self.edit_rpc_password.setText(gen_password())
             self.edit_host.setText(app.DEFAULT_RPC_HOST)
             self.edit_port.setText("{}".format(app.DEFAULT_RPC_PORT))
+
+    def switch_test_mode(self, test_mode=False):
+        self.btn_save.clicked.connect(self.test_connection if test_mode else self.on_save)
+        self.btn_save.clicked.disconnect(self.on_save if test_mode else self.test_connection)
+        self.btn_save.setText('Test Connection' if test_mode else 'Save')
+        self.edit_host.setDisabled(not test_mode)
+        self.edit_port.setDisabled(not test_mode)
+        self.edit_rpc_user.setDisabled(not test_mode)
+        self.edit_rpc_password.setDisabled(not test_mode)
 
     def refill_profile_form(self, profile=None):
         if profile is not None:
@@ -170,3 +185,23 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
         for profile in profiles:
             self.cb_profile.addItem(profile.name)
         self.cb_profile.setCurrentText(self.active_profile.name)
+
+    def test_connection(self):
+        client = RpcClient(
+            host=self.edit_host.text(),
+            port=int(self.edit_port.text()),
+            user=self.edit_rpc_user.text(),
+            pwd=self.edit_rpc_password.text(),
+            use_ssl=self.check_box_use_ssl.isChecked(),
+        )
+        try:
+            response = client.getruntimeparams()
+            if response['error'] is None:
+                self.switch_test_mode(False)
+        except Exception as e:
+            err_msg = str(e)
+            error_dialog = QMessageBox()
+            error_dialog.setWindowTitle('Connection Error')
+            error_dialog.setText(err_msg)
+            error_dialog.setIcon(QMessageBox.Warning)
+            error_dialog.exec_()

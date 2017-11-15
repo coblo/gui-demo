@@ -19,7 +19,7 @@ executables = [
         base=base,
         initScript=None,
         icon='app.ico',
-        targetName='charm.exe',
+        targetName='coblo.exe',
         shortcutName='Content Blockchain',
         shortcutDir='DesktopFolder',
         copyright='Copyright (C) 2017 The Content Blockchain Project',
@@ -27,7 +27,7 @@ executables = [
 ]
 
 setup(
-    name='Charm',
+    name='Coblo',
     version='0.1.1',
     description='Content Blockchain Demo',
     options=options,

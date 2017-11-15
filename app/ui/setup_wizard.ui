@@ -64,7 +64,7 @@
     <item>
      <widget class="QLabel" name="label_header_p1">
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;CHARM&lt;/span&gt; is a &lt;span style=&quot; font-weight:600; color:#aa0000;&quot;&gt;proof of concept software&lt;/span&gt; that allows you to run a full content blockchain node and wallet on your computer and participate in testing the plattform.&lt;/p&gt;&lt;p&gt;Copyright (c) 2017 The Content Blockchain Project.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;License Agreement&lt;/span&gt;&lt;/p&gt;&lt;p&gt;To proceed you must accept the following license terms:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is a &lt;span style=&quot; font-weight:600; color:#aa0000;&quot;&gt;proof of concept software&lt;/span&gt; that allows you to run a full content blockchain node and wallet on your computer and participate in testing the plattform.&lt;/p&gt;&lt;p&gt;Copyright (c) 2017 The Content Blockchain Project.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;License Agreement&lt;/span&gt;&lt;/p&gt;&lt;p&gt;To proceed you must accept the following license terms:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="wordWrap">
        <bool>true</bool>

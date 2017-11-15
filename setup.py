@@ -11,7 +11,7 @@ base = 'Win32GUI' if sys.platform == 'win32' else None
 executables = [
     Executable(
         'main.py',
-        base=base,
+        # base=base,
         targetName='charm.exe'
     )
 ]

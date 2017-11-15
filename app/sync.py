@@ -140,6 +140,9 @@ def listpermissions():
             addr_obj, created = Address.get_or_create(address=perm['address'])
 
             for vote in perm['pending']:
+                # If candidate has already the permission continue.
+                if vote['startblock'] == perm['startblock'] and vote['endblock'] == perm['endblock']:
+                    continue
                 start_block = vote['startblock']
                 end_block = vote['endblock']
                 approbations = len(vote['admins'])

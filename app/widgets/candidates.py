@@ -42,7 +42,8 @@ class CandidateModel(QAbstractTableModel):
         old_keys = set(self.db.keys())
         new_keys = set()
         for data in perms_data:
-            if not data['pending']:
+            # If there is no pending or candidate has already the permission continue.
+            if not data['pending'] or (data['startblock'] == 0 and data['endblock'] == MAX_END_BLOCK):
                 continue
             address = data['address']
             try:

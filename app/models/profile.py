@@ -12,6 +12,7 @@ from app.models.db import profile_db
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
 from app.tools.validators import is_valid_username
+from app.exceptions import RpcResponseError, CharmError
 
 log = logging.getLogger(__name__)
 
@@ -52,16 +53,20 @@ class Profile(peewee.Model):
             self.active = True
             self.save()
 
-    def update_alias(self, new_alias) -> bool:
+    def update_alias(self, new_alias):
         if not is_valid_username(new_alias):
-            return False
+            raise CharmError(Exception("Invalid Username:\n"
+                                       '- It may contain alphanumerical characters and "_", ".", "-"\n'
+                                       '- It must not start or end with "-" or "."\n'
+                                       '- It must be between 3 and 33 characters\n'
+                                       '- It must not have consecutive "_", ".", "-" characters'))
 
-        get_active_rpc_client().publish("alias", new_alias, "")
-        with profile_db.atomic():
-            Profile.update(alias=new_alias).execute()
-            self.alias = new_alias
-            self.save()
-            return True
+        result = get_active_rpc_client().publish("alias", new_alias, "")
+        if result['error']:
+            if result['error']['code'] in [-716, -6]:
+                raise RpcResponseError(Exception("Insufficient Funds"))
+            else:
+                raise RpcResponseError(Exception('"Blockchain error: "' + result['error']['message'] + '"'))
 
     @property
     def data_db_filepath(self):

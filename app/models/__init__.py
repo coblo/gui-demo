@@ -5,9 +5,9 @@ import peewee
 import app
 from app.models.address import Address
 from app.models.block import Block
+from app.models.currentvote import CurrentVote
 from app.models.permission import Permission
 from app.models.transaction import Transaction
-from app.models.votinground import VotingRound
 from app.models.profile import Profile
 from app.models.vote import Vote
 from app.models.db import data_db, profile_db
@@ -38,7 +38,7 @@ def init_data_db():
     data_db.initialize(peewee.SqliteDatabase(fp))
     data_db.connect()
     data_db.create_tables(
-        [Address, Block, Permission, Transaction, VotingRound, Vote],
+        [Address, CurrentVote, Block, Permission, Transaction, Vote],
         safe=True
     )
     return data_db

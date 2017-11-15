@@ -11,12 +11,10 @@ from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
 from app.enums import Stream
 from app.helpers import batchwise
-from app.models import Address, Permission, Transaction, VotingRound, data_db, Block, Profile
+from app.models import Address, Permission, Transaction, CurrentVote, data_db, Block, Profile
 from app.tools.validators import is_valid_username
 
-
 log = logging.getLogger(__name__)
-
 
 permission_candidates = ['admin', 'mine', 'issue', 'create']
 
@@ -115,7 +113,7 @@ def listpermissions():
     new_perms, new_votes = False, False
 
     Permission.delete().execute()
-    VotingRound.delete().execute()
+    CurrentVote.delete().execute()
 
     admin_addresses = set()
     miner_addresses = set()
@@ -140,19 +138,22 @@ def listpermissions():
             addr_obj, created = Address.get_or_create(address=perm['address'])
 
             for vote in perm['pending']:
+                # If candidate has already the permission continue.
+                if vote['startblock'] == perm['startblock'] and vote['endblock'] == perm['endblock']:
+                    continue
                 start_block = vote['startblock']
                 end_block = vote['endblock']
+                # new stuff start
+                for admin in vote['admins']:
+                    admin_obj, created = Address.get_or_create(address=admin)
+                    vote_obj, created = CurrentVote.get_or_create(
+                        address=addr_obj, perm_type=perm_type, start_block=start_block, end_block=end_block,
+                        given_from=admin_obj
+                    )
+                    vote_obj.set_vote_type()
+                # new stuff end
                 approbations = len(vote['admins'])
                 # TODO: Fix: current time of syncing is not the time of first_vote!
-                vote_obj, created = VotingRound.get_or_create(
-                    address=addr_obj, perm_type=perm_type, start_block=start_block, end_block=end_block,
-                    defaults=(dict(approbations=approbations, first_vote=datetime.now()))
-                )
-                vote_obj.set_vote_type()
-                if created:
-                    new_votes = True
-                else:
-                    vote_obj.save()
 
             start_block = perm['startblock']
             end_block = perm['endblock']

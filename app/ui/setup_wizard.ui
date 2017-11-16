@@ -232,7 +232,7 @@ p, li { white-space: pre-wrap; }
     <item>
      <widget class="QCommandLinkButton" name="button_setup_node">
       <property name="text">
-       <string>Setup and run a full node</string>
+       <string>Standard installation (recommended)</string>
       </property>
       <property name="checkable">
        <bool>true</bool>
@@ -974,7 +974,7 @@ p, li { white-space: pre-wrap; }
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="button_group_choose_account"/>
   <buttongroup name="button_group_choose_mode"/>
+  <buttongroup name="button_group_choose_account"/>
  </buttongroups>
 </ui>

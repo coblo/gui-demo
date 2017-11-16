@@ -28,3 +28,10 @@ Please report any issues at [https://github.com/coblo/gui-demo/issues](https://g
 ![Alt text](docs/screenshot_timestamp.jpg?raw=true "Content Blockchain Timestamp Screenshot")
 
 ![Alt text](docs/screenshot_community.jpg?raw=true "Content Blockchain Community Screenshot")
+
+## Credits
+
+This application was build with [Python](https://www.python.org/), 
+[PyQT](https://riverbankcomputing.com/software/pyqt/intro),
+[MultiChain](https://www.multichain.com/), and many other open source libraries and tools.
+Our thanks go out to the entire open source community.

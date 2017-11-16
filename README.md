@@ -1,20 +1,22 @@
 # Content Blockchain GUI Prototype
 
-A proof of concept GUI Application for the [Content Blockchain](https://content-blockchain.org).
+A proof of concept GUI Application for the 
+[Content Blockchain](https://content-blockchain.org).
 
-The **Content Blockchain Project** is building the foundational tools that enable journalists, publishers,
-and media start-ups to create new innovative products, services and business models in the open blockchain economy.
+The **Content Blockchain Project** is building the foundational tools that 
+enable journalists, publishers, and media start-ups to create new innovative 
+products, services and business models in the open blockchain economy.
 
-We have started a [public testnet](https://explorer.content-blockchain.org/) and implemented 
-this proof of concept application that allows users to:
+This software allows you to run a full content blockchain node on your and 
+participate in testing the plattform. It allows you to:
 
-- Run their own blockchain-node (testnet)
-- Create an account on the blockchain
-- Test the experimental voting based consensus mechanism
-- Send and receive native blockchain coins
-- Timestamp content on the blockchain
+- run your own blockchain-node (testnet)
+- create an account on the blockchain
+- test the experimental voting based consensus
+- send and receive native blockchain coins
+- timestamp content on the blockchain
 
-An installable version of he application is currently available for 64-Bit Windows.
+An installable version is currently available for 64-Bit Windows.
 You can download it [here](https://github.com/coblo/gui-demo/releases/download/v0.2.0/Coblo-0.2.0-win.msi).
 If you need help or have questions you can reach us via telegram:
 [https://t.me/ContentBlockchainBeta](https://t.me/ContentBlockchainBeta)
@@ -30,6 +32,9 @@ Please report any issues at [https://github.com/coblo/gui-demo/issues](https://g
 ![Alt text](docs/screenshot_community.jpg?raw=true "Content Blockchain Community Screenshot")
 
 ## Credits
+
+The Content Blockchain Project received funding from the 
+[Google Digital News Initiative](https://digitalnewsinitiative.com/dni-projects/content-blockchain-project/).
 
 This application was build with [Python](https://www.python.org/), 
 [PyQT](https://riverbankcomputing.com/software/pyqt/intro),

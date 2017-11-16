@@ -53,7 +53,7 @@ class Updater(QtCore.QThread):
                 blockchain_downloading = blockchain_info['blocks'] != blockchain_info['headers']
                 node_block_hash = blockchain_info['bestblockhash']
             except Exception as e:
-                log.debug('cannot get bestblock via rpc: %s' % e)
+                log.exception('cannot get bestblock via rpc: %s' % e)
                 self.sleep(self.UPDATE_INTERVALL)
                 continue
 

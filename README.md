@@ -15,6 +15,7 @@ this proof of concept application that allows users to:
 - Timestamp content on the blockchain
 
 An installable version of he application is currently available for 64-Bit Windows.
+You can download it [here](https://github.com/coblo/gui-demo/releases/download/v0.2.0/Coblo-0.2.0-win.msi).
 If you need help or have questions you can reach us via telegram:
 [https://t.me/ContentBlockchainBeta](https://t.me/ContentBlockchainBeta)
 
@@ -27,3 +28,10 @@ Please report any issues at [https://github.com/coblo/gui-demo/issues](https://g
 ![Alt text](docs/screenshot_timestamp.jpg?raw=true "Content Blockchain Timestamp Screenshot")
 
 ![Alt text](docs/screenshot_community.jpg?raw=true "Content Blockchain Community Screenshot")
+
+## Credits
+
+This application was build with [Python](https://www.python.org/), 
+[PyQT](https://riverbankcomputing.com/software/pyqt/intro),
+[MultiChain](https://www.multichain.com/), and many other open source libraries and tools.
+Our thanks go out to the entire open source community.

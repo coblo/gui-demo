@@ -112,7 +112,7 @@
            <string/>
           </property>
           <property name="placeholderText">
-           <string>Paste address or type alias of recipient</string>
+           <string>Paste address of recipient here</string>
           </property>
           <property name="clearButtonEnabled">
            <bool>true</bool>
@@ -150,7 +150,7 @@
            <number>100</number>
           </property>
           <property name="placeholderText">
-           <string>Optional payment reference information</string>
+           <string>Optional payment reference information (only visible to you)</string>
           </property>
           <property name="clearButtonEnabled">
            <bool>true</bool>

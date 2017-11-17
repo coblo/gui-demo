@@ -1,11 +1,14 @@
+import re
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QValidator
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QStyledItemDelegate
+from PyQt5.QtWidgets import QCompleter
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QWidget
 from decimal import Decimal
 
 from app.backend.rpc import get_active_rpc_client
+from app.models import Address
 from app.tools.validators import AddressValidator
 from app.ui.wallet_send import Ui_widget_wallet_send
 
@@ -21,6 +24,7 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.edit_amount.textChanged.connect(self.on_amount_edit)
 
         self.edit_address.setValidator(AddressValidator())
+        self.edit_address.textChanged.connect(self.on_address_edit)
         self.edit_address.textChanged.connect(self.check_state)
 
         self.edit_description.setStyleSheet('QLineEdit:focus {background-color: #fff79a}')
@@ -30,6 +34,37 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.amount_valid = False
         self.address_valid = False
         self.btn_send_send.clicked.connect(self.on_send_clicked)
+
+        address_list =[]
+        for address in Address.select().order_by(Address.address.desc()):
+            if address.alias is not None:
+                address_list.append("{} ({})".format(address.alias, address.address))
+            address_list.append(address.address)
+        completer = QCompleter(address_list, self.edit_address)
+        completer_delegate = QStyledItemDelegate(completer)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.popup().setItemDelegate(completer_delegate)
+        completer.popup().setStyleSheet(
+            """
+            QAbstractItemView {
+                font: 10pt "Roboto Light";
+                border: 1px solid #41ADFF;
+                border-top: 0px;
+                background-color: #FFF79A;
+                border-radius: 2px;
+            }
+            QAbstractItemView::item  {
+                margin-top: 3px;
+            }           
+            """
+        )
+        self.edit_address.setCompleter(completer)
+
+    def on_address_edit(self, text):
+        address_with_alias_re = re.compile('^.* \(.*\)$')
+        if address_with_alias_re.match(text):
+            address = text[text.find("(")+1:text.find(")")]
+            self.edit_address.setText(address)
 
     def on_amount_edit(self, text):
         if not text:

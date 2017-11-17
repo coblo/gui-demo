@@ -1,7 +1,7 @@
 import re
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QValidator
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QStyledItemDelegate
 from PyQt5.QtWidgets import QCompleter
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QWidget
@@ -36,13 +36,28 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.btn_send_send.clicked.connect(self.on_send_clicked)
 
         address_list =[]
-        for address in Address.select():
+        for address in Address.select().order_by(Address.address.desc()):
             if address.alias is not None:
                 address_list.append("{} ({})".format(address.alias, address.address))
             address_list.append(address.address)
         completer = QCompleter(address_list, self.edit_address)
+        completer_delegate = QStyledItemDelegate(completer)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
-        completer.popup().setStyleSheet('font: 10pt "Roboto Light"')
+        completer.popup().setItemDelegate(completer_delegate)
+        completer.popup().setStyleSheet(
+            """
+            QAbstractItemView {
+                font: 10pt "Roboto Light";
+                border: 1px solid #41ADFF;
+                border-top: 0px;
+                background-color: #FFF79A;
+                border-radius: 2px;
+            }
+            QAbstractItemView::item  {
+                margin-top: 3px;
+            }           
+            """
+        )
         self.edit_address.setCompleter(completer)
 
     def on_address_edit(self, text):

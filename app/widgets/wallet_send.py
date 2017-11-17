@@ -42,6 +42,7 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
             address_list.append(address.address)
         completer = QCompleter(address_list, self.edit_address)
         completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.popup().setStyleSheet('font: 10pt "Roboto Light"')
         self.edit_address.setCompleter(completer)
 
     def on_address_edit(self, text):

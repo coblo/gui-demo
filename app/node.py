@@ -53,6 +53,7 @@ class Node(QProcess):
                     '-server=1',
                     '-daemon',
                     '-autosubscribe=assets,streams',
+                    '-autocombineminconf=4294967294',
                     # '-maxshowndata=32',
                     # '-printtoconsole',
                     '-rpcuser={}'.format(self.profile.rpc_user),

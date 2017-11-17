@@ -25,7 +25,9 @@ class PermissionModel(QAbstractTableModel):
     def __init__(self, parent, perm_type=Permission.MINE):
         super().__init__(parent)
 
-        self._fields = ('Alias', 'Address', 'Last Mined' if perm_type==Permission.MINE else 'Last Voted', 'Revokes', 'Action')
+        self._fields = (
+        'Alias', 'Address', 'Last Mined' if perm_type == Permission.MINE else 'Last Voted', 'Last 24h', 'Revokes',
+        'Action')
         self._perm_type = perm_type
         self._data = self.load_data()
 
@@ -53,7 +55,7 @@ class PermissionModel(QAbstractTableModel):
 
     def data(self, idx: QModelIndex, role=None):
 
-        if role == Qt.TextAlignmentRole and idx.column() in (3, 4):
+        if role == Qt.TextAlignmentRole and idx.column() in (3, 4, 5):
             return Qt.AlignCenter
 
         if not idx.isValid():
@@ -61,7 +63,7 @@ class PermissionModel(QAbstractTableModel):
 
         perm_obj = self._data[idx.row()]
 
-        if role == Qt.EditRole and idx.column() in (1, 4):
+        if role == Qt.EditRole and idx.column() in (1, 5):
             return perm_obj.address_id
 
         if role != Qt.DisplayRole:
@@ -83,9 +85,16 @@ class PermissionModel(QAbstractTableModel):
             return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
-                return "{} of {}".format(perm_obj.address.num_validator_revokes(), math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE))
+                return "{} Blocks".format(perm_obj.address.get_mined_last_24_hours())
             else:
-                return "{} of {}".format(perm_obj.address.num_guardian_revokes(), math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN))
+                return "{} Votes".format(perm_obj.address.get_voted_last_24_hours())
+        if idx.column() == 4:
+            if self._perm_type == Permission.MINE:
+                return "{} of {}".format(perm_obj.address.num_validator_revokes(),
+                                         math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE))
+            else:
+                return "{} of {}".format(perm_obj.address.num_guardian_revokes(),
+                                         math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN))
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:
@@ -156,7 +165,8 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
                     raise RuntimeError(err_msg)
                 else:
                     sender.setDisabled(True)
-                    sender.setStyleSheet("QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                    sender.setStyleSheet(
+                        "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
                 QApplication.restoreOverrideCursor()
             except Exception as e:
                 err_msg = str(e)
@@ -204,6 +214,7 @@ class CommunityTableView(QtWidgets.QTableView):
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
         header.setFont(font)
 
         # Row height
@@ -222,17 +233,17 @@ class CommunityTableView(QtWidgets.QTableView):
         self.create_table_buttons()
 
     def create_table_buttons(self):
-        self.setItemDelegateForColumn(4, ButtonDelegate(self))
+        self.setItemDelegateForColumn(5, ButtonDelegate(self))
         for row in range(0, self.table_model.rowCount()):
-            self.openPersistentEditor(self.table_model.index(row, 4))
+            self.openPersistentEditor(self.table_model.index(row, 5))
         # TODO find a better way to fix button sizes collapsing on update
         w, h = self.size().width(), self.size().height()
-        self.resize(w+1, h)
+        self.resize(w + 1, h)
         self.resize(w, h)
 
     @pyqtSlot(bool)
     def is_admin_changed(self, is_admin):
-        self.setColumnHidden(4, not is_admin)
+        self.setColumnHidden(5, not is_admin)
 
 
 if __name__ == '__main__':

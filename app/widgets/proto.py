@@ -104,7 +104,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.updater.start()
 
         self.show()
-        self.statusbar.showMessage(app.APP_DIR, 10000)
 
     @pyqtSlot(Profile)
     def on_profile_changed(self, new_profile):

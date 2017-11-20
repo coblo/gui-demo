@@ -206,7 +206,7 @@ class CommunityTableView(QtWidgets.QTableView):
         font.setFamily("Roboto Light")
         font.setPointSize(10)
 
-        self.setColumnHidden(4, not self.profile.is_admin)
+        self.setColumnHidden(5, not self.profile.is_admin)
 
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)

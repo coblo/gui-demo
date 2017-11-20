@@ -17,23 +17,32 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
         self.table_wallet_history.setModel(self.table_model)
         header = self.table_wallet_history.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
 
 
 class TransactionHistoryTableModel(QAbstractTableModel):
 
     DATETIME = 0
-    COMMENT = 1
-    AMOUNT = 2
-    BALANCE = 3
-    CONFIRMATIONS = 4
-    TXID = 5
+    TXTYPE = 1
+    COMMENT = 2
+    AMOUNT = 3
+    BALANCE = 4
+    CONFIRMATIONS = 5
+    TXID = 6
+
+    transaction_types = {
+        "payment": "Payment",
+        "vote": "Skill grant/revoke",
+        "mining_reward": "Mining Reward",
+        "publish": "Publish"
+    }
 
     def __init__(self, parent=None):
         super().__init__()
-        self.header = ['Date', 'Comment', 'Amount', 'Balance']
+        self.header = ['Date', 'Type', 'Comment', 'Amount', 'Balance']
         self.txs = []
         self.insert_db_data(Transaction.select())
         self.sort_index = self.DATETIME
@@ -47,6 +56,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     def tx_to_tuple(self, tx) -> tuple:
         return (
             tx.datetime,
+            tx.txtype,
             tx.comment,
             tx.amount,
             tx.balance,
@@ -79,6 +89,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                     return 'Unconfirmed'
                 else:
                     return value.strftime("%Y-%m-%d %H:%M")
+            elif col == self.TXTYPE and value in self.transaction_types:
+                return self.transaction_types[value]
             else:
                 return str(value)
         if role == Qt.ToolTipRole and col in (self.AMOUNT, self.BALANCE):

@@ -64,18 +64,25 @@ def listwallettransactions():
             if tx['valid']:
                 txid = tx['txid']
                 dt = datetime.fromtimestamp(tx['time'])
-                description = tx.get('comment', '')
-                perm = tx['permissions']
-                if perm:
-                    description = 'Skills grant/revoke'
+
+                comment = ''
+                txtype = 'payment'
+                if tx['permissions']:
+                    txtype = 'vote'
 
                 items = tx['items']
                 if items:
-                    first_item_type = items[0].get('type')
-                    if first_item_type == 'stream':
-                        description = 'Stream publishing'
+                    first_item = items[0]
+                    if first_item['type'] == 'stream':
+                        txtype = "publish"
+                        comment = 'Stream:"' + first_item['name'] + '", Key: "' + first_item['key'] + '"'
+
                 if tx.get('generated'):
-                    description = 'Mining reward'
+                    txtype = 'mining_reward'
+
+                # local comments have the highest priority
+                if 'comment' in tx:
+                    comment = tx.get('comment')
 
                 amount = tx['balance']['amount']
                 balance += amount
@@ -84,7 +91,8 @@ def listwallettransactions():
                 tx_obj, created = Transaction.get_or_create(
                     txid=txid, defaults=dict(
                         datetime=dt,
-                        comment=description,
+                        txtype=txtype,
+                        comment=comment,
                         amount=amount,
                         balance=balance,
                         confirmations=confirmations

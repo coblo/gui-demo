@@ -11,6 +11,7 @@ class Transaction(peewee.Model):
     """Wallet transactions"""
 
     datetime = peewee.DateTimeField()
+    txtype = peewee.CharField()
     comment = peewee.CharField()
     amount = peewee.DecimalField(max_digits=17, decimal_places=8)
     balance = peewee.DecimalField(max_digits=17, decimal_places=8)

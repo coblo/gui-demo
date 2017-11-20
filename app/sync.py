@@ -66,19 +66,19 @@ def listwallettransactions():
                 dt = datetime.fromtimestamp(tx['time'])
 
                 comment = ''
-                txtype = 'payment'
+                txtype = Transaction.PAYMENT
                 if tx['permissions']:
-                    txtype = 'vote'
+                    txtype = Transaction.VOTE
 
                 items = tx['items']
                 if items:
                     first_item = items[0]
                     if first_item['type'] == 'stream':
-                        txtype = "publish"
+                        txtype = Transaction.PUBLISH
                         comment = 'Stream:"' + first_item['name'] + '", Key: "' + first_item['key'] + '"'
 
                 if tx.get('generated'):
-                    txtype = 'mining_reward'
+                    txtype = Transaction.MINING_REWARD
 
                 # local comments have the highest priority
                 if 'comment' in tx:

@@ -34,10 +34,10 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     TXID = 6
 
     transaction_types = {
-        "payment": "Payment",
-        "vote": "Skill grant/revoke",
-        "mining_reward": "Mining Reward",
-        "publish": "Publish"
+        Transaction.PAYMENT: "Payment",
+        Transaction.VOTE: "Skill grant/revoke",
+        Transaction.MINING_REWARD: "Mining Reward",
+        Transaction.PUBLISH: "Publish"
     }
 
     def __init__(self, parent=None):

@@ -10,6 +10,7 @@ options = {
             'includes': 'atexit',
             'packages': ['requests', 'idna', 'timeago'],
             'excludes': [],
+            'include_msvcr': True,
         },
 }
 
@@ -28,7 +29,7 @@ executables = [
 
 setup(
     name='Coblo',
-    version='0.2.0',
+    version='0.2.1',
     description='Content Blockchain Demo',
     options=options,
     executables=executables

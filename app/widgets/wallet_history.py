@@ -116,7 +116,6 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                     lst[self.CONFIRMATIONS] = confirmations_map[tx_1[self.TXID]].confirmations
                     self.txs[index] = tuple(lst)
                     self.dataChanged.emit(self.index(index, self.CONFIRMATIONS), self.index(index, self.CONFIRMATIONS), [Qt.DisplayRole])
-                    break
 
         self.sort(self.sort_index, self.sort_order)
 

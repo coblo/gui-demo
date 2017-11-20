@@ -3,8 +3,6 @@ import logging
 import peewee
 from peewee import fn
 
-from datetime import datetime, timedelta
-
 from app.models.db import data_db
 
 
@@ -48,14 +46,6 @@ class Address(peewee.Model):
         latest_vote = self.votes_given.order_by(Vote.time.desc()).first()
         if latest_vote:
             return latest_vote.time
-
-    def get_mined_last_24_hours(self):
-        from app.models import Block
-        return self.mined_blocks.select().where(datetime.now() - timedelta(days=1) <= Block.time).count()
-
-    def get_voted_last_24_hours(self):
-        from app.models import Vote
-        return self.votes_given.select().where(datetime.now() - timedelta(days=1) <= Vote.time).count()
 
     def num_validator_revokes(self):
         from app.models import CurrentVote, Permission

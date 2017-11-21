@@ -17,7 +17,7 @@ participate in testing the plattform. It allows you to:
 - timestamp content on the blockchain
 
 An installable version is currently available for 64-Bit Windows.
-You can download it [here](https://github.com/coblo/gui-demo/releases/download/v0.2.0/Coblo-0.2.0-win.msi).
+You can download it [here](https://github.com/coblo/gui-demo/releases/download/v0.2.1/Coblo-0.2.1-win.msi).
 If you need help or have questions you can reach us via telegram:
 [https://t.me/ContentBlockchainBeta](https://t.me/ContentBlockchainBeta)
 

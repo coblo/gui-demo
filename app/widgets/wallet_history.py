@@ -1,6 +1,6 @@
 from datetime import datetime
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, QVariant, Qt, pyqtSlot
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QIcon, QPixmap
 from PyQt5.QtWidgets import QHeaderView, QWidget
 from decimal import Decimal, ROUND_DOWN
 
@@ -40,9 +40,21 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         Transaction.PUBLISH: "Publish"
     }
 
+    transaction_type_to_icon = {
+        Transaction.PAYMENT: QIcon(),
+        Transaction.VOTE: QIcon(),
+        Transaction.MINING_REWARD: QIcon(),
+        Transaction.PUBLISH: QIcon()
+    }
+
     def __init__(self, parent=None):
         super().__init__()
         self.header = ['Date', 'Type', 'Comment', 'Amount', 'Balance']
+        self.transaction_type_to_icon[Transaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[Transaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[Transaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[Transaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
+
         self.txs = []
         self.insert_db_data(Transaction.select())
         self.sort_index = self.DATETIME
@@ -89,14 +101,23 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                     return 'Unconfirmed'
                 else:
                     return value.strftime("%Y-%m-%d %H:%M")
-            elif col == self.TXTYPE and value in self.transaction_types:
-                return self.transaction_types[value]
+            elif col == self.TXTYPE:
+                return ""
             else:
                 return str(value)
-        if role == Qt.ToolTipRole and col in (self.AMOUNT, self.BALANCE):
-            return "{0:n}".format(tx[col])
+        if role == Qt.DecorationRole and col == self.TXTYPE and tx[col] in self.transaction_types:
+            return self.transaction_type_to_icon[tx[col]]
+        if role == Qt.ToolTipRole:
+            if col in (self.AMOUNT, self.BALANCE):
+                return "{0:n}".format(tx[col])
+            elif col == self.TXTYPE and tx[col] in self.transaction_types:
+                return self.transaction_types[tx[col]]
+            else:
+                return None
         elif role == Qt.TextAlignmentRole and col not in (self.COMMENT, self.DATETIME):
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
+        elif role == Qt.TextAlignmentRole and col == self.TXTYPE and tx[col] in self.transaction_types:
+            return self.transaction_type_to_icon[tx[col]].actualSize()
         elif role == Qt.ForegroundRole:
             if col == self.AMOUNT and tx[self.AMOUNT] < 0:
                 return QVariant(QColor(Qt.red))

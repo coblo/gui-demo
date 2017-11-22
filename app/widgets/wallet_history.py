@@ -1,6 +1,6 @@
 from datetime import datetime
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, QVariant, Qt, pyqtSlot
-from PyQt5.QtGui import QColor, QIcon, QPixmap
+from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import QHeaderView, QWidget
 from decimal import Decimal, ROUND_DOWN
 
@@ -94,7 +94,10 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             value = tx[col]
             if isinstance(value, Decimal):
-                normalized = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+                if col == self.AMOUNT:
+                    normalized = value
+                else:
+                    normalized = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
                 display = "{0:n}".format(normalized)
                 return '+' + display if value > 0 and col == self.AMOUNT else display
             elif isinstance(value, datetime):
@@ -109,7 +112,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if role == Qt.DecorationRole and col == self.TXTYPE and tx[col] in self.transaction_types:
             return self.transaction_type_to_icon[tx[col]]
         if role == Qt.ToolTipRole:
-            if col in (self.AMOUNT, self.BALANCE):
+            if col == self.BALANCE:
                 return "{0:n}".format(tx[col])
             elif col == self.TXTYPE and tx[col] in self.transaction_types:
                 return self.transaction_types[tx[col]]
@@ -122,6 +125,9 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         elif role == Qt.ForegroundRole:
             if col == self.AMOUNT and tx[self.AMOUNT] < 0:
                 return QVariant(QColor(Qt.red))
+        elif role == Qt.FontRole and col == self.AMOUNT:
+            font = QFont("RobotoCondensed-Light", 9)
+            return QVariant(font)
         return None
 
     def sort(self, p_int, order=None):

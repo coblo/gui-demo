@@ -43,6 +43,7 @@ class Application(QtWidgets.QApplication):
         font_db = QtGui.QFontDatabase()
         font_db.addApplicationFont(':/fonts/resources/Roboto-Light.ttf')
         font_db.addApplicationFont(':/fonts/resources/RobotoCondensed-Regular.ttf')
+        font_db.addApplicationFont(':/fonts/resources/RobotoCondensed-Light.ttf')
         font_db.addApplicationFont(':/fonts/resources/Oswald-Regular.ttf')
         font_db.addApplicationFont(':/fonts/resources/Oswald-SemiBold.ttf')
         app_font = QtGui.QFont("Roboto Light")

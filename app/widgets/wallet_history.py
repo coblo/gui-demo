@@ -15,6 +15,7 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
         self.setupUi(self)
         self.table_model = TransactionHistoryTableModel(self)
         self.table_wallet_history.setModel(self.table_model)
+        self.table_wallet_history.horizontalHeader().setSortIndicator(1, Qt.AscendingOrder)
         header = self.table_wallet_history.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
@@ -25,8 +26,8 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
 
 class TransactionHistoryTableModel(QAbstractTableModel):
 
-    DATETIME = 0
-    TXTYPE = 1
+    TXTYPE = 0
+    DATETIME = 1
     COMMENT = 2
     AMOUNT = 3
     BALANCE = 4
@@ -49,7 +50,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def __init__(self, parent=None):
         super().__init__()
-        self.header = ['Date', 'Type', 'Comment', 'Amount', 'Balance']
+        self.header = ['', 'Date', 'Comment', 'Amount', 'Balance']
         self.transaction_type_to_icon[Transaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
         self.transaction_type_to_icon[Transaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
         self.transaction_type_to_icon[Transaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
@@ -67,8 +68,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def tx_to_tuple(self, tx) -> tuple:
         return (
-            tx.datetime,
             tx.txtype,
+            tx.datetime,
             tx.comment,
             tx.amount,
             tx.balance,

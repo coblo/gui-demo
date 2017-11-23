@@ -2,25 +2,29 @@ import sys
 import traceback
 import locale
 import logging
+
+import time
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMessageBox
 
 import app
 from app import helpers
+from app.models import Profile
 from app.node import Node
 from app.updater import Updater
 from app.widgets.proto import MainWindow
 from app.widgets.setup_wizard import SetupWizard
 from app.signals import signals
 
+from app.backend.rpc import get_active_rpc_client
 
 helpers.init_logging()
 log = logging.getLogger(__name__)
 
 
 class Application(QtWidgets.QApplication):
-
     def __init__(self, args, main_widget=None):
         log.debug('init app')
         super().__init__(args)
@@ -64,6 +68,7 @@ class Application(QtWidgets.QApplication):
         self.updater = Updater(self)
         self.node = Node(self)
         self.aboutToQuit.connect(self.cleanup)
+        signals.profile_changed.connect(self.on_profile_changed)
 
         if app.is_first_start():
             wizard = SetupWizard()
@@ -73,6 +78,14 @@ class Application(QtWidgets.QApplication):
 
         # Initialize main window
         self.ui = self.main_widget()
+
+        if self.account_balance_zero():
+            self.ui.setDisabled(True)
+            profile = Profile.get_active()
+            QMessageBox.information(QMessageBox(), "Account Balance is 0",
+                                    "To use this application you will need \"Charm\", the currency we use on our Blockchain.<br>"
+                                    "You can get \"Charm\" <a href='https://t.me/ContentBlockchainBeta'>here</a>.<br>"
+                                    "Your address is {}.".format(profile.address))
 
         # Init TrayIcon
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)
@@ -126,3 +139,16 @@ class Application(QtWidgets.QApplication):
         if reason == QtWidgets.QSystemTrayIcon.DoubleClick:
             self.ui.show()
             self.ui.activateWindow()
+
+    def account_balance_zero(self):
+        if Profile.get_active().balance == 0:
+            # We only make a rpc-call, if we see in the profile, that the user has no coins
+            client = get_active_rpc_client()
+            if client.getbalance()['result'] == 0:
+                return True
+
+    def on_profile_changed(self, new_profile):
+        try:
+            self.ui.setDisabled(new_profile.balance == 0)
+        except Exception as e:
+            log.debug(e)

@@ -7,8 +7,8 @@ The **Content Blockchain Project** is building the foundational tools that
 enable journalists, publishers, and media start-ups to create new innovative 
 products, services and business models in the open blockchain economy.
 
-This software allows you to run a full content blockchain node on your and 
-participate in testing the plattform. It allows you to:
+This software allows you to run a full content blockchain node on your computer
+and participate in testing the plattform. It allows you to:
 
 - run your own blockchain-node (testnet)
 - create an account on the blockchain
@@ -18,7 +18,7 @@ participate in testing the plattform. It allows you to:
 
 An installable version is currently available for 64-Bit Windows.
 You can download it [here](https://github.com/coblo/gui-demo/releases/download/v0.2.1/Coblo-0.2.1-win.msi).
-If you need help or have questions you can reach us via telegram:
+If you need help or have questions you can reach us via Telegram:
 [https://t.me/ContentBlockchainBeta](https://t.me/ContentBlockchainBeta)
 
 Please report any issues at [https://github.com/coblo/gui-demo/issues](https://github.com/coblo/gui-demo/issues)
@@ -56,31 +56,31 @@ for their services. **Guardians** determine **Validators** by on-chain voting.
 ## Development Setup
 
 If you want to contribute or just play around with the code you will need
-Python 3.5 on your system. The application is cross platform and should
-generally work on any 64-Bit Linux, Mac and Windows. Please be aware that this
+**Python 3.5** on your system. The application is cross platform and should
+generally work on any 64-Bit Linux, Mac or Windows. Please be aware that this
 is a "Proof of Concept" and the code is not meant to be production grade. 
 These are the steps to get your hands dirty:
 
 - Checkout this repository to you machine
 - Optionaly create a virtual environment for the project
 - Install python dependencies with `pip install -r requirements.txt`
-- Download [multichaind binaries](https://www.multichain.com/download-install/) an place them in `/app/bin`
+- Download [multichaind binaries](https://www.multichain.com/download-install/) and place them in `/app/bin`
 - Compile QT .ui files with `comile_ui.py`
 
 Now you should be able to run `main.py`. Launching the application will check
-if you have a `provile.db` SQLite file in your systems app data folder.
+if you have a `profile.db` SQLite file in your systems app data folder.
 For example on Windows that would be `C:\Users\YOURUSERNAME\AppData\Local\Content-Blockchain\Coblo\profile.db`.
 If that file does not exist the application will guide you through the setup wizard
 to create a `profile.db` and a blockchain address.
 
-By default the application will manage the multichaind node proccess.
+By default the application will manage the `multichaind` node proccess.
 For development you might want to manage the process yourself.
-See `runchain.example.bat` for how to manually start a multichain node.
-The first time setup wizard also allows to to specify connection data for you
+See `runchain.example.bat` for how to manually start a MultiChain node on Windows.
+The first time setup wizard also allows to specify connection data for you
 manually managed node.
 
 By installing the `requirements-dev.txt` dependencies you will also be able to
-create frozen app builds and edit .ui files with QT-Designer. The windows
+create frozen app builds and edit .ui files with QT-Designer. The Windows
 build/dist is created with `python setup.py bdist_msi`. `pyqt5-tools` will
 install the QT-Designer executable to your python `site-packages/pyqt5-tools`
 folder.

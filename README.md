@@ -23,13 +23,34 @@ If you need help or have questions you can reach us via telegram:
 
 Please report any issues at [https://github.com/coblo/gui-demo/issues](https://github.com/coblo/gui-demo/issues)
 
-## Screenshots
+## Overview
 
-![Alt text](docs/screenshot_wallet.jpg?raw=true "Content Blockchain Wallet Screenshot")
+<img align="left" width="150" src="docs/screenshot_wallet.jpg?raw=true">
 
-![Alt text](docs/screenshot_timestamp.jpg?raw=true "Content Blockchain Timestamp Screenshot")
+### Wallet
 
-![Alt text](docs/screenshot_community.jpg?raw=true "Content Blockchain Community Screenshot")
+Content is registered via transactions that are replicated and stored on the
+blockchain. Infrastructure providers are rewarded with tokens for their 
+services. The wallet screen shows your token balance and transaction history.
+You may exchange tokens with other participants.
+
+<img align="left" width="150" src="docs/screenshot_timestamp.jpg?raw=true">
+
+### Timestamping
+
+A minimal demonstration of content timestamping. Here you can create, search
+and optionally register a unique fingerprint (SHA256 hash) of any document or
+file. This will be extended to demonstrate content registration with 
+[ISCC codes](http://iscc.codes/ "International Standard Content Code")
+
+
+<img align="left" width="150" src="docs/screenshot_community.jpg?raw=true">
+
+### Community 
+
+Demonstration of a decentralized voting based governance. Participants that 
+operate full  nodes on the network can become **Validators** and earn tokens
+for their services. **Guardians** determine **Validators** by on-chain voting.
 
 ## Credits
 

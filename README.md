@@ -27,7 +27,7 @@ Please report any issues at [https://github.com/coblo/gui-demo/issues](https://g
 
 <img align="left" width="150" src="docs/screenshot_wallet.jpg?raw=true">
 
-### Wallet
+**Wallet**
 
 Content is registered via transactions that are replicated and stored on the
 blockchain. Infrastructure providers are rewarded with tokens for their 
@@ -36,7 +36,7 @@ You may exchange tokens with other participants.
 
 <img align="left" width="150" src="docs/screenshot_timestamp.jpg?raw=true">
 
-### Timestamping
+**Timestamping**
 
 A minimal demonstration of content timestamping. Here you can create, search
 and optionally register a unique fingerprint (SHA256 hash) of any document or
@@ -46,11 +46,45 @@ file. This will be extended to demonstrate content registration with
 
 <img align="left" width="150" src="docs/screenshot_community.jpg?raw=true">
 
-### Community 
+**Community** 
 
 Demonstration of a decentralized voting based governance. Participants that 
 operate full  nodes on the network can become **Validators** and earn tokens
 for their services. **Guardians** determine **Validators** by on-chain voting.
+
+
+## Development Setup
+
+If you want to contribute or just play around with the code you will need
+Python 3.5 on your system. The application is cross platform and should
+generally work on any 64-Bit Linux, Mac and Windows. Please be aware that this
+is a "Proof of Concept" and the code is not meant to be production grade. 
+These are the steps to get your hands dirty:
+
+- Checkout this repository to you machine
+- Optionaly create a virtual environment for the project
+- Install python dependencies with `pip install -r requirements.txt`
+- Download [multichaind binaries](https://www.multichain.com/download-install/) an place them in `/app/bin`
+- Compile QT .ui files with `comile_ui.py`
+
+Now you should be able to run `main.py`. Launching the application will check
+if you have a `provile.db` SQLite file in your systems app data folder.
+For example on Windows that would be `C:\Users\YOURUSERNAME\AppData\Local\Content-Blockchain\Coblo\profile.db`.
+If that file does not exist the application will guide you through the setup wizard
+to create a `profile.db` and a blockchain address.
+
+By default the application will manage the multichaind node proccess.
+For development you might want to manage the process yourself.
+See `runchain.example.bat` for how to manually start a multichain node.
+The first time setup wizard also allows to to specify connection data for you
+manually managed node.
+
+By installing the `requirements-dev.txt` dependencies you will also be able to
+create frozen app builds and edit .ui files with QT-Designer. The windows
+build/dist is created with `python setup.py bdist_msi`. `pyqt5-tools` will
+install the QT-Designer executable to your python `site-packages/pyqt5-tools`
+folder.
+
 
 ## Credits
 

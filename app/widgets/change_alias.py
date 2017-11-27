@@ -31,6 +31,7 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
         signals.profile_changed.connect(self.on_profile_changed)
         self.adjustSize()
         self.buttonBox.button(QDialogButtonBox.Save).clicked.connect(self.save)
+        self.buttonBox.button(QDialogButtonBox.Save).setDisabled(True)
 
     @pyqtSlot(Profile)
     def on_profile_changed(self, new_profile):

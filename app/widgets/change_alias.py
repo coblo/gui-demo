@@ -54,28 +54,26 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
         self.buttonBox.button(QDialogButtonBox.Save).setDisabled(not is_valid)
 
     def save(self):
-        if self.edit_alias.text() != self.profile.alias:
-            client = get_active_rpc_client()
-            try:
-                response = client.publish(
-                    stream='alias',
-                    key=self.edit_alias.text(),
-                    hex_data=''
-                )
-                if response['error'] is not None:
-                    err_msg = response['error']['message']
-                    raise RuntimeError(err_msg)
-                else:
-                    QMessageBox.information(QWidget(), 'Changing alias successful',
-                                            'The transaction to change your alias was sent successful. It may take some'
-                                            ' minutes to validate your transaction. After validation your alias will be'
-                                            ' changed.', QMessageBox.Ok, QMessageBox.Ok)
-                self.close()
-            except Exception as e:
-                err_msg = str(e)
-                error_dialog = QMessageBox()
-                error_dialog.setWindowTitle('Error while changing alias')
-                error_dialog.setText(err_msg)
-                error_dialog.setIcon(QMessageBox.Warning)
-                error_dialog.exec_()
+        client = get_active_rpc_client()
+        try:
+            response = client.publish(
+                stream='alias',
+                key=self.edit_alias.text(),
+                hex_data=''
+            )
+            if response['error'] is not None:
+                err_msg = response['error']['message']
+                raise RuntimeError(err_msg)
+            else:
+                QMessageBox.information(QWidget(), 'Changing alias successful',
+                                        'The transaction to change your alias was sent successful. It may take some'
+                                        ' minutes to validate your transaction. After validation your alias will be'
+                                        ' changed.', QMessageBox.Ok, QMessageBox.Ok)
+        except Exception as e:
+            err_msg = str(e)
+            error_dialog = QMessageBox()
+            error_dialog.setWindowTitle('Error while changing alias')
+            error_dialog.setText(err_msg)
+            error_dialog.setIcon(QMessageBox.Warning)
+            error_dialog.exec_()
         self.close()

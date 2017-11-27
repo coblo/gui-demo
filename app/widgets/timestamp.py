@@ -52,6 +52,8 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.current_filepath = None
         self.current_comment = None
 
+        self.lbl_registration_feedback.setWordWrap(True)
+
         # Ui Tweaks
         self.table_verification.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
 
@@ -67,7 +69,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         log.debug('proccess file %s' % file_path)
         self.current_filepath = file_path
         self.button_dropzone.setText("Current File: %s" % os.path.basename(file_path))
-        self.gbox_processing_status.setEnabled(True)
+        self.gbox_processing_status.setVisible(True)
         self.progress_bar.setMaximum(os.path.getsize(file_path))
         self.progress_bar.setValue(0)
         self.progress_bar.show()
@@ -79,6 +81,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         # Disable dropzone
         self.gbox_dropzone.setDisabled(True)
         self.button_dropzone.setDisabled(True)
+        self.button_reset.setEnabled(True)
 
         self.hash_thread.start()
 
@@ -103,7 +106,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
         if timestamps:
             self.label_verification.setText('Found existing timestamps for document:')
-            self.gbox_verification.setEnabled(True)
+            self.gbox_verification.setVisible(True)
             self.table_verification.setRowCount(len(timestamps))
             for row_id, row in enumerate(timestamps):
                 for col_id, col in enumerate(row):
@@ -118,21 +121,21 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
         self.progress_bar.hide()
         self.label_processing_status.setText('Fingerprint: %s' % self.current_fingerprint)
-        self.gbox_timestamp.setEnabled(True)
+        self.gbox_timestamp.setVisible(True)
+        self.button_register.setEnabled(True)
 
     @pyqtSlot()
     def register_timestamp(self):
         self.button_register.setDisabled(True)
         self.edit_comment.setDisabled(True)
+        self.lbl_registration_feedback.setVisible(True)
         try:
             txid = put_timestamp(self.current_fingerprint, self.edit_comment.text())
-            self.edit_comment.hide()
-            self.label_register_comment.setText(
+            self.lbl_registration_feedback.setText(
                 'Timestamp registered. Transaction ID is: %s' % txid
             )
         except Exception as e:
-            self.edit_comment.hide()
-            self.label_register_comment.setText(
+            self.lbl_registration_feedback.setText(
                 'Registration failed: %s' % e
             )
 
@@ -204,27 +207,28 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
         # Processing Status
         self.gbox_processing_status.show()
-        self.gbox_processing_status.setDisabled(True)
+        self.gbox_processing_status.setVisible(False)
         self.label_processing_status.setText('Waiting for document to process')
         self.progress_bar.hide()
 
         # Verification results
-        self.gbox_verification.setDisabled(True)
+        self.gbox_verification.setVisible(False)
         self.label_verification.setText('Waiting for document to verify')
         self.table_verification.clearContents()
         self.table_verification.setRowCount(0)
         self.table_verification.show()
 
+        self.lbl_registration_feedback.setVisible(False)
+
         # Timestamp Form
-        self.gbox_timestamp.setDisabled(True)
+        self.gbox_timestamp.setVisible(False)
         self.label_register_comment.setText(
             'You may add a public comment to your timestamp if you wish'
         )
         self.edit_comment.clear()
-        self.edit_comment.show()
         self.edit_comment.setEnabled(True)
-        self.button_reset.setEnabled(True)
-        self.button_register.setEnabled(True)
+        self.button_reset.setEnabled(False)
+        self.button_register.setEnabled(False)
 
 
 if __name__ == '__main__':

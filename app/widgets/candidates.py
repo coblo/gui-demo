@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 from functools import partial
-
 import math
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
 from collections import OrderedDict
+
 from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtGui import QFont, QCursor
+from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView, QWidget, QMessageBox, QMenu, \
+    QPushButton, QStyledItemDelegate
 
 from app.models import Profile, Address, CurrentVote, Permission
 from app.signals import signals
@@ -97,14 +94,14 @@ class CandidateModel(QAbstractTableModel):
         self.parent().create_table_buttons()
 
 
-class ButtonDelegate(QtWidgets.QStyledItemDelegate):
+class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent):
-        QtWidgets.QStyledItemDelegate.__init__(self, parent)
+        QStyledItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, idx):
         db = self.parent().table_model.db
         db_entry = db[list(db.keys())[idx.row()]]
-        btn = QtWidgets.QPushButton('Grant', parent)
+        btn = QPushButton('Grant', parent)
         btn.setStyleSheet(
             "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         btn.setObjectName(db_entry[1])
@@ -160,12 +157,9 @@ class CandidateTableView(QTableView):
         self.setModel(self.table_model)
         self.setMinimumWidth(400)
 
-        font = QtGui.QFont()
+        font = QFont()
         font.setFamily("Roboto Light")
         font.setPointSize(10)
-
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
 
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -186,12 +180,14 @@ class CandidateTableView(QTableView):
 
         self.setFont(font)
         self.setAlternatingRowColors(True)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setShowGrid(False)
         # TODO implement candidates table sorting
         self.setSortingEnabled(False)
         self.setCornerButtonEnabled(True)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.openCustomMenu)
         self.create_table_buttons()
 
     def create_table_buttons(self):
@@ -200,8 +196,21 @@ class CandidateTableView(QTableView):
             self.openPersistentEditor(self.table_model.index(row, 4))
         # TODO find a better way to fix button sizes collapsing on update
         w, h = self.size().width(), self.size().height()
-        self.resize(w+1, h)
+        self.resize(w + 1, h)
         self.resize(w, h)
+
+    def openCustomMenu(self, QPoint):
+        menu = QMenu(self)
+        copy_address = menu.addAction("Copy Address")
+        copy_alias = menu.addAction("Copy Alias")
+        row = self.rowAt(QPoint.y())
+        action = menu.exec_(self.mapToGlobal(QPoint))
+        if action == copy_address:
+            index = self.table_model.index(row, 1)
+            QApplication.clipboard().setText(self.table_model.itemData(index)[0])
+        elif action == copy_alias:
+            index = self.table_model.index(row, 0)
+            QApplication.clipboard().setText(self.table_model.itemData(index)[0])
 
 
 if __name__ == '__main__':

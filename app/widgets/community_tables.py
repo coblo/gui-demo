@@ -6,15 +6,14 @@ import math
 import timeago
 from datetime import datetime, timedelta
 
-from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget
+from PyQt5.QtGui import QCursor, QFont
+from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget, QMenu, QAbstractItemView, QPushButton, \
+    QStyledItemDelegate, QTableView
 
 from app.backend.rpc import get_active_rpc_client
 from app.models import Permission, Profile, CurrentVote, Block, Vote
 from app.signals import signals
-
 
 from peewee import fn
 
@@ -33,8 +32,8 @@ class PermissionModel(QAbstractTableModel):
         self.last_24_h_vote_count = self.get_24_hour_vote_count()
 
         self._fields = (
-        'Alias', 'Address', 'Last Mined' if perm_type == Permission.MINE else 'Last Voted', 'Last 24h', 'Revokes',
-        'Action')
+            'Alias', 'Address', 'Last Mined' if perm_type == Permission.MINE else 'Last Voted', 'Last 24h', 'Revokes',
+            'Action')
         self._perm_type = perm_type
         self._data = self.load_data()
 
@@ -92,9 +91,11 @@ class PermissionModel(QAbstractTableModel):
             return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
-                return "{} Blocks".format(self.last_24_h_mine_count[perm_obj.address.address] if perm_obj.address.address in self.last_24_h_mine_count else 0)
+                return "{} Blocks".format(self.last_24_h_mine_count[
+                                              perm_obj.address.address] if perm_obj.address.address in self.last_24_h_mine_count else 0)
             else:
-                return "{} Votes".format(self.last_24_h_vote_count[perm_obj.address.address] if perm_obj.address.address in self.last_24_h_vote_count else 0)
+                return "{} Votes".format(self.last_24_h_vote_count[
+                                             perm_obj.address.address] if perm_obj.address.address in self.last_24_h_vote_count else 0)
         if idx.column() == 4:
             if self._perm_type == Permission.MINE:
                 return "{} of {}".format(perm_obj.address.num_validator_revokes(),
@@ -131,9 +132,9 @@ class PermissionModel(QAbstractTableModel):
         self.parent().create_table_buttons()
 
 
-class ButtonDelegate(QtWidgets.QStyledItemDelegate):
+class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent):
-        QtWidgets.QStyledItemDelegate.__init__(self, parent)
+        QStyledItemDelegate.__init__(self, parent)
         self.already_voted = []
         signals.listpermissions.connect(self.listpermissions)
         self.listpermissions()
@@ -150,7 +151,7 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
             })
 
     def createEditor(self, parent, option, idx):
-        btn = QtWidgets.QPushButton('Revoke', parent)
+        btn = QPushButton('Revoke', parent)
         btn.setStyleSheet(
             "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         address = idx.data(Qt.EditRole)
@@ -200,17 +201,12 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
                 error_dialog.exec_()
 
 
-class CommunityTableView(QtWidgets.QTableView):
-    # TODO: show number of "blocks mined"/"votes given" in last 24h in validator/guardian tables
-
+class CommunityTableView(QTableView):
     def __init__(self, *args, **kwargs):
         self.perm_type = kwargs.pop('perm_type')
-        QtWidgets.QTableView.__init__(self, *args, **kwargs)
+        QTableView.__init__(self, *args, **kwargs)
 
         self.setMinimumWidth(400)
-        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-
         try:
             self.profile = self.parent().profile
         except AttributeError:
@@ -224,7 +220,7 @@ class CommunityTableView(QtWidgets.QTableView):
         self.table_model = PermissionModel(self, perm_type=self.perm_type)
         self.setModel(self.table_model)
 
-        font = QtGui.QFont()
+        font = QFont()
         font.setFamily("Roboto Light")
         font.setPointSize(10)
 
@@ -246,12 +242,14 @@ class CommunityTableView(QtWidgets.QTableView):
 
         self.setFont(font)
         self.setAlternatingRowColors(True)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setShowGrid(False)
         # TODO implement comminity tables sorting
         self.setSortingEnabled(False)
         self.setCornerButtonEnabled(True)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.openCustomMenu)
         self.create_table_buttons()
 
     def create_table_buttons(self):
@@ -262,6 +260,19 @@ class CommunityTableView(QtWidgets.QTableView):
         w, h = self.size().width(), self.size().height()
         self.resize(w + 1, h)
         self.resize(w, h)
+
+    def openCustomMenu(self, QPoint):
+        menu = QMenu(self)
+        copy_address = menu.addAction("Copy Address")
+        copy_alias = menu.addAction("Copy Alias")
+        row = self.rowAt(QPoint.y())
+        action = menu.exec_(self.mapToGlobal(QPoint))
+        if action == copy_address:
+            index = self.table_model.index(row, 1)
+            QApplication.clipboard().setText(self.table_model.itemData(index)[0])
+        elif action == copy_alias:
+            index = self.table_model.index(row, 0)
+            QApplication.clipboard().setText(self.table_model.itemData(index)[0])
 
     @pyqtSlot(bool)
     def is_admin_changed(self, is_admin):
@@ -276,7 +287,7 @@ if __name__ == '__main__':
     # from app.tools.runner import run_widget
     init_profile_db()
     init_data_db()
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     win = CommunityTableView(perm_type=Permission.MINE)
     win.show()
     sys.exit(app.exec_())

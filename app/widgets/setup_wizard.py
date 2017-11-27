@@ -227,9 +227,8 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         self.log('Initialize profile database at: %s' % app.PROFILE_DB_FILEPATH)
 
         if self._manage_node:
-            init_profile_db(create_default_profile=True)
+            Profile.create_default_profile()
         elif self._connection_tested:
-            init_profile_db(create_default_profile=False)
             p_obj, created = Profile.get_or_create(
                 name=self.edit_rpc_host.text(),
                 defaults=dict(

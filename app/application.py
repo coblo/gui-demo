@@ -13,6 +13,7 @@ from app.updater import Updater
 from app.widgets.proto import MainWindow
 from app.widgets.setup_wizard import SetupWizard
 from app.signals import signals
+from app.models import init_profile_db, init_data_db
 
 
 helpers.init_logging()
@@ -58,6 +59,9 @@ class Application(QtWidgets.QApplication):
 
         self.ui = None
         self.tray_icon = None
+        helpers.init_data_dir()
+        self.profile_db = init_profile_db()
+        self.data_db = init_data_db()
         signals.application_start.connect(self.on_application_start)
 
     def on_application_start(self):
@@ -114,8 +118,8 @@ class Application(QtWidgets.QApplication):
                 self.node.kill()
 
         if self.ui is not None:
-            self.ui.data_db.close()
-            self.ui.profile_db.close()
+            self.data_db.close()
+            self.profile_db.close()
 
         if self.tray_icon is not None:
             self.tray_icon.deleteLater()

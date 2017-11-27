@@ -33,9 +33,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.node = QApplication.instance().node
 
         self.data_dir = helpers.init_data_dir()
-        self.profile_db = models.init_profile_db()
         self.node_data_dir = helpers.init_node_data_dir()
-        self.data_db = models.init_data_db()
         self.profile = Profile.get_active()
 
         # Setup Widgets

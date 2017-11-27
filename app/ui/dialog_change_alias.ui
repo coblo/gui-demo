@@ -55,7 +55,7 @@
       <string notr="true">color: rgb(170, 0, 0);</string>
      </property>
      <property name="text">
-      <string>ghjj</string>
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

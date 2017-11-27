@@ -23,29 +23,11 @@ class MyAccount(QWidget, Ui_MyAccount):
 
         signals.profile_changed.connect(self.on_profile_changed)
 
-        self.btn_wallet_alias_edit_save.hide()
-        self.btn_wallet_alias_edit_cancel.hide()
-        self.edit_alias.hide()
-
-        self.btn_wallet_alias_edit_start.clicked.connect(self.start_edit_alias)
-        self.btn_wallet_alias_edit_cancel.clicked.connect(self.stop_edit_alias)
-        self.btn_wallet_alias_edit_save.clicked.connect(self.save_alias)
-        self.edit_alias.returnPressed.connect(self.save_alias)
-        self.lbl_wallet_address.setText(self.profile.address)
-
     @pyqtSlot(Profile)
     def on_profile_changed(self, new_profile):
         self.profile = new_profile
         self.lbl_wallet_alias.setText(self.profile.alias)
-        self.edit_alias.setText(self.profile.alias)
         self.lbl_wallet_address.setText(self.profile.address)
-
-        # minimal amount for changing the alias
-        if self.profile.balance < 0.00001:
-            self.stop_edit_alias()
-            self.btn_wallet_alias_edit_start.setEnabled(False)
-        else:
-            self.btn_wallet_alias_edit_start.setEnabled(True)
 
         normalized = self.profile.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
         display = "{0:n} {1}".format(normalized, CURRENCY_CODE)
@@ -54,35 +36,6 @@ class MyAccount(QWidget, Ui_MyAccount):
             self.profile.balance, CURRENCY_CODE)
         )
 
-    def format_balance(self, balance):
-        display = "{0:n}".format(balance.normalize()) if balance is not ' ' else balance
-        return display + ' CHM'
-
-    def start_edit_alias(self):
-        self.lbl_wallet_alias.hide()
-        self.btn_wallet_alias_edit_start.hide()
-        self.btn_wallet_alias_edit_save.show()
-        self.btn_wallet_alias_edit_cancel.show()
-        self.edit_alias.show()
-        self.edit_alias.setFocus()
-        self.edit_alias.selectAll()
-
-    def stop_edit_alias(self):
-        self.lbl_wallet_alias.setText(self.profile.alias)
-        self.edit_alias.setText(self.profile.alias)
-        self.lbl_wallet_alias.show()
-        self.btn_wallet_alias_edit_start.show()
-        self.btn_wallet_alias_edit_save.hide()
-        self.btn_wallet_alias_edit_cancel.hide()
-        self.edit_alias.hide()
-
-    def save_alias(self):
-        try:
-            self.profile.update_alias(self.edit_alias.text())
-            self.stop_edit_alias()
-            QMessageBox().information(self, "New alias", "New alias registration in progress")
-        except Exception as e:
-            QMessageBox().critical(self, 'Alias update error', str(e))
 
 if __name__ == '__main__':
     import sys

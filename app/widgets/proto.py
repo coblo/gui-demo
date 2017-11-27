@@ -17,6 +17,7 @@ from app.widgets.timestamp import WidgetTimestamping
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
 from app.widgets.invite import InviteDialog
+from app.widgets.change_alias import ChangeAlias
 
 
 log = logging.getLogger(__name__)
@@ -90,6 +91,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.check_box_exit_on_close.stateChanged['int'].connect(self.setting_changed_exit_on_close)
         self.check_manage_node.setChecked(self.profile.manage_node)
         self.check_manage_node.stateChanged['int'].connect(self.setting_changed_manage_node)
+        self.btn_alias_change.clicked.connect(self.on_change_alias)
 
         # Connections
         signals.getblockchaininfo.connect(self.getblockchaininfo)
@@ -111,6 +113,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.profile = new_profile
         log.debug('load current profile %s' % self.profile)
 
+        self.lbl_alias.setText(new_profile.alias)
+
         self.lbl_skill_is_admin.setEnabled(self.profile.is_admin)
         self.lbl_skill_is_miner.setEnabled(self.profile.is_miner)
         # We must manually "polish" the style to trigger visuals
@@ -125,6 +129,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_apply_validator.setVisible(not self.profile.is_miner)
         self.button_apply_guardian.setVisible(not self.profile.is_admin)
         self.button_invite_canditate.setVisible(self.profile.is_admin)
+
+        self.btn_alias_change.setDisabled(self.profile.balance <= 0)
+        if self.profile.balance <= 0:
+            self.btn_alias_change.setToolTip('You need coins to change your alias.')
 
     def closeEvent(self, event):
         if self.profile.exit_on_close:
@@ -145,6 +153,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def node_started(self):
         self.updater.start()
+
+    def on_change_alias(self):
+        dialog = ChangeAlias(self)
+        dialog.show()
+        return dialog
 
     @pyqtSlot(object)
     def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):

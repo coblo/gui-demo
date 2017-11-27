@@ -53,21 +53,6 @@ class Profile(peewee.Model):
             self.active = True
             self.save()
 
-    def update_alias(self, new_alias):
-        if not is_valid_username(new_alias):
-            raise CharmError(Exception("Invalid Username:\n"
-                                       '- It may contain alphanumerical characters and "_", ".", "-"\n'
-                                       '- It must not start or end with "-" or "."\n'
-                                       '- It must be between 3 and 33 characters\n'
-                                       '- It must not have consecutive "_", ".", "-" characters'))
-
-        result = get_active_rpc_client().publish("alias", new_alias, "")
-        if result['error']:
-            if result['error']['code'] in [-716, -6]:
-                raise RpcResponseError(Exception("Insufficient Funds"))
-            else:
-                raise RpcResponseError(Exception('"Blockchain error: "' + result['error']['message'] + '"'))
-
     @property
     def data_db_filepath(self):
         """Return database path for this profile"""

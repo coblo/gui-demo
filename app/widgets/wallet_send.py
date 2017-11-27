@@ -27,8 +27,6 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.edit_address.textChanged.connect(self.on_address_edit)
         self.edit_address.textChanged.connect(self.check_state)
 
-        self.edit_description.setStyleSheet('QLineEdit:focus {background-color: #fff79a}')
-
         self.btn_send_cancel.clicked.connect(self.on_cancel_clicked)
         self.btn_send_send.setDisabled(True)
         self.amount_valid = False

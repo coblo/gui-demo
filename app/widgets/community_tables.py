@@ -4,15 +4,19 @@ import logging
 import math
 
 import timeago
-from datetime import datetime
+from datetime import datetime, timedelta
+
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget
 
 from app.backend.rpc import get_active_rpc_client
-from app.models import Permission, Profile, CurrentVote
+from app.models import Permission, Profile, CurrentVote, Block, Vote
 from app.signals import signals
+
+
+from peewee import fn
 
 from app import ADMIN_CONSENUS_MINE, ADMIN_CONSENUS_ADMIN
 
@@ -24,6 +28,9 @@ class PermissionModel(QAbstractTableModel):
 
     def __init__(self, parent, perm_type=Permission.MINE):
         super().__init__(parent)
+
+        self.last_24_h_mine_count = self.get_24_hour_mine_count()
+        self.last_24_h_vote_count = self.get_24_hour_vote_count()
 
         self._fields = (
         'Alias', 'Address', 'Last Mined' if perm_type == Permission.MINE else 'Last Voted', 'Last 24h', 'Revokes',
@@ -85,9 +92,9 @@ class PermissionModel(QAbstractTableModel):
             return 'Never'
         if idx.column() == 3:
             if self._perm_type == Permission.MINE:
-                return "{} Blocks".format(perm_obj.address.get_mined_last_24_hours())
+                return "{} Blocks".format(self.last_24_h_mine_count[perm_obj.address.address] if perm_obj.address.address in self.last_24_h_mine_count else 0)
             else:
-                return "{} Votes".format(perm_obj.address.get_voted_last_24_hours())
+                return "{} Votes".format(self.last_24_h_vote_count[perm_obj.address.address] if perm_obj.address.address in self.last_24_h_vote_count else 0)
         if idx.column() == 4:
             if self._perm_type == Permission.MINE:
                 return "{} of {}".format(perm_obj.address.num_validator_revokes(),
@@ -101,8 +108,23 @@ class PermissionModel(QAbstractTableModel):
             return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
         return super().flags(idx)
 
+    def get_24_hour_mine_count(self):
+        return {b.miner.address: b.block_count for b in Block.select(
+            Block.miner,
+            fn.COUNT(Block.hash).alias("block_count")
+        ).where(datetime.now() - timedelta(days=1) <= Block.time).group_by(Block.miner)}
+
+    def get_24_hour_vote_count(self):
+        return {v.from_address.address: v.vote_count for v in Vote.select(
+            Vote.from_address,
+            fn.COUNT(Vote.txid).alias("vote_count")
+        ).where(datetime.now() - timedelta(days=1) <= Vote.time).group_by(Vote.from_address)}
+
     @pyqtSlot()
     def listpermissions(self):
+        self.last_24_h_mine_count = self.get_24_hour_mine_count()
+        self.last_24_h_vote_count = self.get_24_hour_vote_count()
+
         self.beginResetModel()
         self._data = self.load_data()
         self.endResetModel()

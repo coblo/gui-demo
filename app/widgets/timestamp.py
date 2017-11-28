@@ -4,11 +4,14 @@ import os
 from datetime import datetime
 from hashlib import sha256
 
-from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread, QDir
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent
+from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread, QDir, QAbstractTableModel, \
+    QModelIndex, Qt
+from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent, QFont
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView, QMessageBox
 
-from app.api import put_timestamp
+from app.models import Profile
+from app.signals import signals
+from app.api import put_timestamp, get_publisher_timestamps
 from app.exceptions import RpcResponseError
 from app.models.timestamp import Timestamp
 from app.ui.timestamp import Ui_WidgetTimestamping
@@ -53,6 +56,19 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.current_filepath = None
         self.current_comment = None
 
+        font = QFont()
+        font.setFamily("Roboto Light")
+        font.setPointSize(10)
+
+        self.table_my_timestamps.setModel(TimestampTableModel(self))
+        header = self.table_my_timestamps.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Interactive)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setFont(font)
+        self.table_my_timestamps.doubleClicked.connect(self.on_dbl_click)
+        self.button_refresh_my_timestamps.clicked.connect(self.table_my_timestamps.model().refresh_data)
+
         # Ui Tweaks
         self.table_verification.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
 
@@ -86,8 +102,10 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
     @pyqtSlot()
     def hash_thread_finished(self):
         log.debug('hash thread finished with: %s' % self.hash_thread.result)
-
         self.current_fingerprint = self.hash_thread.result
+        self.get_timestamps()
+
+    def get_timestamps(self):
         status_text = 'Checking timpestamp records for %s' % self.current_fingerprint
         self.label_processing_status.setText(status_text)
 
@@ -195,6 +213,20 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         )
         event.ignore()
 
+    def on_dbl_click(self, index):
+        model = self.table_my_timestamps.model()
+        self.current_fingerprint = model.data[index.row()][model.KEY]
+        self.button_dropzone.setText("Current File: __from_hash__")
+
+        # Disable dropzone
+        self.gbox_dropzone.setDisabled(True)
+        self.button_dropzone.setDisabled(True)
+
+        status_text = 'Checking timpestamp records for %s' % self.current_fingerprint
+        self.label_processing_status.setText(status_text)
+        self.tabWidget.setCurrentIndex(0)
+        self.get_timestamps()
+
     @pyqtSlot()
     def reset(self):
         self.current_fingerprint = None
@@ -228,6 +260,47 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.edit_comment.setEnabled(True)
         self.button_reset.setEnabled(True)
         self.button_register.setEnabled(True)
+
+
+class TimestampTableModel(QAbstractTableModel):
+    # TODO: make permissions table model sortable (keep sort order on data update)
+
+    DATETIME = 0
+    KEY = 1
+    COMMENT = 2
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.profile = Profile.get_active()
+        self.data = self.load_data()
+
+        self.header = ["Time", "Hash", "Comment"]
+
+    def load_data(self):
+        return get_publisher_timestamps(self.profile.address)
+
+    def refresh_data(self):
+        self.beginResetModel()
+        self.data = self.load_data()
+        self.endResetModel()
+
+    def rowCount(self, parent=None, *args, **kwargs):
+        return len(self.data)
+
+    def columnCount(self, parent=None, *args, **kwargs):
+        return len(self.header)
+
+    def headerData(self, col, orientation, role=Qt.DisplayRole):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.header[col]
+        return None
+
+    def data(self, idx: QModelIndex, role=None):
+        if role == Qt.DisplayRole or role == Qt.ToolTipRole:
+            if idx.column() == self.DATETIME:
+                return datetime.fromtimestamp(self.data[idx.row()][idx.column()]).strftime("%Y-%m-%d %H:%M")
+            else:
+                return self.data[idx.row()][idx.column()]
 
 
 if __name__ == '__main__':

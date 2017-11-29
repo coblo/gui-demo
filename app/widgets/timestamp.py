@@ -9,9 +9,9 @@ from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal,
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent, QFont
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView, QMessageBox
 
-from app.models import Profile
+from app.models import Profile, profile_session_scope
 from app.signals import signals
-from app.api import put_timestamp, get_publisher_timestamps
+from app.api import put_timestamp
 from app.exceptions import RpcResponseError
 from app.models.timestamp import Timestamp
 from app.ui.timestamp import Ui_WidgetTimestamping
@@ -67,7 +67,6 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         header.setSectionResizeMode(2, QHeaderView.Stretch)
         header.setFont(font)
         self.table_my_timestamps.doubleClicked.connect(self.on_dbl_click)
-        self.button_refresh_my_timestamps.clicked.connect(self.table_my_timestamps.model().refresh_data)
 
         # Ui Tweaks
         self.table_verification.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -79,6 +78,13 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.button_dropzone.clicked.connect(self.file_select_dialog)
         self.button_reset.clicked.connect(self.reset)
         self.button_register.clicked.connect(self.register_timestamp)
+
+    def showEvent(self, show_event):
+        self.table_my_timestamps.model().refresh_data()
+        signals.sync_cycle_finished.connect(self.table_my_timestamps.model().refresh_data)
+
+    def hideEvent(self, hide_event):
+        signals.sync_cycle_finished.disconnect(self.table_my_timestamps.model().refresh_data)
 
     def process_file(self, file_path):
         log.debug('proccess file %s' % file_path)
@@ -271,13 +277,16 @@ class TimestampTableModel(QAbstractTableModel):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.profile = Profile.get_active()
-        self.data = self.load_data()
+        with profile_session_scope() as session:
+            self.profile = Profile.get_active(session)
+        self.data = []
 
         self.header = ["Time", "Hash", "Comment"]
 
     def load_data(self):
-        return get_publisher_timestamps(self.profile.address)
+        from app.models.db import data_session_scope
+        with data_session_scope() as session:
+            return Timestamp.get_timestamps_for_address(session, self.profile.address)
 
     def refresh_data(self):
         self.beginResetModel()
@@ -298,7 +307,7 @@ class TimestampTableModel(QAbstractTableModel):
     def data(self, idx: QModelIndex, role=None):
         if role == Qt.DisplayRole or role == Qt.ToolTipRole:
             if idx.column() == self.DATETIME:
-                return datetime.fromtimestamp(self.data[idx.row()][idx.column()]).strftime("%Y-%m-%d %H:%M")
+                return "{}".format(self.data[idx.row()][idx.column()])
             else:
                 return self.data[idx.row()][idx.column()]
 

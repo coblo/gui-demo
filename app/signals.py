@@ -44,6 +44,8 @@ class Signals(QObject):
     is_admin_changed = pyqtSignal(bool)
     is_miner_changed = pyqtSignal(bool)
 
+    # emitted when the sync for new blocks was finished
+    sync_cycle_finished = pyqtSignal()
 
     # Emmitted by sync.listblocks to report node -> db sync
     # Emmits synched_block_height, node_block_height ints

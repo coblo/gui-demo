@@ -1044,6 +1044,24 @@ QLabel[enabled=&quot;true&quot;] {
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QPushButton" name="reset_suppressed_warnings">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="font">
+              <font>
+               <family>Roboto Light</family>
+              </font>
+             </property>
+             <property name="text">
+              <string>Re-enable all suppressed warnings</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>

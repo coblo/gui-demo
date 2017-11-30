@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QDialogButtonBox
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QWidget
@@ -10,10 +10,11 @@ from peewee import fn
 
 from app.backend.rpc import get_active_rpc_client
 from app.models import Address
-from app.ui.dialog_change_alias import Ui_dialog_change_alias
 from app.models import Profile
 from app.signals import signals
 from app.tools.validators import username_regex
+from app.ui.dialog_change_alias import Ui_dialog_change_alias
+from app.widgets.transaction_confirmation_dialog import TransactionConfirmationDialog
 
 log = logging.getLogger(__name__)
 
@@ -54,7 +55,14 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
             is_valid = True
         self.buttonBox.button(QDialogButtonBox.Save).setDisabled(not is_valid)
 
+
     def save(self):
+        confirmation_dialog = TransactionConfirmationDialog(self)
+        confirmation_dialog.fee = "approximately 0.00074"
+        confirmation_dialog.callback = self.do_save
+        confirmation_dialog.exec()
+
+    def do_save(self):
         client = get_active_rpc_client()
         try:
             response = client.publish(

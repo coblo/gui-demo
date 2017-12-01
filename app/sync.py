@@ -363,6 +363,18 @@ def listblocks() -> int:
 
     synced = 0
 
+    # check for forks
+    # those are rare and usually short, so no binary search here
+    fork_happened = False
+    for i in range(height_db, -1, -1):
+        current_block = client.listblocks("{}-{}".format(i, i))[0]
+        if current_block['hash'] != Block.select(Block.hash).where(Block.height == i).scalar():
+            fork_happened = True
+        else:
+            if fork_happened:
+                Block.delete().where(Block.height > i)
+            break
+
     for batch in batchwise(range(height_db, height_node), 100):
 
         new_blocks = client.listblocks(batch)

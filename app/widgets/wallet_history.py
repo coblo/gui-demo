@@ -95,6 +95,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             value = tx[col]
             if isinstance(value, Decimal):
                 if col == self.AMOUNT:
+                    if value == 0:
+                        value = 0
                     normalized = value
                 else:
                     normalized = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)

@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QWidget
 from peewee import fn
 
 from app.backend.rpc import get_active_rpc_client
-from app.models import Address
+from app.models import Address, Alias, data_db
 from app.ui.dialog_change_alias import Ui_dialog_change_alias
 from app.models import Profile
 from app.signals import signals
@@ -22,7 +22,9 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.profile = Profile.get_active()
+        from app.models.db import profile_session_scope
+        with profile_session_scope() as session:
+            self.profile = Profile.get_active(session)
         self.on_profile_changed(self.profile)
 
         self.edit_alias.setText(self.profile.alias)
@@ -35,23 +37,26 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
 
     @pyqtSlot(Profile)
     def on_profile_changed(self, new_profile):
+        self.profile = new_profile
         self.edit_alias.setText(new_profile.alias)
 
     def on_alias_changed(self, text):
+        from app.models.db import data_session_scope
         text = text.lower()
         self.edit_alias.setText(text.lower())
         is_valid = False
-        if not username_regex.match(text):
-            self.lbl_error.setText('- It may contain alphanumerical characters and "_", ".", "-"\n'
-                                   '- It must not start or end with "-" or "."\n'
-                                   '- It must be between 3 and 30 characters\n'
-                                   '- It must not have consecutive "_", ".", "-" characters')
-        elif Address.select(fn.count()).where(Address.alias == text).scalar() > 0 and text != self.profile.alias:
-            self.lbl_error.setText('Username already in use.')
-        else:
-            self.lbl_error.setText("")
-            self.adjustSize()
-            is_valid = True
+        with data_session_scope() as session:
+            if not username_regex.match(text):
+                self.lbl_error.setText('- It may contain alphanumerical characters and "_", ".", "-"\n'
+                                       '- It must not start or end with "-" or "."\n'
+                                       '- It must be between 3 and 30 characters\n'
+                                       '- It must not have consecutive "_", ".", "-" characters')
+            elif text != self.profile.alias and Alias.alias_in_use(session, text):
+                self.lbl_error.setText('Username already in use.')
+            else:
+                self.lbl_error.setText("")
+                self.adjustSize()
+                is_valid = True
         self.buttonBox.button(QDialogButtonBox.Save).setDisabled(not is_valid)
 
     def save(self):

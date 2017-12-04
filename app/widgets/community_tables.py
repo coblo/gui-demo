@@ -11,8 +11,12 @@ from PyQt5.QtGui import QCursor, QFont
 from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget, QMenu, QAbstractItemView, QPushButton, \
     QStyledItemDelegate, QTableView
 
+from app import enums
 from app.backend.rpc import get_active_rpc_client
-from app.models import Permission, Profile, CurrentVote, Block, Vote
+from app.models import Alias
+from app.models import MiningReward
+from app.models import Permission, Profile, PendingVote, Block, Vote
+from app.models.db import data_session_scope, profile_session_scope
 from app.signals import signals
 
 from peewee import fn
@@ -25,29 +29,52 @@ log = logging.getLogger(__name__)
 class PermissionModel(QAbstractTableModel):
     # TODO: make permissions table model sortable (keep sort order on data update)
 
-    def __init__(self, parent, perm_type=Permission.MINE):
+    def __init__(self, parent, perm_type=enums.MINE):
         super().__init__(parent)
 
-        self.last_24_h_mine_count = self.get_24_hour_mine_count()
-        self.last_24_h_vote_count = self.get_24_hour_vote_count()
+        self.last_24_h_mine_count = {}
+        self.last_24_h_vote_count = {}
+        self.last_mined = {}
+        self.last_voted = {}
+        self.count_revokes = {}
+        self.num_guardians = 0
 
         self._fields = (
-            'Alias', 'Address', 'Last Mined' if perm_type == Permission.MINE else 'Last Voted', 'Last 24h', 'Revokes',
+            'Alias', 'Address', 'Last Mined' if perm_type == enums.MINE else 'Last Voted', 'Last 24h', 'Revokes',
             'Action')
         self._perm_type = perm_type
-        self._data = self.load_data()
+        self._data = []
+        self._alias_list = []
+        self.already_revoked = []
+        self.load_data()
 
-        signals.listpermissions.connect(self.listpermissions)
-
-        if perm_type == Permission.ADMIN:
-            # Update guardians table if votes have changed
-            signals.votes_changed.connect(self.listpermissions)
+        signals.permissions_changed.connect(self.permissions_changed)
+        signals.votes_changed.connect(self.permissions_changed)
+        self.fill_count_lists()
 
     def load_data(self):
-        if self._perm_type == Permission.MINE:
-            return list(Permission.validators())
-        elif self._perm_type == Permission.ADMIN:
-            return list(Permission.guardians())
+        with data_session_scope() as session:
+            if self._perm_type == enums.MINE:
+                self._data = list(Permission.validators(session))
+            elif self._perm_type == enums.ADMIN:
+                self._data = list(Permission.guardians(session))
+            self._alias_list = Alias.get_aliases(session)
+        self.already_revoked = PendingVote.already_revoked(session)
+
+    def fill_count_lists(self):
+        with data_session_scope() as session:
+            for reward in MiningReward.mined_last_24h(session):
+                self.last_24_h_mine_count[reward.address] = reward.count
+            for reward in MiningReward.last_mined(session):
+                self.last_mined[reward.address] = reward.last_mined
+            for vote in Vote.voted_last_24h(session):
+                self.last_24_h_vote_count[vote.from_address] = vote.count
+            for vote in Vote.last_voted(session):
+                self.last_voted[vote.from_address] = vote.last_voted
+            for pending_vote in PendingVote.num_revokes(session, self._perm_type):
+                self.count_revokes[pending_vote.address_to] = pending_vote.count
+
+            self.num_guardians = Permission.num_guardians(session)
 
     def headerData(self, col, orientation, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
@@ -70,64 +97,46 @@ class PermissionModel(QAbstractTableModel):
         perm_obj = self._data[idx.row()]
 
         if role == Qt.EditRole and idx.column() in (1, 5):
-            return perm_obj.address_id
+            return perm_obj.address
 
         if role != Qt.DisplayRole:
             return None
 
         if idx.column() == 0:
-            return perm_obj.address.alias
+            if self._alias_list and perm_obj.address in self._alias_list.keys():
+                return self._alias_list[perm_obj.address]
+            return ''
         if idx.column() == 1:
-            return perm_obj.address_id
+            return perm_obj.address
         if idx.column() == 2:
-            if self._perm_type == Permission.MINE:
-                last_mined = perm_obj.address.get_last_mined()
-                if last_mined:
-                    return timeago.format(last_mined, datetime.now())
-            if self._perm_type == Permission.ADMIN:
-                last_voted = perm_obj.address.get_last_voted()
-                if last_voted:
-                    return timeago.format(last_voted, datetime.now())
+            if self._perm_type == enums.MINE:
+                if perm_obj.address in self.last_mined:
+                    return timeago.format(self.last_mined[perm_obj.address], datetime.now())
+            if self._perm_type == enums.ADMIN:
+                if perm_obj.address in self.last_voted:
+                    return timeago.format(self.last_voted[perm_obj.address], datetime.now())
             return 'Never'
         if idx.column() == 3:
-            if self._perm_type == Permission.MINE:
+            if self._perm_type == enums.MINE:
                 return "{} Blocks".format(self.last_24_h_mine_count[
-                                              perm_obj.address.address] if perm_obj.address.address in self.last_24_h_mine_count else 0)
+                                              perm_obj.address] if perm_obj.address in self.last_24_h_mine_count else 0)
             else:
                 return "{} Votes".format(self.last_24_h_vote_count[
-                                             perm_obj.address.address] if perm_obj.address.address in self.last_24_h_vote_count else 0)
+                                             perm_obj.address] if perm_obj.address in self.last_24_h_vote_count else 0)
         if idx.column() == 4:
-            if self._perm_type == Permission.MINE:
-                return "{} of {}".format(perm_obj.address.num_validator_revokes(),
-                                         math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE))
-            else:
-                return "{} of {}".format(perm_obj.address.num_guardian_revokes(),
-                                         math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN))
+            return "{} of {}".format(self.count_revokes[perm_obj.address] if perm_obj.address in self.count_revokes else 0,
+                                     math.ceil(self.num_guardians * ADMIN_CONSENUS_ADMIN if self._perm_type == enums.ADMIN else ADMIN_CONSENUS_MINE))
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:
             return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
         return super().flags(idx)
 
-    def get_24_hour_mine_count(self):
-        return {b.miner.address: b.block_count for b in Block.select(
-            Block.miner,
-            fn.COUNT(Block.hash).alias("block_count")
-        ).where(datetime.now() - timedelta(days=1) <= Block.time).group_by(Block.miner)}
-
-    def get_24_hour_vote_count(self):
-        return {v.from_address.address: v.vote_count for v in Vote.select(
-            Vote.from_address,
-            fn.COUNT(Vote.txid).alias("vote_count")
-        ).where(datetime.now() - timedelta(days=1) <= Vote.time).group_by(Vote.from_address)}
-
     @pyqtSlot()
-    def listpermissions(self):
-        self.last_24_h_mine_count = self.get_24_hour_mine_count()
-        self.last_24_h_vote_count = self.get_24_hour_vote_count()
-
+    def permissions_changed(self):
+        self.fill_count_lists()
         self.beginResetModel()
-        self._data = self.load_data()
+        self.load_data()
         self.endResetModel()
         self.parent().create_table_buttons()
 
@@ -135,22 +144,14 @@ class PermissionModel(QAbstractTableModel):
 class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent):
         QStyledItemDelegate.__init__(self, parent)
-        self.already_voted = []
-        signals.listpermissions.connect(self.listpermissions)
-        self.listpermissions()
-
-    def listpermissions(self):
-        own_votes = CurrentVote.select().where(
-            CurrentVote.start_block == CurrentVote.end_block == 0,
-            CurrentVote.given_from == Profile.get_active().address
-        )
-        for vote in own_votes:
-            self.already_voted.append({
-                'address': vote.address.address,
-                'perm_type': vote.perm_type
-            })
 
     def createEditor(self, parent, option, idx):
+        db = self.parent().table_model._data
+        table_entry = db[idx.row()]
+        already_voted = False
+        for vote in self.parent().table_model.already_revoked:
+            if vote.address_to == table_entry.address and self.parent().table_model._perm_type == table_entry.perm_type.name:
+                already_voted = True
         btn = QPushButton('Revoke', parent)
         btn.setStyleSheet(
             "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
@@ -158,11 +159,10 @@ class ButtonDelegate(QStyledItemDelegate):
         btn.setObjectName(address)
         btn.clicked.connect(self.on_revoke_clicked)
         btn.setCursor(QCursor(Qt.PointingHandCursor))
-        for vote in self.already_voted:
-            if vote['address'] == address and vote['perm_type'] == self.parent().perm_type:
-                btn.setDisabled(True)
-                btn.setStyleSheet(
-                    "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+        if already_voted:
+            btn.setStyleSheet(
+                "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+        btn.setDisabled(already_voted)
         return btn
 
     def on_revoke_clicked(self):
@@ -211,7 +211,8 @@ class CommunityTableView(QTableView):
             self.profile = self.parent().profile
         except AttributeError:
             # In case of standalone usage
-            self.profile = Profile.get_active()
+            with profile_session_scope() as session:
+                self.profile = Profile.get_active(session)
 
         signals.is_admin_changed.connect(self.is_admin_changed)
 
@@ -277,17 +278,3 @@ class CommunityTableView(QTableView):
     @pyqtSlot(bool)
     def is_admin_changed(self, is_admin):
         self.setColumnHidden(5, not is_admin)
-
-
-if __name__ == '__main__':
-    from app.models import init_profile_db, init_data_db
-    from app.helpers import init_logging
-
-    init_logging()
-    # from app.tools.runner import run_widget
-    init_profile_db()
-    init_data_db()
-    app = QApplication(sys.argv)
-    win = CommunityTableView(perm_type=Permission.MINE)
-    win.show()
-    sys.exit(app.exec_())

@@ -1,57 +1,81 @@
 # -*- coding: utf-8 -*-
 import logging
-import peewee
-from app.models.db import data_db
 
-from .address import Address
+from sqlalchemy import Column, String, Enum, Integer
 
+from app import enums
+from app.enums import PermTypes
+from app.models.db import data_base
 
 log = logging.getLogger(__name__)
 
 
-class Permission(peewee.Model):
+class Permission(data_base):
+
+    __tablename__ = "permissions"
     """Address permissions"""
 
-    # TODO move model constants to app.enums
-    ISSUE, CREATE, MINE, ADMIN = 'issue', 'create', 'mine', 'admin'
-    PERM_TYPES = ISSUE, CREATE, MINE, ADMIN
     MAX_END_BLOCK = 4294967295
 
-    address = peewee.ForeignKeyField(Address, related_name='permissions')
-    perm_type = peewee.CharField(choices=PERM_TYPES)
-    start_block = peewee.IntegerField()
-    end_block = peewee.IntegerField()
+    address = Column(String, primary_key=True)
+    perm_type = Column(Enum(PermTypes), primary_key=True)
+    start_block = Column(Integer)
+    end_block = Column(Integer)
 
-    class Meta:
-        database = data_db
-        primary_key = peewee.CompositeKey('address', 'perm_type')
 
     def __repr__(self):
         return "Permission(%s, %s, %s, %s)" % (
             self.address_id[:4], self.perm_type, self.start_block, self.end_block
         )
 
+    #todo: alles ab hier ungetestet
     @staticmethod
-    def validators():
-        return Permission.select().where(
-            Permission.perm_type == Permission.MINE,
-            Permission.start_block == 0,
-            Permission.end_block == Permission.MAX_END_BLOCK,
-        )
+    def validators(data_db): # todo: eigentlcih so falsch, man muss gucken wer für den AKTUELLEN Block die Rechte hat
+        return data_db.query(Permission).filter(
+            (Permission.perm_type == enums.MINE) &
+            (Permission.start_block == 0) &
+            (Permission.end_block == Permission.MAX_END_BLOCK)
+        ).all()
 
     @staticmethod
-    def guardians():
-        return Permission.select().where(
-            Permission.perm_type == Permission.ADMIN,
-            Permission.start_block == 0,
-            Permission.end_block == Permission.MAX_END_BLOCK,
-        )
+    def guardians(data_db):
+        return data_db.query(Permission).filter(
+            (Permission.perm_type == enums.ADMIN) &
+            (Permission.start_block == 0) &
+            (Permission.end_block == Permission.MAX_END_BLOCK)
+        ).all()
 
     @staticmethod
-    def num_validators():
-        return Permission.validators().count()
+    def num_validators(data_db):
+        return data_db.query(Permission).filter(
+            (Permission.perm_type == enums.MINE) &
+            (Permission.start_block == 0) &
+            (Permission.end_block == Permission.MAX_END_BLOCK)
+        ).count()
 
     @staticmethod
-    def num_guardians():
-        return Permission.guardians().count()
+    def num_guardians(data_db):
+        return data_db.query(Permission).filter(
+            (Permission.perm_type == enums.ADMIN) &
+            (Permission.start_block == 0) &
+            (Permission.end_block == Permission.MAX_END_BLOCK)
+        ).count()
 
+    @staticmethod
+    def get_permissions_for_address(data_db, address) -> (bool, bool):
+        from sqlalchemy import exists
+        result = data_db.query(
+            exists().where(
+                (Permission.address == address) &
+                (Permission.perm_type == enums.ADMIN) &
+                (Permission.start_block == 0) &
+                (Permission.end_block == Permission.MAX_END_BLOCK)
+            ).label("is_admin"),
+            exists().where(
+                (Permission.address == address) &
+                (Permission.perm_type == enums.MINE) &
+                (Permission.start_block == 0) &
+                (Permission.end_block == Permission.MAX_END_BLOCK)
+            ).label("is_miner"),
+        ).first()
+        return result

@@ -18,7 +18,9 @@ class MyAccount(QWidget, Ui_MyAccount):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
-        self.profile = Profile.get_active()
+        from app.models.db import profile_session_scope
+        with profile_session_scope() as session:
+            self.profile = Profile.get_active(session)
         self.on_profile_changed(self.profile)
 
         signals.profile_changed.connect(self.on_profile_changed)

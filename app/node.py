@@ -38,7 +38,9 @@ class Node(QProcess):
             self.profile = self.parent().profile
         except AttributeError:
             # In case of standalone usage
-            self.profile = Profile.get_active()
+            from app.models.db import profile_session_scope
+            with profile_session_scope() as session:
+                self.profile = Profile.get_active(session)
 
         assert isinstance(self.profile, Profile)
         assert self.profile.manage_node, "active profile does not want to manage node"

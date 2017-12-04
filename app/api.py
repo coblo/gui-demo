@@ -3,11 +3,9 @@
 import logging
 import ubjson
 from binascii import hexlify, unhexlify
-from decimal import Decimal
 from typing import Optional, NewType, List
 
 from app.backend.rpc import get_active_rpc_client
-from app.enums import Permission
 from app.exceptions import RpcResponseError
 
 log = logging.getLogger(__name__)
@@ -20,16 +18,16 @@ Form = NewType('Form', dict)
 # TODO define and implement highlevel api
 
 
-def pay(to_address: str, amount: Decimal, comment: str, fee: Decimal=Decimal('0.0001')) -> Optional[TxId]:
-    pass
-
-
-def register_alias(alias: str) -> Optional[TxId]:
-    pass
-
-
-def apply_for(perm: Permission, form: Form) -> Optional[TxId]:
-    pass
+# def pay(to_address: str, amount: Decimal, comment: str, fee: Decimal=Decimal('0.0001')) -> Optional[TxId]:
+#     pass
+#
+#
+# def register_alias(alias: str) -> Optional[TxId]:
+#     pass
+#
+#
+# def apply_for(perm: Permission, form: Form) -> Optional[TxId]:
+#     pass
 
 
 # timestamp api

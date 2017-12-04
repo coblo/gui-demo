@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import QApplication
 
 import app
 from app import helpers
-from app import models
-from app.models import Profile, Permission, CurrentVote
+from app import enums
+from app.models import Profile, Permission, PendingVote
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
@@ -66,11 +66,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.lout_page_timestamp_v.addWidget(widget_timestamp)
 
         self.table_validators.setParent(None)
-        table_validators = CommunityTableView(self, perm_type=Permission.MINE)
+        table_validators = CommunityTableView(self, perm_type=enums.MINE)
         self.tab_validators.layout().insertWidget(0, table_validators)
 
         self.table_guardians.setParent(None)
-        table_guardians = CommunityTableView(self, perm_type=Permission.ADMIN)
+        table_guardians = CommunityTableView(self, perm_type=enums.ADMIN)
         self.tab_guardians.layout().insertWidget(0, table_guardians)
 
         self.table_candidates.setParent(None)
@@ -173,7 +173,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         log.debug('set num guardians %s' % num_guardians)
         self.lbl_num_guardians.setText(str(num_guardians))
 
-        num_candidates = CurrentVote.num_candidates()
+        num_candidates = PendingVote.num_candidates()
         log.debug('set num candidates %s' % num_candidates)
         self.lbl_num_candidates.setText(str(num_candidates))
 

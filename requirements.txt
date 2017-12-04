@@ -2,7 +2,6 @@ pyOpenSSL==17.3.0
 PyQt5==5.9
 requests==2.18.4
 bitcoin==1.1.42
-peewee==2.10.2
 appdirs==1.4.3
 timeago==1.0.7
 base58==0.2.5
@@ -11,3 +10,4 @@ mnemonic==0.18
 pycoin==0.80
 qrcode==5.3
 Pillow==4.3.0
+SQLAlchemy==1.2.0b1

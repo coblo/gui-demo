@@ -1,50 +1,48 @@
 # -*- coding: utf-8 -*-
 import logging
-import peewee
-from app.models.db import data_db
 
-from .address import Address
+from sqlalchemy import Column, String, ForeignKey, Enum, Integer, PrimaryKeyConstraint
 
+from app import enums
+from app.models.db import data_db, data_base
+from app.enums import PermTypes
 
 log = logging.getLogger(__name__)
 
 
-class Permission(peewee.Model):
+class Permission(data_base):
+
+    __tablename__ = "permissions"
     """Address permissions"""
 
-    # TODO move model constants to app.enums
-    ISSUE, CREATE, MINE, ADMIN = 'issue', 'create', 'mine', 'admin'
-    PERM_TYPES = ISSUE, CREATE, MINE, ADMIN
     MAX_END_BLOCK = 4294967295
 
-    address = peewee.ForeignKeyField(Address, related_name='permissions')
-    perm_type = peewee.CharField(choices=PERM_TYPES)
-    start_block = peewee.IntegerField()
-    end_block = peewee.IntegerField()
+    address = Column(String, ForeignKey("addresses.address"), primary_key=True)
+    perm_type = Column(Enum(PermTypes), primary_key=True)
+    start_block = Column(Integer)
+    end_block = Column(Integer)
 
-    class Meta:
-        database = data_db
-        primary_key = peewee.CompositeKey('address', 'perm_type')
 
     def __repr__(self):
         return "Permission(%s, %s, %s, %s)" % (
             self.address_id[:4], self.perm_type, self.start_block, self.end_block
         )
 
+    #todo: alles ab hier ungetestet
     @staticmethod
-    def validators():
-        return Permission.select().where(
-            Permission.perm_type == Permission.MINE,
+    def validators(): # todo: eigentlcih so falsch, man muss gucken wer für den aktuellen Block die Rechte hat
+        return data_db().query(Permission).filter(
+            Permission.perm_type == enums.MINE,
             Permission.start_block == 0,
-            Permission.end_block == Permission.MAX_END_BLOCK,
+            Permission.end_block == Permission.MAX_END_BLOCK
         )
 
     @staticmethod
     def guardians():
-        return Permission.select().where(
-            Permission.perm_type == Permission.ADMIN,
+        return data_db().query(Permission).filter(
+            Permission.perm_type == enums.ADMIN,
             Permission.start_block == 0,
-            Permission.end_block == Permission.MAX_END_BLOCK,
+            Permission.end_block == Permission.MAX_END_BLOCK
         )
 
     @staticmethod

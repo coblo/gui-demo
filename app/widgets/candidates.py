@@ -9,7 +9,7 @@ from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView, QWidget, QMessageBox, QMenu, \
     QPushButton, QStyledItemDelegate
 
-from app.models import Profile, Address, CurrentVote, Permission
+from app.models import Profile, Address, PendingVote, Permission
 from app.signals import signals
 from app import ADMIN_CONSENUS_ADMIN, ADMIN_CONSENUS_MINE
 
@@ -31,21 +31,21 @@ class CandidateModel(QAbstractTableModel):
     def update_data(self):
         old_keys = set(self.db.keys())
         new_keys = set()
-        for candidate in CurrentVote.get_candidates():
+        for candidate in []: #todo
             try:
                 alias = Address.select().where(Address.address == candidate.address).first().alias
             except AttributeError:
                 alias = 'unknown'
             if candidate.start_block == 0 and candidate.end_block == MAX_END_BLOCK:
-                vote_count = CurrentVote.select().where(
-                    CurrentVote.address == candidate.address,
-                    CurrentVote.start_block == 0,
-                    CurrentVote.end_block == MAX_END_BLOCK).count()
-                already_voted = CurrentVote.select().where(
-                    CurrentVote.address == candidate.address,
-                    CurrentVote.start_block == 0,
-                    CurrentVote.end_block == MAX_END_BLOCK,
-                    CurrentVote.given_from == Profile.get_active().address).count() > 0
+                vote_count = PendingVote.select().where(
+                    PendingVote.address == candidate.address,
+                    PendingVote.start_block == 0,
+                    PendingVote.end_block == MAX_END_BLOCK).count()
+                already_voted = PendingVote.select().where(
+                    PendingVote.address == candidate.address,
+                    PendingVote.start_block == 0,
+                    PendingVote.end_block == MAX_END_BLOCK,
+                    PendingVote.given_from == Profile.get_active().address).count() > 0
                 if candidate.perm_type == Permission.ADMIN:
                     required = math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN)
                 else:

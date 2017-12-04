@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 import logging
-import peewee
-from app.models import Address
-from app.models.db import data_db
 
+from sqlalchemy import Column, String, ForeignKey, Enum
+
+from app.models.db import data_base
+from app.enums import PermTypes
 
 log = logging.getLogger(__name__)
 
 
-class Vote(peewee.Model):
+class Vote(data_base):
+    __tablename__ = "votes"
 
-    txid = peewee.CharField(primary_key=True)
-    from_address = peewee.ForeignKeyField(Address, related_name='votes_given')
-    to_address = peewee.ForeignKeyField(Address, related_name='votes_received')
-    time = peewee.DateTimeField()
+    txid = Column(String, ForeignKey('transactions.txid'), primary_key=True)
+    from_address = Column(String, ForeignKey("addresses.address")) # todo: wollen wir das? eigentlich unnötig wir brauchen diese Verknüpfung nicht
+    to_address = Column(String, ForeignKey("addresses.address")) # todo: ebenso
+    perm_type = Column(Enum(PermTypes), primary_key=True)
 
-    class Meta:
-        database = data_db
 
     def __repr__(self):
-        return "Vote(%s, %s, %s)" % (self.time, self.from_address, self.to_address)
+        return "Vote(%s, %s, %s, %s)" % (self.txid, self.from_address, self.to_address, self.perm_type)

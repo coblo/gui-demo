@@ -1,27 +1,25 @@
 # -*- coding: utf-8 -*-
 import logging
-import peewee
-from app.models.db import data_db
+
+from sqlalchemy import String, Column, Integer, ForeignKey, LargeBinary
+
+from app.models.db import data_db, data_base
 
 
 log = logging.getLogger(__name__)
 
 
-class Transaction(peewee.Model):
-    """Wallet transactions"""
-    MINING_REWARD, PAYMENT, VOTE, PUBLISH = 'mining_reward', 'payment', 'vote', 'publish'
+class Transaction(data_base):
+    __tablename__ = "transactions"
+    """Transactions"""
 
-    datetime = peewee.DateTimeField()
-    txtype = peewee.CharField()
-    comment = peewee.CharField()
-    amount = peewee.DecimalField(max_digits=17, decimal_places=8)
-    balance = peewee.DecimalField(max_digits=17, decimal_places=8)
-    confirmations = peewee.SmallIntegerField()
-    txid = peewee.CharField(primary_key=True)
+    txid = Column(String, primary_key=True)
+    block = Column(LargeBinary, ForeignKey('blocks.hash'))
+    pos_in_block = Column(Integer)
 
     class Meta:
         database = data_db
 
-    def value_by_col(self, col):
+    def value_by_col(self, col): # todo: nie benutzt, weg?
         fn = self._meta.sorted_field_names[col]
         return getattr(self, fn)

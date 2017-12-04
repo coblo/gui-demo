@@ -18,11 +18,7 @@ class Updater(QtCore.QThread):
         sync.getinfo,
         sync.getruntimeparams,
         sync.getblockchaininfo,
-        sync.listblocks,
-        sync.listwallettransactions,
-        sync.listpermissions,
-        sync.liststreamitems_alias,
-        sync.getblock,
+        sync.process_blocks,
     )
 
     def __init__(self, parent=None):

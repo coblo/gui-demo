@@ -10,6 +10,7 @@ from decimal import Decimal
 from app.backend.rpc import get_active_rpc_client
 from app.models import Address
 from app.tools.validators import AddressValidator
+from app.models.db import data_db
 from app.ui.wallet_send import Ui_widget_wallet_send
 
 
@@ -34,9 +35,9 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.btn_send_send.clicked.connect(self.on_send_clicked)
 
         address_list =[]
-        for address in Address.select().order_by(Address.address.desc()):
-            if address.alias is not None:
-                address_list.append("{} ({})".format(address.alias, address.address))
+        for address in data_db().query(Address).all():
+            # if address.alias is not None: # todo: aus alias holen
+            #     address_list.append("{} ({})".format(address.alias, address.address))
             address_list.append(address.address)
         completer = QCompleter(address_list, self.edit_address)
         completer_delegate = QStyledItemDelegate(completer)

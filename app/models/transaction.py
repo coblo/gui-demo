@@ -9,8 +9,10 @@ log = logging.getLogger(__name__)
 
 class Transaction(peewee.Model):
     """Wallet transactions"""
+    MINING_REWARD, PAYMENT, VOTE, PUBLISH = 'mining_reward', 'payment', 'vote', 'publish'
 
     datetime = peewee.DateTimeField()
+    txtype = peewee.CharField()
     comment = peewee.CharField()
     amount = peewee.DecimalField(max_digits=17, decimal_places=8)
     balance = peewee.DecimalField(max_digits=17, decimal_places=8)

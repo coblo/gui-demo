@@ -1,6 +1,6 @@
 from datetime import datetime
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, QVariant, Qt, pyqtSlot
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import QHeaderView, QWidget
 from decimal import Decimal, ROUND_DOWN
 
@@ -15,25 +15,47 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
         self.setupUi(self)
         self.table_model = TransactionHistoryTableModel(self)
         self.table_wallet_history.setModel(self.table_model)
+        self.table_wallet_history.horizontalHeader().setSortIndicator(1, Qt.AscendingOrder)
         header = self.table_wallet_history.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
 
 
 class TransactionHistoryTableModel(QAbstractTableModel):
 
-    DATETIME = 0
-    COMMENT = 1
-    AMOUNT = 2
-    BALANCE = 3
-    CONFIRMATIONS = 4
-    TXID = 5
+    TXTYPE = 0
+    DATETIME = 1
+    COMMENT = 2
+    AMOUNT = 3
+    BALANCE = 4
+    CONFIRMATIONS = 5
+    TXID = 6
+
+    transaction_types = {
+        Transaction.PAYMENT: "Payment",
+        Transaction.VOTE: "Skill grant/revoke",
+        Transaction.MINING_REWARD: "Mining Reward",
+        Transaction.PUBLISH: "Publish"
+    }
+
+    transaction_type_to_icon = {
+        Transaction.PAYMENT: QIcon(),
+        Transaction.VOTE: QIcon(),
+        Transaction.MINING_REWARD: QIcon(),
+        Transaction.PUBLISH: QIcon()
+    }
 
     def __init__(self, parent=None):
         super().__init__()
-        self.header = ['Date', 'Comment', 'Amount', 'Balance']
+        self.header = ['', 'Date', 'Comment', 'Amount', 'Balance']
+        self.transaction_type_to_icon[Transaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[Transaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[Transaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[Transaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
+
         self.txs = []
         self.insert_db_data(Transaction.select())
         self.sort_index = self.DATETIME
@@ -46,6 +68,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def tx_to_tuple(self, tx) -> tuple:
         return (
+            tx.txtype,
             tx.datetime,
             tx.comment,
             tx.amount,
@@ -71,7 +94,10 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             value = tx[col]
             if isinstance(value, Decimal):
-                normalized = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+                if col == self.AMOUNT:
+                    normalized = value
+                else:
+                    normalized = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
                 display = "{0:n}".format(normalized)
                 return '+' + display if value > 0 and col == self.AMOUNT else display
             elif isinstance(value, datetime):
@@ -79,15 +105,29 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                     return 'Unconfirmed'
                 else:
                     return value.strftime("%Y-%m-%d %H:%M")
+            elif col == self.TXTYPE:
+                return ""
             else:
                 return str(value)
-        if role == Qt.ToolTipRole and col in (self.AMOUNT, self.BALANCE):
-            return "{0:n}".format(tx[col])
+        if role == Qt.DecorationRole and col == self.TXTYPE and tx[col] in self.transaction_types:
+            return self.transaction_type_to_icon[tx[col]]
+        if role == Qt.ToolTipRole:
+            if col == self.BALANCE:
+                return "{0:n}".format(tx[col])
+            elif col == self.TXTYPE and tx[col] in self.transaction_types:
+                return self.transaction_types[tx[col]]
+            else:
+                return None
         elif role == Qt.TextAlignmentRole and col not in (self.COMMENT, self.DATETIME):
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
+        elif role == Qt.TextAlignmentRole and col == self.TXTYPE and tx[col] in self.transaction_types:
+            return self.transaction_type_to_icon[tx[col]].actualSize()
         elif role == Qt.ForegroundRole:
             if col == self.AMOUNT and tx[self.AMOUNT] < 0:
                 return QVariant(QColor(Qt.red))
+        elif role == Qt.FontRole and col == self.AMOUNT:
+            font = QFont("RobotoCondensed-Light", 9)
+            return QVariant(font)
         return None
 
     def sort(self, p_int, order=None):

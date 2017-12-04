@@ -8,6 +8,7 @@ from app import helpers
 from app import models
 from app.models import Profile, Permission, CurrentVote
 from app.responses import Getblockchaininfo
+from app.settings import Settings
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.widgets.apply import ApplyDialog
@@ -90,6 +91,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.check_manage_node.setChecked(self.profile.manage_node)
         self.check_manage_node.stateChanged['int'].connect(self.setting_changed_manage_node)
         self.btn_alias_change.clicked.connect(self.on_change_alias)
+        self.reset_suppressed_warnings.clicked.connect(self.on_reset_suppressed_warnings_click)
 
         # Connections
         signals.getblockchaininfo.connect(self.getblockchaininfo)
@@ -148,6 +150,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.profile.save()
         if self.profile.manage_node:
             self.node.start()
+
+    def on_reset_suppressed_warnings_click(self):
+        settings = Settings()
+        settings.setValue('suppress_transaction_fee_warning', False)
 
     def node_started(self):
         self.updater.start()

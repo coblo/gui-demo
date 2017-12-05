@@ -4,7 +4,10 @@ import logging
 from binascii import unhexlify
 from datetime import datetime
 
+import ubjson
+
 from app import enums
+from app.models.timestamp import Timestamp
 from app.models.vote import Vote
 from app.tools.address import public_key_to_address
 from app.responses import Getblockchaininfo
@@ -105,7 +108,7 @@ def process_blocks():
             else:
                 data_db().rollback()
                 return
-    if last_block_is_valid != block_count_node:
+    if last_valid_height != block_count_node:
         process_permissions()
 
 
@@ -117,17 +120,52 @@ def process_transactions(block_height):
     except Exception as e:
         log.debug(e)
         return False
-    for txid in block['tx']:
+    for pos_in_block, txid in enumerate(block['tx']):
+        tx_relevant = False
         try:
-            tx = client.getrawtransaction(txid)
+            tx = client.getrawtransaction(txid, 4)
+            if tx["error"]:
+                log.debug(tx["error"])
+                continue
+            tx_relevant = parse_timestamps(tx["result"])
+
         except Exception as e:
             log.debug(e)
             return False
         # todo: look if we need this tx and if we do add it to db
+        if tx_relevant:
+            Transaction.create_if_not_exists(
+                Transaction(
+                    txid=txid,
+                    pos_in_block=pos_in_block,
+                    block=unhexlify(block['hash'])
+                )
+            )
     return True
 
+
+def parse_timestamps(raw_transaction) -> bool:
+    new_time_stamp = False
+    for vout in raw_transaction["vout"]:
+        for item in vout["items"]:
+            if item["type"] == "stream" and item["name"] == "timestamp":
+                new_time_stamp = True
+                comment = ''
+                for entry in raw_transaction['data']:
+                    data = ubjson.loadb(unhexlify(entry))
+                    if 'comment' in data:
+                        comment += data.get('comment', '')
+                data_db().add(Timestamp(
+                    txid=raw_transaction["txid"],
+                    hash=item["key"],
+                    comment=comment,
+                    address=item["publishers"][0]
+                ))
+    return new_time_stamp
+
+
 def process_permissions():
-    #todo: check if we have new perms / votes
+    # todo: check if we have new perms / votes
     client = get_active_rpc_client()
 
     try:

@@ -10,5 +10,6 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 
 profile_db = scoped_session(sessionmaker())
+# todo rename those e.g. cache_db
 data_db = scoped_session(sessionmaker())
 data_base = declarative_base()

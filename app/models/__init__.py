@@ -46,15 +46,7 @@ def init_data_db():
 
     log.debug('init data db at: {}'.format(fp))
     engine = sqlalchemy.create_engine('sqlite:///{}'.format(fp))
-    data_base.metadata.create_all(engine,[
-        Block.__table__,
-        Transaction.__table__,
-        MyTransaction.__table__,
-        Vote.__table__,
-        Address.__table__,
-        Permission.__table__,
-        PendingVote.__table__,
-    ]) # todo: alias, timestamp, miningreward
+    data_base.metadata.create_all(engine) # todo: alias, miningreward
 
     data_db.configure(bind=engine)
 

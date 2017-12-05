@@ -51,29 +51,6 @@ def put_timestamp(hexhash: str, comment: str='', stream='timestamp') -> Optional
     return TxId(response['result'])
 
 
-def get_timestamps(hash_value: str, stream='timestamp') -> Optional[List]:
-    client = get_active_rpc_client()
-    response = client.liststreamkeyitems(stream, hash_value, verbose=True, count=1000, start=-1000)
-
-    if response['error'] is not None:
-        raise RpcResponseError(response['error']['message'])
-
-    result = response['result']
-    timestamps = []
-    for entry in result:
-        if entry['data']:
-            if not isinstance(entry['data'], str):
-                log.warning('Stream item data is not a string: %s' % entry['data'])
-                # Todo investigate dict with size, txid, vout in stream item data
-                continue
-            data = ubjson.loadb(unhexlify(entry['data']))
-            comment = data.get('comment', '')
-        else:
-            comment = ''
-
-        for publisher in entry['publishers']:
-            timestamps.append((entry['time'], publisher, comment))
-    return timestamps
 
 
 if __name__ == '__main__':

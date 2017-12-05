@@ -8,8 +8,9 @@ from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal,
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView, QMessageBox
 
-from app.api import get_timestamps, put_timestamp
+from app.api import put_timestamp
 from app.exceptions import RpcResponseError
+from app.models.timestamp import Timestamp
 from app.ui.timestamp import Ui_WidgetTimestamping
 
 log = logging.getLogger(__name__)
@@ -96,7 +97,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
 
         # Check for existing timestamps:
         try:
-            timestamps = get_timestamps(self.current_fingerprint)
+            timestamps = Timestamp.get_timestamps_for_hash(self.current_fingerprint)
         except RpcResponseError as e:
             QMessageBox.warning(self, 'Error reading timestamp stream', str(e))
             timestamps = None
@@ -108,7 +109,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
             for row_id, row in enumerate(timestamps):
                 for col_id, col in enumerate(row):
                     if col_id == 0:
-                        content = QTableWidgetItem('%s' % datetime.fromtimestamp(col))
+                        content = QTableWidgetItem('%s' % col)
                     else:
                         content = QTableWidgetItem(col)
                     self.table_verification.setItem(row_id, col_id, content)

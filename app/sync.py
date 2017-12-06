@@ -8,6 +8,7 @@ import ubjson
 
 from app import enums
 from app.models import Alias
+from app.models import MiningReward
 from app.models.timestamp import Timestamp
 from app.models.vote import Vote
 from app.tools.address import public_key_to_address
@@ -114,8 +115,6 @@ def process_blocks():
 
 def process_transactions(block_height):
     client = get_active_rpc_client()
-    if block_height in [13, 14,15]:
-        print(block_height)
 
     try:
         block = client.getblock(hash_or_height='{}'.format(block_height))['result']
@@ -128,7 +127,7 @@ def process_transactions(block_height):
             if tx["error"]:
                 log.debug(tx["error"])
                 continue
-            tx_relevant = process_vouts(tx["result"])
+            tx_relevant = process_vouts(tx["result"], block['miner'])
 
         except Exception as e:
             log.debug(e)
@@ -144,12 +143,17 @@ def process_transactions(block_height):
     return True
 
 
-def process_vouts(raw_transaction) -> bool: #todo: better name
+def process_vouts(raw_transaction, miner) -> bool: #todo: better name
     relevant = False
     txid = raw_transaction["txid"]
     # mining reward
-    # if raw_transaction.get('generated'):
-    #     relevant = True
+    for vin in raw_transaction["vin"]:
+        if 'coinbase' in vin:
+            relevant = True
+            data_db().add(MiningReward(
+                txid=txid,
+                address=miner
+            ))
     for vout in raw_transaction["vout"]:
         for item in vout["items"]:
             # stream item

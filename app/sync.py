@@ -7,6 +7,7 @@ from datetime import datetime
 import ubjson
 
 from app import enums
+from app.models import Alias
 from app.models.timestamp import Timestamp
 from app.models.vote import Vote
 from app.tools.address import public_key_to_address
@@ -84,7 +85,6 @@ def process_blocks():
     ### process new blocks ###
     block_count_node = client.getblockcount()['result']
     for batch in batchwise(range(last_valid_height+1, block_count_node), 100):
-        new_blocks = []
         try:
             answer = client.listblocks(batch)
             if answer['error'] is None:
@@ -114,6 +114,8 @@ def process_blocks():
 
 def process_transactions(block_height):
     client = get_active_rpc_client()
+    if block_height in [13, 14,15]:
+        print(block_height)
 
     try:
         block = client.getblock(hash_or_height='{}'.format(block_height))['result']
@@ -121,18 +123,16 @@ def process_transactions(block_height):
         log.debug(e)
         return False
     for pos_in_block, txid in enumerate(block['tx']):
-        tx_relevant = False
         try:
             tx = client.getrawtransaction(txid, 4)
             if tx["error"]:
                 log.debug(tx["error"])
                 continue
-            tx_relevant = parse_timestamps(tx["result"])
+            tx_relevant = process_vouts(tx["result"])
 
         except Exception as e:
             log.debug(e)
             return False
-        # todo: look if we need this tx and if we do add it to db
         if tx_relevant:
             Transaction.create_if_not_exists(
                 Transaction(
@@ -144,24 +144,47 @@ def process_transactions(block_height):
     return True
 
 
-def parse_timestamps(raw_transaction) -> bool:
-    new_time_stamp = False
+def process_vouts(raw_transaction) -> bool: #todo: better name
+    relevant = False
+    txid = raw_transaction["txid"]
+    # mining reward
+    # if raw_transaction.get('generated'):
+    #     relevant = True
     for vout in raw_transaction["vout"]:
         for item in vout["items"]:
-            if item["type"] == "stream" and item["name"] == "timestamp":
-                new_time_stamp = True
-                comment = ''
-                for entry in raw_transaction['data']:
-                    data = ubjson.loadb(unhexlify(entry))
-                    if 'comment' in data:
-                        comment += data.get('comment', '')
-                data_db().add(Timestamp(
-                    txid=raw_transaction["txid"],
-                    hash=item["key"],
-                    comment=comment,
-                    address=item["publishers"][0]
-                ))
-    return new_time_stamp
+            # stream item
+            if item["type"] == "stream":
+                publishers = item["publishers"]
+                for publisher in publishers:
+                    Address.create_if_not_exists(publisher)
+                if item["name"] == "timestamp":
+                    relevant = True
+                    comment = ''
+                    for entry in raw_transaction['data']:
+                        data = ubjson.loadb(unhexlify(entry))
+                        if 'comment' in data:
+                            comment += data.get('comment', '')
+                    data_db().add(Timestamp(
+                        txid=txid,
+                        hash=item["key"],
+                        comment=comment,
+                        address=publishers[0]
+                    ))
+                elif item['name'] == "alias":
+                    alias = item["key"]
+                    # Sanity checks
+                    if item["data"] or not is_valid_username(alias) or len(publishers) != 1:
+                        continue
+                    relevant = True
+                    data_db().add(Alias(
+                        txid=txid,
+                        address=publishers[0],
+                        alias=alias
+                    ))
+            # mining reward
+            # vote
+            # wallet transactions?? oder batch wise extra holen?
+    return relevant
 
 
 def process_permissions():
@@ -183,7 +206,7 @@ def process_permissions():
         perm_end = perm['endblock']
         address = perm['address']
 
-        create_address_if_not_exists(address)
+        Address.create_if_not_exists(address)
 
         if perm_type not in [enums.ISSUE, enums.CREATE, enums.MINE, enums.ADMIN]:
             continue
@@ -204,7 +227,7 @@ def process_permissions():
             if start_block == perm['startblock'] and end_block == perm['endblock']:
                 continue
             for admin in vote['admins']:
-                create_address_if_not_exists(admin)
+                Address.create_if_not_exists(admin)
                 vote_obj = PendingVote(
                     address_from=admin,
                     address_to=address,
@@ -215,12 +238,6 @@ def process_permissions():
                 data_db().add(vote_obj)
                 data_db().commit()
 
-
-def create_address_if_not_exists(address):
-    if data_db().query(Address).filter(Address.address == address).count() == 0:
-        address_obj = Address(address=address)
-        data_db().add(address_obj)
-        data_db().commit()
 
 def listwallettransactions():
     pass
@@ -365,97 +382,6 @@ def listpermissions():
     # return {'new_perms': new_perms, 'new_votes': new_votes}
 
 
-def liststreamitems_alias():
-    """
-    Sample stream item (none verbose):
-    {
-        'blocktime': 1505905511,
-        'confirmations': 28948,
-        'data': '4d696e65722031',
-        'key': 'Miner_1',
-        'publishers': ['1899xJpqZN3kMQdpvTxESWqykxgFJwRddCE4Tr'],
-        'txid': 'caa1155e719803b9f39096860519a5e08e78214245ae9822beeea2b37a656178'
-    }
-    """
-
-    pass
-    # client = get_active_rpc_client()
-    #
-    # # TODO read and process only fresh stream data by storing a state cursor between runs
-    # # TODO read stream items 100 at a time
-    # stream_items = client.liststreamitems(Stream.alias.name, count=100000)
-    # if not stream_items['result']:
-    #     log.debug('got no items from stream alias')
-    #     return 0
-    #
-    # by_addr = {}  # address -> alias
-    # reseved = set()  # reserved aliases
-    #
-    # # aggregate the final state of address to alias mappings from stream
-    # for item in stream_items['result']:
-    #     confirmations = item['confirmations']
-    #     alias = item['key']
-    #     address = item['publishers'][0]
-    #     data = item['data']
-    #     num_publishers = len(item['publishers'])
-    #
-    #     # Sanity checks
-    #     if confirmations < 1:
-    #         log.debug('ignore alias - 0 confirmations for %s -> %s' % (address, alias))
-    #         continue
-    #     if data:
-    #         log.debug('ignore alias - alias item "%s" with data "%s..."' % (alias, data[:8]))
-    #         continue
-    #     if not is_valid_username(alias):
-    #         log.debug('ignore alias - alias does not match our regex: %s' % alias)
-    #         continue
-    #     if num_publishers != 1:
-    #         log.debug('ignore alias - alias has multiple publishers: %s' % alias)
-    #         continue
-    #     if alias in reseved:
-    #         log.debug('ignore alias - alias "%s" already reserved by "%s"' % (alias, address))
-    #         continue
-    #
-    #     is_new_address = address not in by_addr
-    #
-    #     if is_new_address:
-    #         by_addr[address] = alias
-    #         reseved.add(alias)
-    #         continue
-    #
-    #     is_alias_change = by_addr[address] != alias
-    #
-    #     if is_alias_change:
-    #         log.debug('change alias of %s from %s to %s' % (address, by_addr[address], alias))
-    #         # reserve new name
-    #         reseved.add(alias)
-    #         # release old name
-    #         reseved.remove(by_addr[address])
-    #         # set new name
-    #         by_addr[address] = alias
-    #         continue
-    #
-    # # update database
-    # profile = Profile.get_active()
-    # new_main_alias = by_addr.get(profile.address)
-    # if new_main_alias and profile.alias != new_main_alias:
-    #     log.debug('sync found new alias. profile.alias from %s to %s' % (profile.alias, new_main_alias))
-    #     profile.alias = new_main_alias
-    #     profile.save()
-    #
-    # with data_db.atomic():
-    #     old_addrs = set(Address.select(Address.address, Address.alias).tuples())
-    #     new_addrs = set(by_addr.items())
-    #     # set of elements that are only in new_addr but not in old_addr
-    #     changed_addrs = new_addrs - old_addrs
-    #     new_rows = [dict(address=i[0], alias=i[1]) for i in changed_addrs]
-    #     if new_rows:
-    #         log.debug('adding new aliases %s' % changed_addrs)
-    #         # insert rows 100 at a time.
-    #         for idx in range(0, len(new_rows), 100):
-    #             Address.insert_many(new_rows[idx:idx + 100]).upsert(True).execute()
-    #
-    # return len(changed_addrs)
 
 
 getblock_proccessed_height = 1
@@ -523,53 +449,6 @@ def getblock():
     # if votes_changed:
     #     signals.votes_changed.emit()
 
-
-def listblocks() -> int:
-    """Synch block data from node
-
-    :return int: number of new blocks synched to database
-    """
-
-    # client = get_active_rpc_client()
-    #
-    # # height_node = client.getblockcount()['result']
-    # # latest_block_obj = Block.select().order_by(Block.height.desc()).first()
-    # #
-    # # last_valid_height = latest_block_obj.height
-    # # block_from_chain = client.getblock(hash_or_height=latest_block_obj.height)['result']
-    # # if latest_block_obj.hash !=
-    # #     for i in range(height_db, -1, -1):
-    # #        current_block = client.listblocks("{}-{}".format(i, i))[0]
-    # #
-    # #         if current_block['hash'] != Block.select(Block.hash).where(Block.height == i).scalar():
-    # #             fork_happened = True
-    # #         else:
-    # #             if fork_happened:
-    # #             +                Block.delete().where(Block.height > i)
-    # #         +
-    # #         break
-    # #
-    # # synced = 0
-    #
-    # for block in new_blocks['result']:
-    #
-    #     addr_obj, adr_created = Address.get_or_create(address=block['miner'])
-    #     block_obj, blk_created = Block.get_or_create(
-    #         hash=unhexlify(block['hash']),
-    #         defaults=dict(
-    #             time=datetime.fromtimestamp(block['time']),
-    #             miner=addr_obj,
-    #             txcount=block['txcount'],
-    #             height=block['height'],
-    #         )
-    #     )
-    #     if blk_created:
-    #         synced += 1
-    #
-    #     log.debug('Synced block {}'.format(block_obj.height))
-    #     signals.database_blocks_updated.emit(block_obj.height, height_node)
-    # log.debug('Synced {} blocks total.'.format(synced))
-    # return synced
 
 
 if __name__ == '__main__':

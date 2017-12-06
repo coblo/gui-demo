@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget, QMe
 
 from app import enums
 from app.backend.rpc import get_active_rpc_client
+from app.models import Alias
 from app.models import Permission, Profile, PendingVote, Block, Vote
 from app.signals import signals
 
@@ -37,6 +38,7 @@ class PermissionModel(QAbstractTableModel):
             'Action')
         self._perm_type = perm_type
         self._data = self.load_data()
+        self._alias_list = self.load_alias_list()
 
         signals.listpermissions.connect(self.listpermissions)
 
@@ -49,6 +51,9 @@ class PermissionModel(QAbstractTableModel):
             return list(Permission.validators())
         elif self._perm_type == enums.ADMIN:
             return list(Permission.guardians())
+
+    def load_alias_list(self):
+        return Alias.get_aliases()
 
     def headerData(self, col, orientation, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
@@ -71,39 +76,42 @@ class PermissionModel(QAbstractTableModel):
         perm_obj = self._data[idx.row()]
 
         if role == Qt.EditRole and idx.column() in (1, 5):
-            return perm_obj.address_id
+            return perm_obj.address
 
         if role != Qt.DisplayRole:
             return None
 
         if idx.column() == 0:
-            return perm_obj.address.alias
+            if self._alias_list and perm_obj.address in self._alias_list.keys():
+                return self._alias_list[perm_obj.address]
+            return ''
         if idx.column() == 1:
-            return perm_obj.address_id
+            return perm_obj.address
         if idx.column() == 2:
-            if self._perm_type == enums.MINE:
-                last_mined = perm_obj.address.get_last_mined()
-                if last_mined:
-                    return timeago.format(last_mined, datetime.now())
-            if self._perm_type == enums.ADMIN:
-                last_voted = perm_obj.address.get_last_voted()
-                if last_voted:
-                    return timeago.format(last_voted, datetime.now())
+            # if self._perm_type == enums.MINE: todo
+            #     last_mined = perm_obj.address.get_last_mined()
+            #     if last_mined:
+            #         return timeago.format(last_mined, datetime.now())
+            # if self._perm_type == enums.ADMIN:
+            #     last_voted = perm_obj.address.get_last_voted()
+            #     if last_voted:
+            #         return timeago.format(last_voted, datetime.now())
             return 'Never'
         if idx.column() == 3:
-            if self._perm_type == enums.MINE:
+            if self._perm_type == enums.MINE: # todo
                 return "{} Blocks".format(self.last_24_h_mine_count[
-                                              perm_obj.address.address] if perm_obj.address.address in self.last_24_h_mine_count else 0)
+                                              perm_obj.address] if perm_obj.address in self.last_24_h_mine_count else 0)
             else:
                 return "{} Votes".format(self.last_24_h_vote_count[
-                                             perm_obj.address.address] if perm_obj.address.address in self.last_24_h_vote_count else 0)
+                                             perm_obj.address] if perm_obj.address in self.last_24_h_vote_count else 0)
         if idx.column() == 4:
-            if self._perm_type == enums.MINE:
-                return "{} of {}".format(perm_obj.address.num_validator_revokes(),
-                                         math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE))
-            else:
-                return "{} of {}".format(perm_obj.address.num_guardian_revokes(),
-                                         math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN))
+            # if self._perm_type == enums.MINE: # todo
+            #     return "{} of {}".format(perm_obj.address.num_validator_revokes(),
+            #                              math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE))
+            # else:
+            #     return "{} of {}".format(perm_obj.address.num_guardian_revokes(),
+            #                              math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN))
+            return 'TODO revoked'
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:

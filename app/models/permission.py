@@ -30,12 +30,12 @@ class Permission(data_base):
 
     #todo: alles ab hier ungetestet
     @staticmethod
-    def validators(): # todo: eigentlcih so falsch, man muss gucken wer für den aktuellen Block die Rechte hat
+    def validators(): # todo: eigentlcih so falsch, man muss gucken wer für den AKTUELLEN Block die Rechte hat
         return data_db().query(Permission).filter(
             Permission.perm_type == enums.MINE,
             Permission.start_block == 0,
             Permission.end_block == Permission.MAX_END_BLOCK
-        )
+        ).all()
 
     @staticmethod
     def guardians():
@@ -43,7 +43,7 @@ class Permission(data_base):
             Permission.perm_type == enums.ADMIN,
             Permission.start_block == 0,
             Permission.end_block == Permission.MAX_END_BLOCK
-        )
+        ).all()
 
     @staticmethod
     def num_validators():

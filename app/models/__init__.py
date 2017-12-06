@@ -2,14 +2,13 @@
 """Data model orm package"""
 import logging
 import sqlalchemy
-from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql.ddl import CreateTable
-from sqlalchemy.engine import reflection
-from sqlalchemy import MetaData
 
 import app
 from app.models.address import Address
+from app.models.alias import Alias
 from app.models.block import Block
+from app.models.miningreward import MiningReward
 from app.models.my_transaction import MyTransaction
 from app.models.pendingvote import PendingVote
 from app.models.permission import Permission
@@ -33,7 +32,7 @@ def init_profile_db():
 
     # log.debug('check profile-db schema')
     # todo: check if table structure is up to date
-    print((CreateTable(Profile.__table__).compile(engine)))
+    CreateTable(Profile.__table__).compile(engine)
 
     return profile_db
 
@@ -46,7 +45,7 @@ def init_data_db():
 
     log.debug('init data db at: {}'.format(fp))
     engine = sqlalchemy.create_engine('sqlite:///{}'.format(fp))
-    data_base.metadata.create_all(engine) # todo: alias, miningreward
+    data_base.metadata.create_all(engine)
 
     data_db.configure(bind=engine)
 

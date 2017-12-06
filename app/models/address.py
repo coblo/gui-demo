@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy import Column, String
+from sqlalchemy import exists
 
 from app.models.db import data_db, data_base
 
@@ -18,6 +19,12 @@ class Address(data_base):
 
     def __repr__(self):
         return 'Address(%s)' % (self.address)
+
+    @staticmethod
+    def create_if_not_exists(address):
+        if not data_db().query(exists().where(Address.address == address)).scalar():
+            data_db().add(Address(address=address))
+            data_db().commit()
 
     # @classmethod #todo: in die Klassen mining_reqards und votes verlagern
     # def with_last_mined(cls):

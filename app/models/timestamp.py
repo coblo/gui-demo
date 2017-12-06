@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import Column, String, ForeignKey, Integer
 
 from app.models import Transaction, Block
 from app.models.db import data_base, data_db
@@ -12,7 +12,8 @@ log = logging.getLogger(__name__)
 class Timestamp(data_base):
     __tablename__ = "timestamps"
 
-    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE"), primary_key=True)
+    timestamp_id = Column(Integer, autoincrement=True, primary_key=True)
+    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE"))
     address = Column(String)
     hash = Column(String, index=True)
     comment = Column(String)

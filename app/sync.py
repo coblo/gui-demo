@@ -15,7 +15,6 @@ from app.tools.address import public_key_to_address
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
-from app.enums import Stream
 from app.helpers import batchwise
 from app.models import Address, Permission, Transaction, PendingVote, data_db, Block, Profile
 from app.tools.validators import is_valid_username
@@ -83,6 +82,10 @@ def process_blocks():
         else:
             data_db().delete(latest_block)
 
+    blockchain_params = client.getblockchainparams()['result']
+    pubkeyhash_version = blockchain_params['address-pubkeyhash-version']
+    checksum_value = blockchain_params['address-checksum-value']
+
     ### process new blocks ###
     block_count_node = client.getblockcount()['result']
     for batch in batchwise(range(last_valid_height+1, block_count_node), 100):
@@ -104,7 +107,7 @@ def process_blocks():
                 time=datetime.fromtimestamp(block['time']),
             )
             data_db().add(block_obj)
-            if process_transactions(block['height']):
+            if process_transactions(block['height'], pubkeyhash_version, checksum_value):
                 data_db().commit()
             else:
                 data_db().rollback()
@@ -113,7 +116,7 @@ def process_blocks():
         process_permissions()
 
 
-def process_transactions(block_height):
+def process_transactions(block_height, pubkeyhash_version, checksum_value):
     client = get_active_rpc_client()
 
     try:
@@ -127,7 +130,7 @@ def process_transactions(block_height):
             if tx["error"]:
                 log.debug(tx["error"])
                 continue
-            tx_relevant = process_vouts(tx["result"], block['miner'])
+            tx_relevant = process_vouts(tx["result"], block['miner'], pubkeyhash_version, checksum_value)
 
         except Exception as e:
             log.debug(e)
@@ -143,9 +146,10 @@ def process_transactions(block_height):
     return True
 
 
-def process_vouts(raw_transaction, miner) -> bool: #todo: better name
+def process_vouts(raw_transaction, miner, pubkeyhash_version, checksum_value) -> bool: #todo: better name
     relevant = False
     txid = raw_transaction["txid"]
+    signers=[] #todo: SIGHASH_ALL
     # mining reward
     for vin in raw_transaction["vin"]:
         if 'coinbase' in vin:
@@ -154,6 +158,9 @@ def process_vouts(raw_transaction, miner) -> bool: #todo: better name
                 txid=txid,
                 address=miner
             ))
+        elif 'scriptSig' in vin:
+            public_key = vin['scriptSig']['asm'].split(' ')[1]
+            signers.append(public_key_to_address(public_key, pubkeyhash_version, checksum_value))
     for vout in raw_transaction["vout"]:
         for item in vout["items"]:
             # stream item
@@ -185,9 +192,21 @@ def process_vouts(raw_transaction, miner) -> bool: #todo: better name
                         address=publishers[0],
                         alias=alias
                     ))
-            # mining reward
-            # vote
-            # wallet transactions?? oder batch wise extra holen?
+        # vote
+        for perm in vout['permissions']:
+            for perm_type, changed in perm.items():
+                if changed and perm_type in permission_candidates:
+                    for address in vout['scriptPubKey']['addresses']:
+                        Address.create_if_not_exists(address)
+                        data_db().add(Vote(
+                            txid=txid,
+                            from_address=signers[vout['n']],
+                            to_address=address,
+                            start_block=perm['startblock'],
+                            end_block=perm['endblock'],
+                            perm_type=perm_type
+                        ))
+        # wallet transactions?? oder batch wise extra holen?
     return relevant
 
 

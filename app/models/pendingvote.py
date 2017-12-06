@@ -15,8 +15,8 @@ class PendingVote(data_base):
 
     MAX_END_BLOCK = 4294967295
 
-    address_from = Column(String, ForeignKey("addresses.address"), primary_key=True) # todo: unnötig? siehe votes
-    address_to = Column(String, ForeignKey("addresses.address"), primary_key=True)
+    address_from = Column(String, primary_key=True)
+    address_to = Column(String, primary_key=True)
     perm_type = Column(Enum(PermTypes), primary_key=True)
     start_block = Column(Integer, primary_key=True)
     end_block = Column(Integer, primary_key=True)

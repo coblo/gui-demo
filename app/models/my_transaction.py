@@ -13,7 +13,7 @@ class MyTransaction(data_base):
     """Wallet Transactions"""
 
     PAYMENT, VOTE, MINING_REWARD, PUBLISH, TX_FEE = "payment", "vote", "mining_reward", "publish", "tx_fee"
-    TRANSACTION_TYPES = PAYMENT, VOTE, MINING_REWARD, PUBLISH
+    TRANSACTION_TYPES = PAYMENT, VOTE, MINING_REWARD, PUBLISH, TX_FEE
 
     txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE"), primary_key=True) #todo: das kann probleme machen wenn wir eine transaction in mehrere aufteilen
     amount = Column(Float(asdecimal=True, precision=17, decimal_return_scale=8))

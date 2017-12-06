@@ -49,21 +49,3 @@ class Address(data_base):
     #     latest_vote = self.votes_given.order_by(Vote.time.desc()).first()
     #     if latest_vote:
     #         return latest_vote.time
-    #
-    # def num_validator_revokes(self):
-    #     from app.models import PendingVote, Permission
-    #     return PendingVote.select().where(
-    #         (PendingVote.address == self) &
-    #         (PendingVote.perm_type == Permission.MINE) &
-    #         (PendingVote.start_block == 0) &
-    #         (PendingVote.end_block == 0)
-    #     ).count()
-    #
-    # def num_guardian_revokes(self):
-    #     from app.models import PendingVote, Permission
-    #     return PendingVote.select().where(
-    #         (PendingVote.address == self) &
-    #         (PendingVote.perm_type == Permission.ADMIN) &
-    #         (PendingVote.start_block == 0) &
-    #         (PendingVote.end_block == 0)
-    #     ).count()

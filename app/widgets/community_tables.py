@@ -40,11 +40,11 @@ class PermissionModel(QAbstractTableModel):
         self._data = self.load_data()
         self._alias_list = self.load_alias_list()
 
-        signals.listpermissions.connect(self.listpermissions)
+        signals.permissions_changed.connect(self.permissions_changed)
 
         if perm_type == enums.ADMIN:
             # Update guardians table if votes have changed
-            signals.votes_changed.connect(self.listpermissions)
+            signals.votes_changed.connect(self.permissions_changed)
 
     def load_data(self):
         if self._perm_type == enums.MINE:
@@ -133,7 +133,7 @@ class PermissionModel(QAbstractTableModel):
         return []
 
     @pyqtSlot()
-    def listpermissions(self):
+    def permissions_changed(self):
         self.last_24_h_mine_count = self.get_24_hour_mine_count()
         self.last_24_h_vote_count = self.get_24_hour_vote_count()
 
@@ -147,10 +147,10 @@ class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent):
         QStyledItemDelegate.__init__(self, parent)
         self.already_voted = []
-        signals.listpermissions.connect(self.listpermissions)
-        self.listpermissions()
+        signals.permissions_changed.connect(self.permissions_changed)
+        self.permissions_changed()
 
-    def listpermissions(self):
+    def permissions_changed(self):
         # own_votes = PendingVote.select().where( todo
         #     PendingVote.start_block == PendingVote.end_block == 0,
         #     PendingVote.given_from == Profile.get_active().address

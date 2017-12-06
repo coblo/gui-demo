@@ -9,6 +9,8 @@ from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView, QWidget, QMessageBox, QMenu, \
     QPushButton, QStyledItemDelegate
 
+from app import enums
+from app.models import Alias
 from app.models import Profile, Address, PendingVote, Permission
 from app.signals import signals
 from app import ADMIN_CONSENUS_ADMIN, ADMIN_CONSENUS_MINE
@@ -22,41 +24,18 @@ MAX_END_BLOCK = 4294967295
 class CandidateModel(QAbstractTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.db = OrderedDict()
+        self.candidates = []
+        self.aliases = []
+        self.already_granted = []
         self.update_data()
         self.headers = ('Alias', 'Address', 'Skill', 'Grants', 'Action')
 
         signals.votes_changed.connect(self.votes_changed)
 
     def update_data(self):
-        old_keys = set(self.db.keys())
-        new_keys = set()
-        for candidate in []: #todo
-            try:
-                alias = Address.select().where(Address.address == candidate.address).first().alias
-            except AttributeError:
-                alias = 'unknown'
-            if candidate.start_block == 0 and candidate.end_block == MAX_END_BLOCK:
-                vote_count = PendingVote.select().where(
-                    PendingVote.address == candidate.address,
-                    PendingVote.start_block == 0,
-                    PendingVote.end_block == MAX_END_BLOCK).count()
-                already_voted = PendingVote.select().where(
-                    PendingVote.address == candidate.address,
-                    PendingVote.start_block == 0,
-                    PendingVote.end_block == MAX_END_BLOCK,
-                    PendingVote.given_from == Profile.get_active().address).count() > 0
-                if candidate.perm_type == Permission.ADMIN:
-                    required = math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN)
-                else:
-                    required = math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE)
-                key = (candidate.address, candidate.perm_type)
-                new_keys.add(key)
-                self.db[key] = [alias, candidate.address.address, candidate.perm_type,
-                                "{} of {}".format(vote_count, required), already_voted]
-        deleted_keys = old_keys - new_keys
-        for key in deleted_keys:
-            del self.db[key]
+        self.candidates = PendingVote.get_candidates()
+        self.aliases = Alias.get_aliases()
+        self.already_granted = PendingVote.already_granted()
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:
@@ -68,23 +47,41 @@ class CandidateModel(QAbstractTableModel):
             return self.headers[col]
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return len(self.db)
+        return len(self.candidates)
 
     def columnCount(self, parent=None, *args, **kwargs):
         return len(self.headers)
 
     def data(self, idx: QModelIndex, role=None):
+        row = idx.row()
+        col = idx.column()
+        candidate = self.candidates[row]
         if not idx.isValid():
             return None
 
-        if role == Qt.TextAlignmentRole and idx.column() in (3, 4):
+        if role == Qt.TextAlignmentRole and col in (3, 4):
             return Qt.AlignCenter
 
-        if role == Qt.EditRole and idx.column() in (1, 4):
-            return self.db[list(self.db.keys())[idx.row()]][1]
+        if role == Qt.EditRole and col == 1:
+            return candidate.address_to
 
         if role == Qt.DisplayRole:
-            return self.db[list(self.db.keys())[idx.row()]][idx.column()]
+            if col == 0:
+                return self.aliases[candidate.address_to]
+            elif col == 1:
+                return candidate.address_to
+            elif idx.column() == 2:
+                return candidate.perm_type
+            elif idx.column() == 3:
+                return "{} of {}".format(
+                    PendingVote.num_grants(candidate.address_to, candidate.perm_type),
+                    math.ceil(Permission.num_guardians() * (ADMIN_CONSENUS_ADMIN if candidate.perm_type.name == enums.ADMIN else ADMIN_CONSENUS_MINE))
+                )
+            elif idx.column() == 4:
+                for vote in self.already_granted:
+                    if vote.address_to == candidate.address_to and vote.perm_type == candidate.perm_type:
+                        return True
+                return False
 
     @pyqtSlot()
     def votes_changed(self):
@@ -99,19 +96,23 @@ class ButtonDelegate(QStyledItemDelegate):
         QStyledItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, idx):
-        db = self.parent().table_model.db
-        db_entry = db[list(db.keys())[idx.row()]]
+        db = self.parent().table_model.candidates
+        candidate = db[idx.row()]
         btn = QPushButton('Grant', parent)
         btn.setStyleSheet(
             "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
-        btn.setObjectName(db_entry[1])
-        btn.clicked.connect(partial(self.on_grant_clicked, db_entry[2]))
-        if db_entry[4]:
+        btn.setObjectName(candidate.address_to)
+        btn.clicked.connect(partial(self.on_grant_clicked, candidate.perm_type.name))
+        already_voted = False
+        for vote in self.parent().table_model.already_granted:
+            if vote.address_to == candidate.address_to and vote.perm_type == candidate.perm_type:
+                already_voted = True
+        if already_voted:
             btn.setStyleSheet(
                 "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
-            btn.setDisabled(db_entry[4])
         else:
             btn.setCursor(QCursor(Qt.PointingHandCursor))
+        btn.setDisabled(already_voted)
         return btn
 
     def on_grant_clicked(self, skill):

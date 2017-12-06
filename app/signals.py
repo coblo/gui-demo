@@ -21,7 +21,7 @@ class Signals(QObject):
 
     # database rpc syncs
     listwallettransactions = pyqtSignal(list, list)
-    listpermissions = pyqtSignal()
+    permissions_changed = pyqtSignal()
     liststreamitems_alias = pyqtSignal()
     listblocks = pyqtSignal()
 

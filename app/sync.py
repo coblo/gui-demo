@@ -260,7 +260,7 @@ def process_permissions():
                 )
                 data_db().add(vote_obj)
                 data_db().commit()
-
+    signals.permissions_changed.emit()
 
 def listwallettransactions():
     pass

@@ -40,16 +40,24 @@ class Permission(data_base):
     @staticmethod
     def guardians():
         return data_db().query(Permission).filter(
-            Permission.perm_type == enums.ADMIN,
+            Permission.perm_type == enums.MINE,
             Permission.start_block == 0,
             Permission.end_block == Permission.MAX_END_BLOCK
         ).all()
 
     @staticmethod
     def num_validators():
-        return Permission.validators().count()
+        return data_db().query(Permission).filter(
+            Permission.perm_type == enums.MINE,
+            Permission.start_block == 0,
+            Permission.end_block == Permission.MAX_END_BLOCK
+        ).count()
 
     @staticmethod
     def num_guardians():
-        return Permission.guardians().count()
+        return data_db().query(Permission).filter(
+            Permission.perm_type == enums.ADMIN,
+            Permission.start_block == 0,
+            Permission.end_block == Permission.MAX_END_BLOCK
+        ).count()
 

@@ -93,7 +93,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Connections
         signals.getblockchaininfo.connect(self.getblockchaininfo)
-        signals.listpermissions.connect(self.listpermissions)
+        signals.permissions_changed.connect(self.permissions_changed)
         signals.node_started.connect(self.node_started)
 
         if self.profile.manage_node:
@@ -164,17 +164,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.label_network_info.setText(blockchaininfo.description)
 
     @pyqtSlot()
-    def listpermissions(self):
+    def permissions_changed(self):
         num_validators = Permission.num_validators()
-        log.debug('set num validators %s' % num_validators)
         self.lbl_num_validators.setText(str(num_validators))
 
         num_guardians = Permission.num_guardians()
-        log.debug('set num guardians %s' % num_guardians)
         self.lbl_num_guardians.setText(str(num_guardians))
 
         num_candidates = PendingVote.num_candidates()
-        log.debug('set num candidates %s' % num_candidates)
         self.lbl_num_candidates.setText(str(num_candidates))
 
 

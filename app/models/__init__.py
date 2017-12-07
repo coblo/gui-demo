@@ -37,12 +37,14 @@ def init_profile_db():
     # create the database
     Profile_Base.metadata.create_all(engine)
 
-    # make a threadsafe? session for the profile db
     profile_db.configure(bind=engine)
 
-    # log.debug('check profile-db schema')
-    # todo: check if table structure is up to date
-    CreateTable(Profile.__table__).compile(engine)
+    log.debug("check {}-db schema".format(Profile.__table__.name))
+    if not check_table_ddl_against_model(profile_db, Profile.__table__):
+        log.debug("{}-db schema outdated, resetting".format(Profile.__table__.name))
+        Profile.__table__.drop(engine)
+    else:
+        log.debug("{}-db schema up to date".format(Profile.__table__.name))
 
     return profile_db
 
@@ -55,29 +57,30 @@ def init_data_db():
 
     log.debug('init data db at: {}'.format(fp))
     engine = sqlalchemy.create_engine('sqlite:///{}'.format(fp))
-    data_base.metadata.create_all(engine)
-
     data_db.configure(bind=engine)
 
-    # log.debug("check data-db schema")
-    # TODO check database for changes
-    # for model in models:
-    #     log.debug("check {}-db schema".format(model.__name__.lower()))
-    #     if not check_table_ddl_against_model(data_db, model):
-    #         log.debug("{}-db schema outdated, resetting".format(model.__name__.lower()))
-    #         data_db.drop_tables([model], safe=True)
-    #     else:
-    #         log.debug("{}-db schema up to date".format(model))
+    log.debug("check data-db schema")
+    for table_name, table in data_base.metadata.tables.items():
+        log.debug("check {}-db schema".format(table.name))
+        if not check_table_ddl_against_model(data_db, table):
+            log.debug("{}-db schema outdated, resetting".format(table.name))
+            table.drop(engine)
+        else:
+            log.debug("{}-db schema up to date".format(table.name))
 
+    data_base.metadata.create_all(engine)
     return data_db
 
-# def check_table_ddl_against_model(database, model) -> bool:
-#     # TODO make this dependent on driver. Peewee itself loses options when reading the schema from db
-#     db_table_ddl = database.execute_sql("select sql from sqlite_master where type = 'table' and name = '{}'".format(model.__name__.lower())).fetchone()
-#     model_table_ddl = database.compiler().create_table(model)
-#     if db_table_ddl:
-#         return db_table_ddl[0] == model_table_ddl[0]
-#     return False
+
+def check_table_ddl_against_model(database, table) -> bool:
+    if database.bind.name == "sqlite":
+        db_table_ddl = database().execute("select sql from sqlite_master where type = 'table' and name = '{}'".format(table.name)).scalar()
+    else:
+        raise Exception("Unsupported database dialect:{}".format(database.bind.name))
+
+    if db_table_ddl:
+        return str.strip(CreateTable(table).compile(database.bind).string) == str.strip(db_table_ddl)
+    return True
 
 
 if __name__ == '__main__':

@@ -194,6 +194,7 @@ def process_vouts(raw_transaction, miner, pubkeyhash_version, checksum_value) ->
                     ))
         # vote
         for perm in vout['permissions']:
+            relevant = True
             for perm_type, changed in perm.items():
                 if changed and perm_type in permission_candidates:
                     for address in vout['scriptPubKey']['addresses']:

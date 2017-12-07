@@ -32,32 +32,32 @@ class Permission(data_base):
     @staticmethod
     def validators(): # todo: eigentlcih so falsch, man muss gucken wer für den AKTUELLEN Block die Rechte hat
         return data_db().query(Permission).filter(
-            Permission.perm_type == enums.MINE,
-            Permission.start_block == 0,
-            Permission.end_block == Permission.MAX_END_BLOCK
+            (Permission.perm_type == enums.MINE) &
+            (Permission.start_block == 0) &
+            (Permission.end_block == Permission.MAX_END_BLOCK)
         ).all()
 
     @staticmethod
     def guardians():
         return data_db().query(Permission).filter(
-            Permission.perm_type == enums.MINE,
-            Permission.start_block == 0,
-            Permission.end_block == Permission.MAX_END_BLOCK
+            (Permission.perm_type == enums.ADMIN) &
+            (Permission.start_block == 0) &
+            (Permission.end_block == Permission.MAX_END_BLOCK)
         ).all()
 
     @staticmethod
     def num_validators():
         return data_db().query(Permission).filter(
-            Permission.perm_type == enums.MINE,
-            Permission.start_block == 0,
-            Permission.end_block == Permission.MAX_END_BLOCK
+            (Permission.perm_type == enums.MINE) &
+            (Permission.start_block == 0) &
+            (Permission.end_block == Permission.MAX_END_BLOCK)
         ).count()
 
     @staticmethod
     def num_guardians():
         return data_db().query(Permission).filter(
-            Permission.perm_type == enums.ADMIN,
-            Permission.start_block == 0,
-            Permission.end_block == Permission.MAX_END_BLOCK
+            (Permission.perm_type == enums.ADMIN) &
+            (Permission.start_block == 0) &
+            (Permission.end_block == Permission.MAX_END_BLOCK)
         ).count()
 

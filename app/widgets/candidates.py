@@ -71,7 +71,7 @@ class CandidateModel(QAbstractTableModel):
             elif col == 1:
                 return candidate.address_to
             elif idx.column() == 2:
-                return candidate.perm_type
+                return 'guardian' if candidate.perm_type.name == enums.ADMIN else 'validator'
             elif idx.column() == 3:
                 return "{} of {}".format(
                     PendingVote.num_grants(candidate.address_to, candidate.perm_type),

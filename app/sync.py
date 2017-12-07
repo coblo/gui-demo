@@ -286,10 +286,6 @@ def process_wallet_transactions():
                 continue # or break??
             if tx['valid']:
                 amount = tx['balance']['amount']
-                old_balance = 0
-                if WalletTransaction.actual_balance_without_tx(txid):
-                    WalletTransaction.actual_balance_without_tx(txid)
-                balance = old_balance + amount
                 transaction_types = []
 
                 # tx_type is vote
@@ -300,7 +296,7 @@ def process_wallet_transactions():
                         tx_fee=0,
                         comment='',
                         tx_type=WalletTransaction.VOTE,
-                        balance=balance
+                        balance=None
                     ))
 
                 # tx_type is publish
@@ -312,7 +308,7 @@ def process_wallet_transactions():
                             tx_fee=0,
                             comment='Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
                             tx_type=WalletTransaction.PUBLISH,
-                            balance=balance
+                            balance=None
                         ))
                     else:
                         print(item) #todo: debug
@@ -325,28 +321,28 @@ def process_wallet_transactions():
                         tx_fee=0,
                         comment='',
                         tx_type=WalletTransaction.MINING_REWARD,
-                        balance=balance
+                        balance=None
                     ))
 
-                if len(transaction_types) == 0:
-                    transaction_types.append(WalletTransaction(
-                            txid=txid,
-                            amount=amount,
-                            tx_fee=0,
-                            comment = tx.get('comment') if tx.get('comment') else '',
-                            tx_type=WalletTransaction.PAYMENT,
-                            balance=balance
-                    ))
-
-                # tx_type is stream
+                # tx_type is create
                 if tx.get('create'):
                     transaction_types.append(WalletTransaction(
                         txid=txid,
                         amount=amount,
                         tx_fee=0,
-                        comment='type: ' + tx['create']['type'] + ', name: ' + tx['create']['type'],
+                        comment='type: ' + tx['create']['type'] + ', name: ' + tx['create']['name'],
+                        tx_type=WalletTransaction.CREATE,
+                        balance=None
+                    ))
+
+                if len(transaction_types) == 0:
+                    transaction_types.append(WalletTransaction(
+                        txid=txid,
+                        amount=amount,
+                        tx_fee=0,
+                        comment = tx.get('comment') if tx.get('comment') else '',
                         tx_type=WalletTransaction.PAYMENT,
-                        balance=balance
+                        balance=None
                     ))
 
                 if not Transaction.transaction_in_db(txid):

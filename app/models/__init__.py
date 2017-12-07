@@ -2,6 +2,8 @@
 """Data model orm package"""
 import logging
 import sqlalchemy
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 from sqlalchemy.sql.ddl import CreateTable
 
 import app
@@ -19,6 +21,13 @@ from app.models.vote import Vote
 from app.models.db import data_db, profile_db, data_base
 
 log = logging.getLogger(__name__)
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 
 def init_profile_db():

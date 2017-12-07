@@ -229,6 +229,7 @@ def process_inputs_and_outputs(raw_transaction, pubkeyhash_version, checksum_val
                                 balance=None
                             ))
                         Address.create_if_not_exists(address)
+                        Address.create_if_not_exists(signers[vout['n']])
                         data_db().add(Vote(
                             txid=txid,
                             from_address=signers[vout['n']],

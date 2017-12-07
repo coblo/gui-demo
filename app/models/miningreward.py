@@ -13,7 +13,7 @@ class MiningReward(data_base):
     __tablename__ = "mining_rewards"
     """Mining Rewards"""
 
-    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE"), primary_key=True)
+    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE", deferrable=True, initially="DEFERRED"), primary_key=True)
     address = Column(String)
 
     def __repr__(self):

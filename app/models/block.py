@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
-from sqlalchemy import LargeBinary, Column, DateTime, ForeignKey, String, Integer
+
+from sqlalchemy import LargeBinary, Column, DateTime, Integer
 
 from app.models.db import data_db, data_base
-
-from .address import Address
-
 
 log = logging.getLogger(__name__)
 

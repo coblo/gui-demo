@@ -13,7 +13,7 @@ class Alias(data_base):
     """Alias Changes"""
 
     alias_id = Column(Integer, autoincrement=True, primary_key=True)
-    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE"))
+    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE", deferrable=True, initially="DEFERRED"))
     address = Column(String)
     alias = Column(String)
 

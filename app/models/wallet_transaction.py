@@ -16,7 +16,7 @@ class WalletTransaction(data_base):
     TRANSACTION_TYPES = PAYMENT, VOTE, MINING_REWARD, PUBLISH, TX_FEE, CREATE
 
     wallet_txid = Column(Integer, autoincrement=True, primary_key=True)
-    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE"))
+    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE", deferrable=True, initially="DEFERRED"))
     amount = Column(Float(asdecimal=True, precision=17, decimal_return_scale=8))
     tx_fee = Column(Float(asdecimal=True, precision=17, decimal_return_scale=8))
     comment = Column(String)

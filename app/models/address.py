@@ -24,7 +24,6 @@ class Address(data_base):
     def create_if_not_exists(address):
         if not data_db().query(exists().where(Address.address == address)).scalar():
             data_db().add(Address(address=address))
-            data_db().commit()
 
     # @classmethod #todo: in die Klassen mining_reqards und votes verlagern
     # def with_last_mined(cls):

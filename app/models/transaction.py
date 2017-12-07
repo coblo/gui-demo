@@ -14,18 +14,24 @@ class Transaction(data_base):
     """Transactions"""
 
     txid = Column(String, primary_key=True)
-    block = Column(LargeBinary, ForeignKey('blocks.hash'))
+    block = Column(LargeBinary, ForeignKey('blocks.hash'), nullable=True)
     pos_in_block = Column(Integer)
 
-    class Meta:
-        database = data_db
-
-    def value_by_col(self, col): # todo: nie benutzt, weg?
-        fn = self._meta.sorted_field_names[col]
-        return getattr(self, fn)
+    def __repr__(self):
+        return "Transaction(%s)" % (self.txid)
 
     @staticmethod
     def create_if_not_exists(transaction):
-        if not data_db().query(exists().where(Transaction.txid == transaction.txid)).scalar():
+        old_transaction = data_db().query(Transaction).filter(Transaction == transaction.txid).first()
+        if old_transaction is None:
             data_db().add(transaction)
             data_db().commit()
+        elif old_transaction.block is None: #transaction was unconfirmed before
+            old_transaction.block = transaction.block
+            old_transaction.pos_in_block = transaction.pos_in_block
+            data_db().commit()
+
+
+    @staticmethod
+    def transaction_in_db(txid):
+        return data_db().query(exists().where(Transaction.txid == txid)).scalar()

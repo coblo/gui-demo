@@ -5,18 +5,16 @@ from binascii import unhexlify
 from datetime import datetime
 
 import ubjson
+from sqlalchemy import func
 
 from app import enums
-from app.models import Alias
-from app.models import MiningReward
-from app.models.timestamp import Timestamp
-from app.models.vote import Vote
 from app.tools.address import public_key_to_address
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
 from app.helpers import batchwise
-from app.models import Address, Permission, Transaction, PendingVote, data_db, Block, Profile
+from app.models import Address, Permission, Transaction, PendingVote, data_db, Block, Profile, Alias, MiningReward,\
+    WalletTransaction, Timestamp, Vote
 from app.tools.validators import is_valid_username
 
 log = logging.getLogger(__name__)
@@ -114,6 +112,7 @@ def process_blocks():
                 return
     if last_valid_height != block_count_node:
         process_permissions()
+        process_wallet_transactions()
 
 
 def process_transactions(block_height, pubkeyhash_version, checksum_value):
@@ -263,219 +262,103 @@ def process_permissions():
                 data_db().commit()
     signals.permissions_changed.emit()
 
-def listwallettransactions():
-    pass
-#     client = get_active_rpc_client()
-#     txs = client.listwallettransactions(10000000)
-#     if not txs:
-#         log.warning('no transactions from api')
-#         return
-#     balance = 0
-#     new_transactions = []
-#     new_confirmations = []
-#     with data_db.atomic():
-#         for tx in txs['result']:
-#             if tx['valid']:
-#                 txid = tx['txid']
-#                 dt = datetime.fromtimestamp(tx['time'])
-#
-#                 comment = ''
-#                 txtype = Transaction.PAYMENT
-#                 if tx['permissions']:
-#                     txtype = Transaction.VOTE
-#
-#                 items = tx['items']
-#                 if items:
-#                     first_item = items[0]
-#                     if first_item['type'] == 'stream':
-#                         txtype = Transaction.PUBLISH
-#                         comment = 'Stream:"' + first_item['name'] + '", Key: "' + first_item['key'] + '"'
-#
-#                 if tx.get('generated'):
-#                     txtype = Transaction.MINING_REWARD
-#
-#                 # local comments have the highest priority
-#                 if 'comment' in tx:
-#                     comment = tx.get('comment')
-#
-#                 amount = tx['balance']['amount']
-#                 balance += amount
-#                 confirmations = tx['confirmations']
-#
-#                 tx_obj, created = Transaction.get_or_create(
-#                     txid=txid, defaults=dict(
-#                         datetime=dt,
-#                         txtype=txtype,
-#                         comment=comment,
-#                         amount=amount,
-#                         balance=balance,
-#                         confirmations=confirmations
-#                     )
-#                 )
-#                 if created:
-#                     new_transactions.append(tx_obj)
-#                 elif tx_obj.confirmations == 0 and confirmations != 0:
-#                     tx_obj.confirmations = confirmations
-#                     new_confirmations.append(tx_obj)
-#                     tx_obj.save()
-#
-#     if len(new_transactions) > 0 or len(new_confirmations) > 0:
-#         signals.listwallettransactions.emit(new_transactions, new_confirmations)
-#     return len(new_transactions) != 0
+def process_wallet_transactions():
+    client = get_active_rpc_client()
+    offset = 0
+    transactions_processed = False
+    actual_time_before = False
+    if data_db().query(WalletTransaction).count() > 0:
+        actual_time_before = data_db().query(func.MAX(Block.time)).join(Transaction, WalletTransaction)
+    while(not transactions_processed):
+        try:
+            new_transactions = client.listwallettransactions(count = 100, skip=offset, verbose=False)['result']
+        except Exception as e:
+            log.debug(e)
+            break
+        if len(new_transactions) == 0:
+            transactions_processed = True
+        elif len(new_transactions) == 100:
+            offset += 100
+        for tx in new_transactions:
+            txid = tx['txid']
+            if WalletTransaction.wallet_transaction_in_db(txid):
+                transactions_processed = True
+                continue # or break??
+            if tx['valid']:
+                amount = tx['balance']['amount']
+                old_balance = 0
+                if WalletTransaction.actual_balance_without_tx(txid):
+                    WalletTransaction.actual_balance_without_tx(txid)
+                balance = old_balance + amount
+                transaction_types = []
 
+                # tx_type is vote
+                if tx['permissions']:
+                    transaction_types.append(WalletTransaction(
+                        txid=txid,
+                        amount=amount,
+                        tx_fee=0,
+                        comment='',
+                        tx_type=WalletTransaction.VOTE,
+                        balance=balance
+                    ))
 
-def listpermissions():
-    pass
-    # client = get_active_rpc_client()
-    # node_height = client.getblockcount()['result']
-    #
-    # perms = client.listpermissions()
-    # if not perms:
-    #     log.warning('no permissions from api')
-    #     return
-    # new_perms, new_votes = False, False
-    #
-    # Permission.delete().execute()
-    # PendingVote.delete().execute()
-    #
-    # admin_addresses = set()
-    # miner_addresses = set()
-    #
-    # with data_db.atomic():
-    #     profile = Profile.get_active()
-    #
-    #     for perm in perms['result']:
-    #         perm_type = perm['type']
-    #         perm_start = perm['startblock']
-    #         perm_end = perm['endblock']
-    #
-    #         if perm_type not in Permission.PERM_TYPES:
-    #             continue
-    #
-    #         if perm_type == Permission.ADMIN and perm_start < node_height < perm_end:
-    #             admin_addresses.add(perm['address'])
-    #
-    #         if perm_type == Permission.MINE and perm_start < node_height < perm_end:
-    #             miner_addresses.add(perm['address'])
-    #
-    #         addr_obj, created = Address.get_or_create(address=perm['address'])
-    #
-    #         for vote in perm['pending']:
-    #             # If candidate has already the permission continue.
-    #             if vote['startblock'] == perm['startblock'] and vote['endblock'] == perm['endblock']:
-    #                 continue
-    #             start_block = vote['startblock']
-    #             end_block = vote['endblock']
-    #             # new stuff start
-    #             for admin in vote['admins']:
-    #                 admin_obj, created = Address.get_or_create(address=admin)
-    #                 vote_obj, created = PendingVote.get_or_create(
-    #                     address=addr_obj, perm_type=perm_type, start_block=start_block, end_block=end_block,
-    #                     given_from=admin_obj
-    #                 )
-    #                 vote_obj.set_vote_type()
-    #             # new stuff end
-    #             approbations = len(vote['admins'])
-    #             # TODO: Fix: current time of syncing is not the time of first_vote!
-    #
-    #         start_block = perm['startblock']
-    #         end_block = perm['endblock']
-    #         # TODO Why get_or_create ... we just deleted all Permission objects
-    #         perm_obj, created = Permission.get_or_create(
-    #             address=addr_obj, perm_type=perm_type, defaults=dict(start_block=start_block, end_block=end_block)
-    #         )
-    #         if created:
-    #             new_perms = True
-    #         else:
-    #             perm_obj.save()
-    #
-    # new_is_admin = profile.address in admin_addresses
-    # if profile.is_admin != new_is_admin:
-    #     profile.is_admin = new_is_admin
-    #
-    # new_is_miner = profile.address in miner_addresses
-    # if profile.is_miner != new_is_miner:
-    #     profile.is_miner = new_is_miner
-    #
-    # if profile.dirty_fields:
-    #     profile.save()
-    #
-    # # Todo: maybe only trigger table updates on actual change?
-    # signals.listpermissions.emit()  # triggers community tab updates
-    # signals.votes_changed.emit()  # triggers community tab updates
-    # return {'new_perms': new_perms, 'new_votes': new_votes}
+                # tx_type is publish
+                for item in tx['items']:
+                    if item['type'] == 'stream':
+                        transaction_types.append(WalletTransaction(
+                            txid=txid,
+                            amount=amount,
+                            tx_fee=0,
+                            comment='Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
+                            tx_type=WalletTransaction.PUBLISH,
+                            balance=balance
+                        ))
+                    else:
+                        print(item) #todo: debug
 
+                # tx_type is mining reward
+                if tx.get('generated'):
+                    transaction_types.append(WalletTransaction(
+                        txid=txid,
+                        amount=amount,
+                        tx_fee=0,
+                        comment='',
+                        tx_type=WalletTransaction.MINING_REWARD,
+                        balance=balance
+                    ))
 
+                if len(transaction_types) == 0:
+                    transaction_types.append(WalletTransaction(
+                            txid=txid,
+                            amount=amount,
+                            tx_fee=0,
+                            comment = tx.get('comment') if tx.get('comment') else '',
+                            tx_type=WalletTransaction.PAYMENT,
+                            balance=balance
+                    ))
 
+                # tx_type is stream
+                if tx.get('create'):
+                    transaction_types.append(WalletTransaction(
+                        txid=txid,
+                        amount=amount,
+                        tx_fee=0,
+                        comment='type: ' + tx['create']['type'] + ', name: ' + tx['create']['type'],
+                        tx_type=WalletTransaction.PAYMENT,
+                        balance=balance
+                    ))
 
-getblock_proccessed_height = 1
-
-
-def getblock():
-    """Process detailed data from individual blocks to find last votes from guardians"""
-    pass
-    # TODO cleanup this deeply nested mess :)
-
-    # client = get_active_rpc_client()
-    # global getblock_proccessed_height
-    # blockchain_params = client.getblockchainparams()['result']
-    # pubkeyhash_version = blockchain_params['address-pubkeyhash-version']
-    # checksum_value = blockchain_params['address-checksum-value']
-    #
-    # block_objs = Block.multi_tx_blocks().where(Block.height > getblock_proccessed_height)
-    #
-    # votes_changed = False
-    #
-    # with data_db.atomic():
-    #     for block_obj in block_objs:
-    #         height = block_obj.height
-    #         block_info = client.getblock("{}".format(height))['result']
-    #         for txid in block_info['tx']:
-    #             transaction = client.getrawtransaction(txid, 4)
-    #             if transaction['error'] is None:
-    #                 if 'vout' in transaction['result']:
-    #                     vout = transaction['result']['vout']
-    #                     permissions = []
-    #                     start_block = None
-    #                     end_block = None
-    #                     for vout_key, entry in enumerate(vout):
-    #                         if len(entry['permissions']) > 0:
-    #                             for key, perm in entry['permissions'][0].items():
-    #                                 if perm and key in permission_candidates:
-    #                                     permissions.append(key)
-    #                                 if key == 'startblock':
-    #                                     start_block = perm
-    #                                 if key == 'endblock':
-    #                                     end_block = perm
-    #                             in_entry = transaction['result']['vin'][vout_key]
-    #                             public_key = in_entry['scriptSig']['asm'].split(' ')[1]
-    #                             from_pubkey = public_key_to_address(public_key, pubkeyhash_version, checksum_value)
-    #                             given_to = entry['scriptPubKey']['addresses']
-    #                             for addr in given_to:
-    #                                 log.debug(
-    #                                     'Grant or Revoke {} given by {} to {} at time {}'.format(
-    #                                         permissions, from_pubkey, addr, block_obj.time)
-    #                                 )
-    #                                 addr_from_obj, _ = Address.get_or_create(address=from_pubkey)
-    #                                 addr_to_obj, _ = Address.get_or_create(address=addr)
-    #                                 vote_obj, created = Vote.get_or_create(
-    #                                     txid=txid, defaults=dict(
-    #                                         from_address=addr_from_obj,
-    #                                         to_address_id=addr_to_obj,
-    #                                         time=block_obj.time
-    #                                     )
-    #                                 )
-    #                                 if created:
-    #                                     votes_changed = True
-    #
-    #         getblock_proccessed_height = height
-    #
-    # if votes_changed:
-    #     signals.votes_changed.emit()
-
-
+                if not Transaction.transaction_in_db(txid):
+                    data_db().add(Transaction(txid=txid, block=None, pos_in_block=0))
+                if len(transaction_types) == 1:
+                    #todo: tx_fee
+                    data_db().add(transaction_types[0])
+                else:
+                    print(len(transaction_types)) #todo: split
+        data_db().commit()
 
 if __name__ == '__main__':
     import app
     app.init()
-    process_permissions()
+    process_wallet_transactions()

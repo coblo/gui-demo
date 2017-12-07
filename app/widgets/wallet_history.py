@@ -4,7 +4,7 @@ from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import QHeaderView, QWidget
 from decimal import Decimal, ROUND_DOWN
 
-from app.models import MyTransaction
+from app.models import WalletTransaction
 from app.ui.wallet_history import Ui_widget_wallet_history
 from app.signals import signals
 
@@ -34,26 +34,26 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     TXID = 6
 
     transaction_types = {
-        MyTransaction.PAYMENT: "Payment",
-        MyTransaction.VOTE: "Skill grant/revoke",
-        MyTransaction.MINING_REWARD: "Mining Reward",
-        MyTransaction.PUBLISH: "Publish"
+        WalletTransaction.PAYMENT: "Payment",
+        WalletTransaction.VOTE: "Skill grant/revoke",
+        WalletTransaction.MINING_REWARD: "Mining Reward",
+        WalletTransaction.PUBLISH: "Publish"
     }
 
     transaction_type_to_icon = {
-        MyTransaction.PAYMENT: QIcon(),
-        MyTransaction.VOTE: QIcon(),
-        MyTransaction.MINING_REWARD: QIcon(),
-        MyTransaction.PUBLISH: QIcon()
+        WalletTransaction.PAYMENT: QIcon(),
+        WalletTransaction.VOTE: QIcon(),
+        WalletTransaction.MINING_REWARD: QIcon(),
+        WalletTransaction.PUBLISH: QIcon()
     }
 
     def __init__(self, parent=None):
         super().__init__()
         self.header = ['', 'Date', 'Comment', 'Amount', 'Balance']
-        self.transaction_type_to_icon[MyTransaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[MyTransaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[MyTransaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[MyTransaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[WalletTransaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[WalletTransaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[WalletTransaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[WalletTransaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
 
         self.txs = []
         # self.insert_db_data(MyTransaction.select()) todo

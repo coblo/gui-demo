@@ -13,12 +13,13 @@ log = logging.getLogger(__name__)
 class Vote(data_base):
     __tablename__ = "votes"
 
-    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE"), primary_key=True)
+    vote_id = Column(Integer, autoincrement=True, primary_key=True)
+    txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE"))
     from_address = Column(String)
     to_address = Column(String)
-    start_block = Column(Integer, primary_key=True)
-    end_block = Column(Integer, primary_key=True)
-    perm_type = Column(Enum(PermTypes), primary_key=True)
+    start_block = Column(Integer)
+    end_block = Column(Integer)
+    perm_type = Column(Enum(PermTypes))
 
 
     def __repr__(self):

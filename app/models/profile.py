@@ -74,7 +74,6 @@ class Profile(Profile_Base):
             active=True,
         )
         profile_db().add(default_profile)
-        profile_db().flush()
 
 
 if __name__ == '__main__':

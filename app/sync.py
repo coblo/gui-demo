@@ -108,6 +108,7 @@ def process_blocks():
             data_db().add(block_obj)
             if process_transactions(block['height'], pubkeyhash_version, checksum_value):
                 data_db().commit()
+                signals.database_blocks_updated.emit(block['height'], block_count_node)
             else:
                 data_db().rollback()
                 return

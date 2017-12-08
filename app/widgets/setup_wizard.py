@@ -12,7 +12,7 @@ from os.path import exists
 import app
 from app.backend.rpc import RpcClient
 from app.helpers import init_data_dir
-from app.models import Profile, init_profile_db, init_data_db
+from app.models import Profile, init_profile_db, init_data_db, profile_db
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.tools.address import main_address_from_mnemonic, main_wif_from_mnemonic
@@ -229,19 +229,19 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         if self._manage_node:
             Profile.create_default_profile()
         elif self._connection_tested:
-            p_obj, created = Profile.get_or_create(
+            profile_db().merge(Profile(
                 name=self.edit_rpc_host.text(),
-                defaults=dict(
-                    rpc_host=self.edit_rpc_host.text(),
-                    rpc_port=self.edit_rpc_port.text(),
-                    rpc_user=self.edit_rpc_user.text(),
-                    rpc_password=self.edit_rpc_password.text(),
-                    rpc_use_ssl=self.cbox_use_ssl.isChecked(),
-                    manage_node=False,
-                    exit_on_close=True,
-                    active=True,
-                )
-            )
+                rpc_host=self.edit_rpc_host.text(),
+                rpc_port=self.edit_rpc_port.text(),
+                rpc_user=self.edit_rpc_user.text(),
+                rpc_password=self.edit_rpc_password.text(),
+                rpc_use_ssl=self.cbox_use_ssl.isChecked(),
+                manage_node=False,
+                exit_on_close=True,
+                active=True,
+            ))
+
+        profile_db().commit()
 
         self.log('Initialize node-sync database')
         init_data_db()

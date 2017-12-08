@@ -76,8 +76,8 @@ class Application(QtWidgets.QApplication):
             if wizard.exec() == SetupWizard.Rejected:
                 QtWidgets.qApp.quit()
                 return
-
-        self.data_db = init_data_db()
+        else:
+            self.data_db = init_data_db()
 
         # Initialize main window
         self.ui = self.main_widget()

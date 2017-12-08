@@ -49,6 +49,7 @@ def getruntimeparams():
 
     if result['handshakelocal'] != profile.address:
         profile.address = result['handshakelocal']
+        profile_db().commit()
 
 
 def process_blocks():

@@ -5,6 +5,7 @@ import os
 from decimal import Decimal
 
 from sqlalchemy import String, Column, Boolean, Float
+from sqlalchemy.event import listens_for
 from sqlalchemy.ext.declarative import declarative_base
 
 import app
@@ -40,9 +41,6 @@ class Profile(Profile_Base):
     def __repr__(self):
         return 'Profile(%s, %s, %s...)' % (self.name, self.rpc_host, self.rpc_user)
 
-    def save(self, *args, **kwargs): # todo: ungetestet
-        signals.profile_changed.emit(self)
-
     def set_active(self):
         profile_db().add(self) # todo: Muss man nicht bei allen anderen active auf false setzen?
         self.active = True
@@ -74,6 +72,12 @@ class Profile(Profile_Base):
             active=True,
         )
         profile_db().add(default_profile)
+
+
+@listens_for(Profile, "after_update")
+@listens_for(Profile, "after_insert")
+def after_update(mapper, connection, profile):
+    signals.profile_changed.emit(profile)
 
 
 if __name__ == '__main__':

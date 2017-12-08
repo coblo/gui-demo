@@ -61,20 +61,23 @@ class Application(QtWidgets.QApplication):
         self.ui = None
         self.tray_icon = None
         helpers.init_data_dir()
-        self.profile_db = init_profile_db()
-        self.data_db = init_data_db()
+        self.profile_db = None
+        self.data_db = None
         signals.application_start.connect(self.on_application_start)
 
     def on_application_start(self):
         self.updater = Updater(self)
         self.node = Node(self)
         self.aboutToQuit.connect(self.cleanup)
+        self.profile_db = init_profile_db()
 
         if app.is_first_start():
             wizard = SetupWizard()
             if wizard.exec() == SetupWizard.Rejected:
                 QtWidgets.qApp.quit()
                 return
+
+        self.data_db = init_data_db()
 
         # Initialize main window
         self.ui = self.main_widget()

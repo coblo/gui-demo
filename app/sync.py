@@ -114,6 +114,7 @@ def process_blocks():
     if last_valid_height != block_count_node:
         process_permissions()
         process_wallet_transactions()
+        WalletTransaction.compute_balances()
 
 
 def process_transactions(block_height, pubkeyhash_version, checksum_value):
@@ -179,6 +180,7 @@ def process_inputs_and_outputs(raw_transaction, pubkeyhash_version, checksum_val
             if item["type"] == "stream":
                 publishers = item["publishers"]
                 if publishers[0] == my_address:
+                    relevant = True
                     data_db().add(WalletTransaction(
                         txid=txid,
                         amount=0,
@@ -390,4 +392,4 @@ def process_wallet_transactions():
 if __name__ == '__main__':
     import app
     app.init()
-    process_wallet_transactions()
+    WalletTransaction.compute_balances()

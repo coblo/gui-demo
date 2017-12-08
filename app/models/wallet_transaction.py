@@ -29,3 +29,20 @@ class WalletTransaction(data_base):
     @staticmethod
     def wallet_transaction_in_db(txid):
         return data_db().query(exists().where(WalletTransaction.txid == txid)).scalar()
+
+    @staticmethod
+    def compute_balances():
+        from app.models import Block, Transaction
+        first_unknown_balance = data_db().query(WalletTransaction, Block.time).join(Transaction, Block)\
+            .filter(WalletTransaction.balance == None).order_by(Block.time.asc()).first()
+        if first_unknown_balance is not None:
+            last_valid_balance = data_db().query(WalletTransaction.balance).join(Transaction, Block)\
+            .filter(WalletTransaction.balance != None).order_by(Block.time.desc()).first()
+            if not last_valid_balance:
+                last_valid_balance = 0
+            txs_with_unknown_balance = data_db().query(WalletTransaction).join(Transaction, Block)\
+                .filter(Block.time >= first_unknown_balance.time).order_by(Block.time.asc()).all()
+            for tx in txs_with_unknown_balance:
+                last_valid_balance += tx.amount + tx.tx_fee
+                tx.balance = last_valid_balance
+            data_db().commit()

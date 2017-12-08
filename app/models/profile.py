@@ -18,7 +18,7 @@ Profile_Base = declarative_base()
 
 class Profile(Profile_Base):
     """Application profile to mangage different Nodes/Accounts"""
-    __tablename__ = 'profile' #todo: bei 'profiles' ist alles kaputt
+    __tablename__ = 'profiles'
 
     name = Column(String, primary_key=True)
     rpc_host = Column(String)

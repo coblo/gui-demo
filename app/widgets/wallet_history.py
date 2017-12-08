@@ -55,7 +55,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.transaction_type_to_icon[WalletTransaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
         self.transaction_type_to_icon[WalletTransaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
 
-        self.txs = []
+        self.txs = WalletTransaction.get_wallet_history()
         # self.insert_db_data(MyTransaction.select()) todo
         self.sort_index = self.DATETIME
         self.sort_order = Qt.AscendingOrder
@@ -91,40 +91,37 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         row, col = index.row(), index.column()
         tx = self.txs[row]
         if role == Qt.DisplayRole:
-            value = tx[col]
-            if isinstance(value, Decimal):
-                if col == self.AMOUNT:
-                    if value == 0:
-                        value = 0
-                    normalized = value
-                else:
-                    normalized = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+            if col == 0:
+                return ''
+            if col == 1:
+                return "{}".format(tx.time)
+            if col == 2:
+                return tx.WalletTransaction.comment
+            if col == self.AMOUNT:
+                amount = tx.WalletTransaction.amount
+                if amount == 0:
+                    amount = 0
+                display = "{0:n}".format(amount)
+                return '+' + display if amount > 0 else display
+            if col == 4:
+                normalized = tx.WalletTransaction.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
                 display = "{0:n}".format(normalized)
-                return '+' + display if value > 0 and col == self.AMOUNT else display
-            elif isinstance(value, datetime):
-                if tx[self.CONFIRMATIONS] == 0:
-                    return 'Unconfirmed'
-                else:
-                    return value.strftime("%Y-%m-%d %H:%M")
-            elif col == self.TXTYPE:
-                return ""
-            else:
-                return str(value)
-        if role == Qt.DecorationRole and col == self.TXTYPE and tx[col] in self.transaction_types:
-            return self.transaction_type_to_icon[tx[col]]
+                return '+' + display if tx.WalletTransaction.balance > 0 and col == self.AMOUNT else display
+        if role == Qt.DecorationRole and col == self.TXTYPE and tx.WalletTransaction.tx_type in self.transaction_types:
+            return self.transaction_type_to_icon[tx.WalletTransaction.tx_type]
         if role == Qt.ToolTipRole:
             if col == self.BALANCE:
-                return "{0:n}".format(tx[col])
-            elif col == self.TXTYPE and tx[col] in self.transaction_types:
-                return self.transaction_types[tx[col]]
+                return "{0:n}".format(tx.WalletTransaction.balance)
+            elif col == self.TXTYPE and tx.WalletTransaction.tx_type in self.transaction_types:
+                return self.transaction_types[tx.WalletTransaction.tx_type]
             else:
                 return None
         elif role == Qt.TextAlignmentRole and col not in (self.COMMENT, self.DATETIME):
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
-        elif role == Qt.TextAlignmentRole and col == self.TXTYPE and tx[col] in self.transaction_types:
-            return self.transaction_type_to_icon[tx[col]].actualSize()
+        elif role == Qt.TextAlignmentRole and col == self.TXTYPE and tx.WalletTransaction.tx_type in self.transaction_types:
+            return self.transaction_type_to_icon[tx.WalletTransaction.tx_type].actualSize()
         elif role == Qt.ForegroundRole:
-            if col == self.AMOUNT and tx[self.AMOUNT] < 0:
+            if col == self.AMOUNT and tx.WalletTransaction.amount < 0:
                 return QVariant(QColor(Qt.red))
         elif role == Qt.FontRole and col == self.AMOUNT:
             font = QFont("RobotoCondensed-Light", 9)

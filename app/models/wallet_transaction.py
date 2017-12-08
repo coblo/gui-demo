@@ -47,3 +47,8 @@ class WalletTransaction(data_base):
                 last_valid_balance += tx.amount
                 tx.balance = last_valid_balance
             data_db().commit()
+
+    @staticmethod
+    def get_wallet_history():
+        from app.models import Block, Transaction
+        return data_db().query(WalletTransaction, Block.time).join(Transaction, Block).order_by(Block.time.desc()).all()

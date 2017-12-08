@@ -100,6 +100,9 @@ class RpcClient:
     def getruntimeparams(self):
         return self._call('getruntimeparams')
 
+    def getwallettransaction(self, txid, includeWatchOnly=False, verbose=False):
+        return self._call('getwallettransaction', txid, includeWatchOnly, verbose)
+
     def grant(self, addresses, permissions, native_amount=0, start_block=0, end_block=4294967295, comment=None, comment_to=None):
         return self._call('grant', addresses, permissions, native_amount, start_block, end_block, comment, comment_to)
 

@@ -5,10 +5,9 @@ from binascii import unhexlify
 from datetime import datetime
 
 import ubjson
-from decimal import Decimal
-from sqlalchemy import func
 
 from app import enums
+from app.models.db import profile_db
 from app.tools.address import public_key_to_address
 from app.responses import Getblockchaininfo
 from app.signals import signals
@@ -31,7 +30,6 @@ def getinfo():
 
     if result['balance'] != profile.balance:
         profile.balance = result['balance']
-        profile.save()
 
 
 def getblockchaininfo():
@@ -51,7 +49,6 @@ def getruntimeparams():
 
     if result['handshakelocal'] != profile.address:
         profile.address = result['handshakelocal']
-        profile.save()
 
 
 def process_blocks():
@@ -114,7 +111,6 @@ def process_blocks():
                 return
     if last_valid_height != block_count_node:
         process_permissions()
-        process_wallet_transactions()
         WalletTransaction.compute_balances()
 
 
@@ -152,7 +148,6 @@ def process_inputs_and_outputs(raw_transaction, pubkeyhash_version, checksum_val
     relevant = False
     txid = raw_transaction["txid"]
     signers=[] #todo: SIGHASH_ALL
-    my_address = Profile.get_active().address
     for n, vin in enumerate(raw_transaction["vin"]):
         # mining reward
         if 'coinbase' in vin:
@@ -163,15 +158,6 @@ def process_inputs_and_outputs(raw_transaction, pubkeyhash_version, checksum_val
                 txid=txid,
                 address=miner
             ))
-            if miner == my_address:
-                data_db().add(WalletTransaction(
-                    txid = txid,
-                    amount = mining_reward['value'],
-                    tx_fee = 0,
-                    comment = '',
-                    tx_type = WalletTransaction.MINING_REWARD,
-                    balance = None,
-                ))
         elif 'scriptSig' in vin:
             public_key = vin['scriptSig']['asm'].split(' ')[1]
             signers.append(public_key_to_address(public_key, pubkeyhash_version, checksum_value))
@@ -180,16 +166,6 @@ def process_inputs_and_outputs(raw_transaction, pubkeyhash_version, checksum_val
             # stream item
             if item["type"] == "stream":
                 publishers = item["publishers"]
-                if publishers[0] == my_address:
-                    relevant = True
-                    data_db().add(WalletTransaction(
-                        txid=txid,
-                        amount=0,
-                        tx_fee=vout['value'],
-                        comment='Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
-                        tx_type=WalletTransaction.PUBLISH,
-                        balance=None
-                    ))
                 for publisher in publishers:
                     Address.create_if_not_exists(publisher)
                 if item["name"] == "timestamp":
@@ -222,15 +198,6 @@ def process_inputs_and_outputs(raw_transaction, pubkeyhash_version, checksum_val
             for perm_type, changed in perm.items():
                 if changed and perm_type in permission_candidates:
                     for address in vout['scriptPubKey']['addresses']:
-                        if address == my_address:
-                            data_db().add(WalletTransaction(
-                                txid=txid,
-                                amount=0,
-                                tx_fee=vout['value'],
-                                comment='',
-                                tx_type=WalletTransaction.VOTE,
-                                balance=None
-                            ))
                         Address.create_if_not_exists(address)
                         Address.create_if_not_exists(signers[vout['n']])
                         data_db().add(Vote(
@@ -242,6 +209,66 @@ def process_inputs_and_outputs(raw_transaction, pubkeyhash_version, checksum_val
                             perm_type=perm_type
                         ))
                         # wallet transactions?? oder batch wise extra holen?
+    # check if transaction is wallet transaction
+    client = get_active_rpc_client()
+    try:
+        request = client.getwallettransaction(txid, verbose=True)
+        if request['error'] is None:
+            relevant = True
+            is_payment = True
+            wallet_tx = request['result']
+            amount = wallet_tx['balance']['amount']
+            if wallet_tx.get('generated'):
+                data_db().add(WalletTransaction(
+                    txid=txid,
+                    amount=amount,
+                    comment='',
+                    tx_type=WalletTransaction.MINING_REWARD,
+                    balance=None
+                ))
+                amount = 0
+                is_payment = False
+            for item in wallet_tx['items']:
+                data_db().add(WalletTransaction(
+                    txid=txid,
+                    amount=amount,
+                    comment='Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
+                    tx_type=WalletTransaction.PUBLISH,
+                    balance=None
+                ))
+                amount = 0
+                is_payment = False
+            for perm in wallet_tx['permissions']:
+                data_db().add(WalletTransaction(
+                    txid=txid,
+                    amount=amount,
+                    comment='',
+                    tx_type=WalletTransaction.VOTE,
+                    balance=None
+                ))
+                amount = 0
+                is_payment = False
+            if wallet_tx.get('create'):
+                data_db().add(WalletTransaction(
+                    txid=txid,
+                    amount=amount,
+                    comment='Type:"' + wallet_tx['create']['type'] + '", Name: "' + wallet_tx['create']['name'] + '"',
+                    tx_type=WalletTransaction.CREATE,
+                    balance=None
+                ))
+                amount = 0
+                is_payment = False
+            if is_payment:
+                data_db().add(WalletTransaction(
+                    txid=txid,
+                    amount=amount,
+                    comment='',
+                    tx_type=WalletTransaction.PAYMENT,
+                    balance=None
+                ))
+
+    except Exception as e:
+        log.debug(e)
     return relevant
 
 
@@ -297,98 +324,6 @@ def process_permissions():
                 data_db().commit()
     signals.permissions_changed.emit()
 
-def process_wallet_transactions():
-    pass
-    # client = get_active_rpc_client()
-    # offset = 0
-    # transactions_processed = False
-    # actual_time_before = False
-    # if data_db().query(WalletTransaction).count() > 0:
-    #     actual_time_before = data_db().query(func.MAX(Block.time)).join(Transaction, WalletTransaction)
-    # while(not transactions_processed):
-    #     try:
-    #         new_transactions = client.listwallettransactions(count = 100, skip=offset, verbose=False)['result']
-    #     except Exception as e:
-    #         log.debug(e)
-    #         break
-    #     if len(new_transactions) == 0:
-    #         transactions_processed = True
-    #     elif len(new_transactions) == 100:
-    #         offset += 100
-    #     for tx in new_transactions:
-    #         txid = tx['txid']
-    #         if WalletTransaction.wallet_transaction_in_db(txid):
-    #             transactions_processed = True
-    #             continue # or break??
-    #         if tx['valid']:
-    #             amount = tx['balance']['amount']
-    #             transaction_types = []
-    #
-    #             # tx_type is vote
-    #             if tx['permissions']:
-    #                 transaction_types.append(WalletTransaction(
-    #                     txid=txid,
-    #                     amount=amount,
-    #                     tx_fee=0,
-    #                     comment='',
-    #                     tx_type=WalletTransaction.VOTE,
-    #                     balance=None
-    #                 ))
-    #
-    #             # tx_type is publish
-    #             for item in tx['items']:
-    #                 if item['type'] == 'stream':
-    #                     transaction_types.append(WalletTransaction(
-    #                         txid=txid,
-    #                         amount=amount,
-    #                         tx_fee=0,
-    #                         comment='Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
-    #                         tx_type=WalletTransaction.PUBLISH,
-    #                         balance=None
-    #                     ))
-    #                 else:
-    #                     print(item) #todo: debug
-    #
-    #             # tx_type is mining reward
-    #             if tx.get('generated'):
-    #                 transaction_types.append(WalletTransaction(
-    #                     txid=txid,
-    #                     amount=amount,
-    #                     tx_fee=0,
-    #                     comment='',
-    #                     tx_type=WalletTransaction.MINING_REWARD,
-    #                     balance=None
-    #                 ))
-    #
-    #             # tx_type is create
-    #             if tx.get('create'):
-    #                 transaction_types.append(WalletTransaction(
-    #                     txid=txid,
-    #                     amount=amount,
-    #                     tx_fee=0,
-    #                     comment='type: ' + tx['create']['type'] + ', name: ' + tx['create']['name'],
-    #                     tx_type=WalletTransaction.CREATE,
-    #                     balance=None
-    #                 ))
-    #
-    #             if len(transaction_types) == 0:
-    #                 transaction_types.append(WalletTransaction(
-    #                     txid=txid,
-    #                     amount=amount,
-    #                     tx_fee=0,
-    #                     comment = tx.get('comment') if tx.get('comment') else '',
-    #                     tx_type=WalletTransaction.PAYMENT,
-    #                     balance=None
-    #                 ))
-    #
-    #             if not Transaction.transaction_in_db(txid):
-    #                 data_db().add(Transaction(txid=txid, block=None, pos_in_block=0))
-    #             if len(transaction_types) == 1:
-    #                 #todo: tx_fee
-    #                 data_db().add(transaction_types[0])
-    #             else:
-    #                 print(len(transaction_types)) #todo: split
-    #     data_db().commit()
 
 if __name__ == '__main__':
     import app

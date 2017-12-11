@@ -19,6 +19,7 @@ class Updater(QtCore.QThread):
         sync.getruntimeparams,
         sync.getblockchaininfo,
         sync.process_blocks,
+        sync.process_unconfirmed_wallet_txs
     )
 
     def __init__(self, parent=None):

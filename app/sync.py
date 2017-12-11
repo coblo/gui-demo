@@ -26,19 +26,27 @@ def getinfo():
     """Update latest wallet balance on current profile"""
     client = get_active_rpc_client()
     profile = Profile.get_active()
-    result = client.getinfo()['result']
+    try:
+        result = client.getinfo()['result']
+        if result['balance'] != profile.balance:
+            profile.balance = result['balance']
+    except Exception as e:
+        log.debug(e)
+        return
 
-    if result['balance'] != profile.balance:
-        profile.balance = result['balance']
 
 
 def getblockchaininfo():
     """Emit headers and blocks (block sync status)"""
     client = get_active_rpc_client()
-    result = client.getblockchaininfo()['result']
-    # Todo: Maybe track headers/blocks on Profile db model
-    signals.getblockchaininfo.emit(Getblockchaininfo(**result))
-    return result
+    try:
+        result = client.getblockchaininfo()['result']
+        # Todo: Maybe track headers/blocks on Profile db model
+        signals.getblockchaininfo.emit(Getblockchaininfo(**result))
+        return result
+    except Exception as e:
+        log.debug(e)
+        return
 
 
 def getruntimeparams():
@@ -78,6 +86,8 @@ def process_blocks():
             last_valid_height = latest_block.height
         else:
             data_db().delete(latest_block)
+
+    WalletTransaction.delete_unconfirmed_wallet_txs()
 
     blockchain_params = client.getblockchainparams()['result']
     pubkeyhash_version = blockchain_params['address-pubkeyhash-version']
@@ -216,61 +226,83 @@ def process_inputs_and_outputs(raw_transaction, pubkeyhash_version, checksum_val
         request = client.getwallettransaction(txid, verbose=True)
         if request['error'] is None:
             relevant = True
-            is_payment = True
-            wallet_tx = request['result']
-            amount = wallet_tx['balance']['amount']
-            if wallet_tx.get('generated'):
-                data_db().add(WalletTransaction(
-                    txid=txid,
-                    amount=amount,
-                    comment='',
-                    tx_type=WalletTransaction.MINING_REWARD,
-                    balance=None
-                ))
-                amount = 0
-                is_payment = False
-            for item in wallet_tx['items']:
-                data_db().add(WalletTransaction(
-                    txid=txid,
-                    amount=amount,
-                    comment='Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
-                    tx_type=WalletTransaction.PUBLISH,
-                    balance=None
-                ))
-                amount = 0
-                is_payment = False
-            for perm in wallet_tx['permissions']:
-                data_db().add(WalletTransaction(
-                    txid=txid,
-                    amount=amount,
-                    comment='',
-                    tx_type=WalletTransaction.VOTE,
-                    balance=None
-                ))
-                amount = 0
-                is_payment = False
-            if wallet_tx.get('create'):
-                data_db().add(WalletTransaction(
-                    txid=txid,
-                    amount=amount,
-                    comment='Type:"' + wallet_tx['create']['type'] + '", Name: "' + wallet_tx['create']['name'] + '"',
-                    tx_type=WalletTransaction.CREATE,
-                    balance=None
-                ))
-                amount = 0
-                is_payment = False
-            if is_payment:
-                data_db().add(WalletTransaction(
-                    txid=txid,
-                    amount=amount,
-                    comment='',
-                    tx_type=WalletTransaction.PAYMENT,
-                    balance=None
-                ))
+            process_wallet_tx(request['result'], txid)
 
     except Exception as e:
         log.debug(e)
     return relevant
+
+
+def process_unconfirmed_wallet_txs():
+    client = get_active_rpc_client()
+    i = 0
+    while(True):
+        try:
+            wallet_txs = client.listwallettransactions(count=10, skip=i, verbose=True)
+            i += 10
+            if wallet_txs['error'] is not None:
+                log.debug(wallet_txs['error'])
+                break
+        except Exception as e:
+            log.debug(e)
+            break
+        for tx in wallet_txs['result']:
+            if WalletTransaction.wallet_transaction_in_db(tx['txid']):
+                break
+            process_wallet_tx(tx)
+
+
+def process_wallet_tx(wallet_tx, txid=None):
+    amount = wallet_tx['balance']['amount']
+    is_payment = True
+    if wallet_tx.get('generated'):
+        data_db().add(WalletTransaction(
+            txid=txid,
+            amount=amount,
+            comment='',
+            tx_type=WalletTransaction.MINING_REWARD,
+            balance=None
+        ))
+        amount = 0
+        is_payment = False
+    for item in wallet_tx['items']:
+        data_db().add(WalletTransaction(
+            txid=txid,
+            amount=amount,
+            comment='Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
+            tx_type=WalletTransaction.PUBLISH,
+            balance=None
+        ))
+        amount = 0
+        is_payment = False
+    for perm in wallet_tx['permissions']:
+        data_db().add(WalletTransaction(
+            txid=txid,
+            amount=amount,
+            comment='',
+            tx_type=WalletTransaction.VOTE,
+            balance=None
+        ))
+        amount = 0
+        is_payment = False
+    if wallet_tx.get('create'):
+        data_db().add(WalletTransaction(
+            txid=txid,
+            amount=amount,
+            comment='Type:"' + wallet_tx['create']['type'] + '", Name: "' + wallet_tx['create']['name'] + '"',
+            tx_type=WalletTransaction.CREATE,
+            balance=None
+        ))
+        amount = 0
+        is_payment = False
+    if is_payment:
+        data_db().add(WalletTransaction(
+            txid=txid,
+            amount=amount,
+            comment='',
+            tx_type=WalletTransaction.PAYMENT,
+            balance=None
+        ))
 
 
 def process_permissions():

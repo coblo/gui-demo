@@ -30,8 +30,6 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     COMMENT = 2
     AMOUNT = 3
     BALANCE = 4
-    CONFIRMATIONS = 5
-    TXID = 6
 
     transaction_types = {
         WalletTransaction.PAYMENT: "Payment",
@@ -60,21 +58,11 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.sort_index = self.DATETIME
         self.sort_order = Qt.AscendingOrder
         self.sort(self.sort_index, self.sort_order)
-        signals.listwallettransactions.connect(self.listwallettransactions)
+        signals.wallet_transaction_inserted.connect(self.add_new_transaction)
+        signals.wallet_transaction_updated.connect(self.update_transaction)
 
     def insert_db_data(self, data):
-        self.txs = self.txs + [self.tx_to_tuple(o) for o in data]
-
-    def tx_to_tuple(self, tx) -> tuple:
-        return (
-            tx.txtype,
-            tx.datetime,
-            tx.comment,
-            tx.amount,
-            tx.balance,
-            tx.confirmations,
-            tx.txid
-        )
+        self.txs = self.txs + [data]
 
     def rowCount(self, parent=None, *args, **kwargs):
         return len(self.txs)
@@ -91,37 +79,39 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         row, col = index.row(), index.column()
         tx = self.txs[row]
         if role == Qt.DisplayRole:
-            if col == 0:
+            if col == self.TXTYPE:
                 return ''
-            if col == 1:
-                return "{}".format(tx.time)
-            if col == 2:
-                return tx.WalletTransaction.comment
+            if col == self.DATETIME:
+                return 'unconfirmed' if tx['time'] is None else "{}".format(tx['time'])
+            if col == self.COMMENT:
+                return tx['comment']
             if col == self.AMOUNT:
-                amount = tx.WalletTransaction.amount
+                amount = tx['amount']
                 if amount == 0:
                     amount = 0
                 display = "{0:n}".format(amount)
                 return '+' + display if amount > 0 else display
-            if col == 4:
-                normalized = tx.WalletTransaction.balance.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+            if col == self.BALANCE:
+                if tx['balance'] is None:
+                    return '-'
+                normalized = tx['balance'].quantize(Decimal('.01'), rounding=ROUND_DOWN)
                 display = "{0:n}".format(normalized)
-                return '+' + display if tx.WalletTransaction.balance > 0 and col == self.AMOUNT else display
-        if role == Qt.DecorationRole and col == self.TXTYPE and tx.WalletTransaction.tx_type in self.transaction_types:
-            return self.transaction_type_to_icon[tx.WalletTransaction.tx_type]
+                return display
+        if role == Qt.DecorationRole and col == self.TXTYPE and tx['tx_type'] in self.transaction_types:
+            return self.transaction_type_to_icon[tx['tx_type']]
         if role == Qt.ToolTipRole:
             if col == self.BALANCE:
-                return "{0:n}".format(tx.WalletTransaction.balance)
-            elif col == self.TXTYPE and tx.WalletTransaction.tx_type in self.transaction_types:
-                return self.transaction_types[tx.WalletTransaction.tx_type]
+                return '_' if tx['balance'] is None else "{0:n}".format(tx['balance'])
+            elif col == self.TXTYPE and tx['tx_type'] in self.transaction_types:
+                return self.transaction_types[tx['tx_type']]
             else:
                 return None
         elif role == Qt.TextAlignmentRole and col not in (self.COMMENT, self.DATETIME):
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
-        elif role == Qt.TextAlignmentRole and col == self.TXTYPE and tx.WalletTransaction.tx_type in self.transaction_types:
-            return self.transaction_type_to_icon[tx.WalletTransaction.tx_type].actualSize()
+        elif role == Qt.TextAlignmentRole and col == self.TXTYPE and tx['tx_type'] in self.transaction_types:
+            return self.transaction_type_to_icon[tx['tx_type']].actualSize()
         elif role == Qt.ForegroundRole:
-            if col == self.AMOUNT and tx.WalletTransaction.amount < 0:
+            if col == self.AMOUNT and tx['amount'] < 0:
                 return QVariant(QColor(Qt.red))
         elif role == Qt.FontRole and col == self.AMOUNT:
             font = QFont("RobotoCondensed-Light", 9)
@@ -133,27 +123,33 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.sort_order = order
         self.layoutAboutToBeChanged.emit()
         if p_int == self.AMOUNT:
-            self.txs.sort(key=lambda x: x[p_int].copy_abs(), reverse=(order != Qt.DescendingOrder))
-        else:
-            self.txs.sort(key=lambda x: x[p_int], reverse=(order != Qt.DescendingOrder))
+            self.txs.sort(key=lambda x: x['amount'].copy_abs(), reverse=(order != Qt.DescendingOrder))
+        elif p_int == self.BALANCE:
+            self.txs.sort(key=lambda x: x['balance'], reverse=(order != Qt.DescendingOrder))
+        elif p_int == self.DATETIME:
+            self.txs.sort(key=lambda x: (datetime.now() if x['time'] is None else x['time']), reverse=(order != Qt.DescendingOrder))
+        elif p_int == self.COMMENT:
+            self.txs.sort(key=lambda x: x['comment'], reverse=(order != Qt.DescendingOrder))
+        elif p_int == self.TXTYPE:
+            self.txs.sort(key=lambda x: x['tx_type'], reverse=(order != Qt.DescendingOrder))
         self.layoutChanged.emit()
 
-    @pyqtSlot(list, list)
-    def listwallettransactions(self, new_transactions, new_confirmations):
+    @pyqtSlot(object)
+    def add_new_transaction(self, new_transactions):
         # add new lines
-        self.beginInsertRows(QModelIndex(), 0, len(new_transactions))
+        self.beginInsertRows(QModelIndex(), 0, 1)
         self.insert_db_data(new_transactions)
         self.endInsertRows()
 
-        # update confirmations column
-        if len(new_confirmations) > 0:
-            confirmations_map = {i.txid: i for i in new_confirmations}
-            for index, tx_1 in enumerate(self.txs):
-                if tx_1[self.TXID] in confirmations_map:
-                    lst = list(self.txs[index])
-                    lst[self.CONFIRMATIONS] = confirmations_map[tx_1[self.TXID]].confirmations
-                    self.txs[index] = tuple(lst)
-                    self.dataChanged.emit(self.index(index, self.CONFIRMATIONS), self.index(index, self.CONFIRMATIONS), [Qt.DisplayRole])
-
         self.sort(self.sort_index, self.sort_order)
 
+    @pyqtSlot(object)
+    def update_transaction(self, new_transactions):
+        # update confirmations column
+        for index, tx_1 in enumerate(self.txs):
+            if tx_1['txid'] == new_transactions['txid']:
+                self.txs[index] = new_transactions
+                self.dataChanged.emit(self.index(index, self.DATETIME), self.index(index, self.DATETIME), [Qt.DisplayRole])
+                self.dataChanged.emit(self.index(index, self.BALANCE), self.index(index, self.BALANCE), [Qt.DisplayRole])
+
+        self.sort(self.sort_index, self.sort_order)

@@ -10,6 +10,9 @@
   </qresource>
   <qresource prefix="images">
     <file>resources/wizard_logo.png</file>
+    <file>resources/mining_reward.svg</file>
+    <file>resources/paper_plane_black.svg</file>
+    <file>resources/vote_hammer_black.svg</file>
     <file>resources/wizard_banner.png</file>
     <file>resources/undo_black.svg</file>
     <file>resources/undo_white.svg</file>

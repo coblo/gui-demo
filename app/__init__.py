@@ -60,8 +60,9 @@ def init():
 
 
 def is_first_start():
+    from app.models.profile import Profile
     """Check if the applications needs to be configured"""
-    if not exists(PROFILE_DB_FILEPATH):
+    if not Profile.get_active():
         return True
     else:
         return False

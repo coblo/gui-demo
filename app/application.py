@@ -13,6 +13,7 @@ from app.updater import Updater
 from app.widgets.proto import MainWindow
 from app.widgets.setup_wizard import SetupWizard
 from app.signals import signals
+from app.models import init_profile_db, init_data_db
 
 
 helpers.init_logging()
@@ -43,6 +44,7 @@ class Application(QtWidgets.QApplication):
         font_db = QtGui.QFontDatabase()
         font_db.addApplicationFont(':/fonts/resources/Roboto-Light.ttf')
         font_db.addApplicationFont(':/fonts/resources/RobotoCondensed-Regular.ttf')
+        font_db.addApplicationFont(':/fonts/resources/RobotoCondensed-Light.ttf')
         font_db.addApplicationFont(':/fonts/resources/Oswald-Regular.ttf')
         font_db.addApplicationFont(':/fonts/resources/Oswald-SemiBold.ttf')
         app_font = QtGui.QFont("Roboto Light")
@@ -58,18 +60,24 @@ class Application(QtWidgets.QApplication):
 
         self.ui = None
         self.tray_icon = None
+        helpers.init_data_dir()
+        self.profile_db = None
+        self.data_db = None
         signals.application_start.connect(self.on_application_start)
 
     def on_application_start(self):
         self.updater = Updater(self)
         self.node = Node(self)
         self.aboutToQuit.connect(self.cleanup)
+        self.profile_db = init_profile_db()
 
         if app.is_first_start():
             wizard = SetupWizard()
             if wizard.exec() == SetupWizard.Rejected:
                 QtWidgets.qApp.quit()
                 return
+
+        self.data_db = init_data_db()
 
         # Initialize main window
         self.ui = self.main_widget()
@@ -114,8 +122,8 @@ class Application(QtWidgets.QApplication):
                 self.node.kill()
 
         if self.ui is not None:
-            self.ui.data_db.close()
-            self.ui.profile_db.close()
+            self.data_db.close()
+            self.profile_db.close()
 
         if self.tray_icon is not None:
             self.tray_icon.deleteLater()

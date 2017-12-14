@@ -25,7 +25,7 @@ def init_profile_db():
 
     if not check_table_ddl_against_model(profile_db, Profile):
         log.debug('profile-db schema outdated, resetting')
-        profile_db.drop_tables([Profile])
+        profile_db.drop_tables([Profile], safe=True)
     else:
         log.debug("profile-db schema up to date")
 

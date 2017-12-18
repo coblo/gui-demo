@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
 from datetime import datetime
+import qrcode
 
-from PyQt5.QtCore import QAbstractTableModel
-from PyQt5.QtCore import QModelIndex
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QAbstractItemView
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QHeaderView
-from PyQt5.QtWidgets import QMenu
-from PyQt5.QtWidgets import QTableView
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import QAbstractTableModel, pyqtSlot, QDir, QEvent, QMimeData, QModelIndex, QObject, QUrl, Qt
+from PyQt5.QtGui import QDragEnterEvent
+from PyQt5.QtGui import QDragLeaveEvent, QDropEvent, QFont
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QFileDialog, QHeaderView, QMenu, QTableView, QWidget
 
 from app.ui.iscc import Ui_Widget_ISCC
+from app.tools import iscc as iscc_lib
 
 log = logging.getLogger(__name__)
 
@@ -25,19 +23,106 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
 
         self.setupUi(self)
 
+        self.meta_id = None
+        self.content_id = None
+        self.data_id = None
+        self.instance_id = None
+        self.iscc = None
+
+        # Intercept drag & drop events from button
+        self.button_dropzone.installEventFilter(self)
+
         # Connections
+        self.button_dropzone.clicked.connect(self.file_select_dialog)
         self.btn_search_iscc.clicked.connect(self.search_iscc)
         self.btn_register.clicked.connect(self.register)
+        self.edit_title.textChanged.connect(self.title_changed)
 
         self.table_iscc.setParent(None)
         table_iscc = ISCCTableView(self)
         self.tab_search.layout().insertWidget(1, table_iscc)
+
+        self.widget_generated_iscc.setHidden(True)
 
     def search_iscc(self):
         pass
 
     def register(self):
         pass
+
+    def title_changed(self, title):
+        self.meta_id = iscc_lib.generate_meta_id(title=title)
+        if self.content_id:
+            self.show_conflicts()
+
+    def process_file(self, file_path):
+        self.button_dropzone.setText(file_path)
+        with open(file_path, 'rb') as infile:
+            self.instance_id = iscc_lib.generate_instance_id(infile)
+        self.content_id = iscc_lib.generate_instance_id(b'\x00' * 16) #todo
+        self.data_id = iscc_lib.generate_instance_id(b'\x11' * 16) #todo
+        if self.meta_id:
+            self.show_conflicts()
+
+    @pyqtSlot()
+    def file_select_dialog(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir().homePath())
+        if file_path:
+            self.process_file(file_path)
+
+    def eventFilter(self, obj: QObject, event: QEvent):
+        if event.type() == QEvent.DragEnter:
+            log.debug('DragEnter')
+            self.on_drag_enter(obj, event)
+        elif event.type() == QEvent.DragLeave:
+            log.debug('DragLeave')
+            self.on_drag_leave(obj, event)
+        elif event.type() == QEvent.Drop:
+            log.debug('Drop')
+            self.on_drop(obj, event)
+        return QWidget.eventFilter(self, obj, event)
+
+    def on_drag_enter(self, obj: QObject, event: QDragEnterEvent):
+        mimedata = event.mimeData()
+        assert isinstance(mimedata, QMimeData)
+
+        if mimedata.hasUrls():
+            if len(mimedata.urls()) > 1:
+                return self.reject_drag(event, 'One file at a time please. Try again!')
+            url = mimedata.urls()[0]
+            assert isinstance(url, QUrl)
+
+            if not url.isValid():
+                return self.reject_drag(event, 'Invalid URL. Try again!')
+            if not url.isLocalFile():
+                return self.reject_drag(event, 'Only local files are supported. Try again!')
+            if os.path.isdir(url.toLocalFile()):
+                return self.reject_drag(event, 'Directories not supported. Try again!')
+
+            event.accept()
+            self.button_dropzone.setStyleSheet(
+                'QPushButton:enabled {background-color: #0183ea; color: white;}'
+            )
+            self.button_dropzone.setText('Just drop it :)')
+
+    def on_drag_leave(self, obj: QObject, event: QDragLeaveEvent):
+        self.button_dropzone.setText('Drop your file here or click to choose.')
+        self.button_dropzone.style().polish(self.button_dropzone)
+
+    def on_drop(self, obj: QObject, event: QDropEvent):
+        file_path = event.mimeData().urls()[0].toLocalFile()
+        self.process_file(file_path)
+
+    def show_conflicts(self):
+        self.widget_generated_iscc.setHidden(False)
+        self.iscc = self.meta_id + '-' + self.content_id + '-' + self.data_id + '-' + self.instance_id
+        self.label_iscc.setText(self.iscc)
+        img = qrcode.make(self.meta_id + self.content_id + self.data_id + self.instance_id)
+        img.save('tmp.png')
+        pixmap = QPixmap('tmp.png')
+        pixmap = pixmap.scaledToWidth(128)
+        pixmap = pixmap.scaledToHeight(128)
+        self.label_qr.setPixmap(pixmap)
 
 class ISCCModel(QAbstractTableModel):
     def __init__(self, parent=None):

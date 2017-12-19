@@ -29,7 +29,7 @@ class Vote(data_base):
         from app.models import Transaction, Block
         return (
             data_db.
-            query(func.max(Block.time).label("last_voted"), Vote.from_address).
+            query(func.max(Block.mining_time).label("last_voted"), Vote.from_address).
             join(Transaction, Vote).
             group_by(Vote.from_address)
         ).all()
@@ -38,4 +38,4 @@ class Vote(data_base):
     def voted_last_24h(data_db):
         from app.models import Transaction, Block
         return data_db.query(func.count(Vote.txid).label("count"), Vote.from_address).join(Transaction, Block).filter(
-            datetime.now() - timedelta(days=1) <= Block.time).group_by(Vote.from_address).all()
+            datetime.now() - timedelta(days=1) <= Block.mining_time).group_by(Vote.from_address).all()

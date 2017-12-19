@@ -76,7 +76,7 @@ class CandidateModel(QAbstractTableModel):
 
         if role == Qt.DisplayRole:
             if col == 0:
-                return self.aliases[candidate.address_to]
+                return self.aliases[candidate.address_to] if candidate.address_to in self.aliases else None
             elif col == 1:
                 return candidate.address_to
             elif idx.column() == 2:

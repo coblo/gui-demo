@@ -5,7 +5,7 @@ from sqlalchemy import Column, String, ForeignKey, Integer, exists
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import aliased
 
-from app.models.db import data_base, profile_session_scope
+from app.models.db import data_base, profile_session_scope, data_db, data_session_scope
 
 log = logging.getLogger(__name__)
 
@@ -25,12 +25,17 @@ class Alias(data_base):
     @staticmethod
     def get_aliases(data_db):
         from app.models import Block, Transaction
-        alias_list = {}
-        for alias_entry in data_db.query(Alias, Block).join(Transaction, Block).order_by(Block.time.desc()).all():
-            if alias_entry.Alias.address in alias_list.keys() or alias_entry.Alias.alias in alias_list.values():
+        address_to_alias = {}
+        alias_in_use = set()
+
+        for alias_entry in data_db.query(Alias.address, Alias.alias).join(Transaction, Block).order_by(Block.height.desc(), Transaction.pos_in_block.desc()).all():
+            if alias_entry.address in address_to_alias or alias_entry.alias in alias_in_use:
                 continue
-            alias_list[alias_entry.Alias.address] = alias_entry.Alias.alias
-        return alias_list
+
+            address_to_alias[alias_entry.address] = alias_entry.alias
+            alias_in_use.add(alias_entry.alias)
+
+        return address_to_alias
 
     @staticmethod
     def get_alias_by_address(data_db, address):

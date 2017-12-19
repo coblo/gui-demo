@@ -111,7 +111,7 @@ def process_blocks():
                         block_obj = Block(
                             hash=unhexlify(block['hash']),
                             height=block['height'],
-                            time=datetime.fromtimestamp(block['time']),
+                            mining_time=datetime.fromtimestamp(block['time']),
                         )
                         session.add(block_obj)
                         session.add(MiningReward(

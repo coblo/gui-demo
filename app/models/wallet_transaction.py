@@ -33,20 +33,20 @@ class WalletTransaction(data_base):
     def compute_balances(data_db) -> bool:
         from app.models import Block, Transaction
         first_unknown_balance = (
-            data_db.query(WalletTransaction, Block.time).
+            data_db.query(WalletTransaction, Block.mining_time).
             join(Transaction, Block).
             filter(WalletTransaction.balance.is_(None)).
-            order_by(Block.time.asc())
+            order_by(Block.mining_time.asc())
         ).first()
         if first_unknown_balance is not None:
             last_valid_balance = data_db.query(WalletTransaction.balance).join(Transaction, Block) \
-                .filter(WalletTransaction.balance.isnot(None)).order_by(Block.time.desc()).first()
+                .filter(WalletTransaction.balance.isnot(None)).order_by(Block.mining_time.desc()).first()
             if not last_valid_balance:
                 last_valid_balance = 0
             else:
                 last_valid_balance = last_valid_balance[0]
             txs_with_unknown_balance = data_db.query(WalletTransaction).join(Transaction, Block) \
-                .filter(Block.time >= first_unknown_balance.time).order_by(Block.time.asc()).all()
+                .filter(Block.mining_time >= first_unknown_balance.mining_time).order_by(Block.mining_time.asc()).all()
             for tx in txs_with_unknown_balance:
                 last_valid_balance += tx.amount
                 tx.balance = last_valid_balance
@@ -58,35 +58,9 @@ class WalletTransaction(data_base):
         from app.models import Block, Transaction
         return data_db.query(
             WalletTransaction.tx_type,
-            Block.time,
+            Block.mining_time,
             WalletTransaction.comment,
             WalletTransaction.amount,
             WalletTransaction.balance,
             WalletTransaction.txid
-        ).outerjoin(Transaction, Block).order_by(Block.time.desc()).all()
-
-
-# def transaction_for_history(wallet_transaction):
-#     transaction = {
-#         'tx_type': wallet_transaction.tx_type,
-#         'comment': wallet_transaction.comment,
-#         'amount': wallet_transaction.amount,
-#         'balance': wallet_transaction.balance,
-#         'txid': wallet_transaction.wallet_txid
-#     }
-#     if wallet_transaction.txid is None:  # tx is unconfirmed
-#         transaction['time'] = None
-#     else:
-#         from app.models import Block, Transaction
-#         tx = data_db().query(WalletTransaction, Block.time).join(Transaction, Block) \
-#             .filter(WalletTransaction.txid == wallet_transaction.txid).first()
-#         transaction['time'] = None if tx is None else tx.time
-#     return transaction
-
-# @listens_for(WalletTransaction, "after_insert")
-# def after_insertion(mapper, connection, wallet_transaction):
-#     signals.wallet_transaction_inserted.emit(transaction_for_history(wallet_transaction))
-#
-# @listens_for(WalletTransaction, "after_update")
-# def after_update(mapper, connection, wallet_transaction):
-#     signals.wallet_transaction_updated.emit(transaction_for_history(wallet_transaction))
+        ).outerjoin(Transaction, Block).order_by(Block.mining_time.desc()).all()

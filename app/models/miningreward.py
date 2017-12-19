@@ -25,7 +25,7 @@ class MiningReward(data_base):
         from app.models import Block
         return (
             data_db.
-            query(func.max(Block.time).label("last_mined"), MiningReward.address).
+            query(func.max(Block.mining_time).label("last_mined"), MiningReward.address).
             join(MiningReward).
             group_by(MiningReward.address)
         ).all()
@@ -36,6 +36,6 @@ class MiningReward(data_base):
         return (
             data_db.
             query(MiningReward.address, func.count("*").label("count")).
-            join(Block).filter(datetime.now() - timedelta(days=1) <= Block.time)
+            join(Block).filter(datetime.now() - timedelta(days=1) <= Block.mining_time)
             .group_by(MiningReward.address)
         ).all()

@@ -15,19 +15,14 @@ class Block(data_base):
     """Blocks"""
 
     hash = Column(LargeBinary, primary_key=True)
-    time = Column(DateTime)
+    mining_time = Column(DateTime)
     height = Column(Integer)
 
     class Meta:
         database = data_db
 
     def __repr__(self):
-        return "Block(h=%s, t=%s, txs=%s)" % (self.height, self.time, self.txcount)
-
-    @classmethod
-    def multi_tx_blocks(cls): # todo: wahrscheinlich ab jetzt unnötig, mal gucken
-        # return cls.select().where(cls.txcount > 1)
-        pass
+        return "Block(h=%s, t=%s, txs=%s)" % (self.height, self.mining_time, self.txcount)
 
     @staticmethod
     def block_exists(data_db, block_hash):

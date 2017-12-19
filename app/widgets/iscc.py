@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from binascii import hexlify
 from datetime import datetime
 import qrcode
+import ubjson
 
 from PyQt5.QtCore import QAbstractTableModel, pyqtSlot, QDir, QEvent, QMimeData, QModelIndex, QObject, QUrl, Qt
-from PyQt5.QtGui import QDragEnterEvent
-from PyQt5.QtGui import QDragLeaveEvent, QDropEvent, QFont
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QDragLeaveEvent, QDropEvent, QFont, QPixmap, QDragEnterEvent
 from PyQt5.QtWidgets import QAbstractItemView, QApplication, QFileDialog, QHeaderView, QMenu, QTableView, QWidget
+from PyQt5.QtWidgets import QMessageBox
 
+from app.backend.rpc import get_active_rpc_client
+from app.models import Alias
+from app.models.db import data_session_scope
 from app.ui.iscc import Ui_Widget_ISCC
+from app.models import ISCC
 from app.tools import iscc as iscc_lib
 
 log = logging.getLogger(__name__)
@@ -48,7 +53,32 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         pass
 
     def register(self):
-        pass
+        #todo subscribe
+        client = get_active_rpc_client()
+        data = dict(title=self.edit_title.text()) #todo: extra
+        serialized = ubjson.dumpb(data)
+        data_hex = hexlify(serialized).decode('utf-8')
+        error = None
+        try:
+            response = client.publish('testiscc', self.iscc, data_hex)
+            if response['error'] is not None:
+                error = response['error']
+        except Exception as e:
+            error = e
+        if error is None:
+            self.edit_title.clear()
+            self.label_qr.clear()
+            self.label_iscc.clear()
+            self.meta_id = None
+            self.content_id = None
+            self.data_id = None
+            self.instance_id = None
+            self.iscc = None
+            self.widget_generated_iscc.setHidden(True)
+            self.button_dropzone.setText('Drop your image or text file here or click to choose.')
+        else:
+            QMessageBox.warning(QMessageBox(), 'Error while publishing', str(error), QMessageBox.Close,
+                                QMessageBox.Close)
 
     def title_changed(self, title):
         self.meta_id = iscc_lib.generate_meta_id(title=title)
@@ -56,7 +86,6 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.show_conflicts()
 
     def process_file(self, file_path):
-        self.button_dropzone.setText(file_path)
         with open(file_path, 'rb') as infile:
             self.instance_id = iscc_lib.generate_instance_id(infile)
         self.content_id = iscc_lib.generate_instance_id(b'\x00' * 16) #todo
@@ -106,11 +135,12 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.button_dropzone.setText('Just drop it :)')
 
     def on_drag_leave(self, obj: QObject, event: QDragLeaveEvent):
-        self.button_dropzone.setText('Drop your file here or click to choose.')
+        self.button_dropzone.setText('Drop your image or text file here or click to choose.')
         self.button_dropzone.style().polish(self.button_dropzone)
 
     def on_drop(self, obj: QObject, event: QDropEvent):
         file_path = event.mimeData().urls()[0].toLocalFile()
+        self.button_dropzone.setText(file_path)
         self.process_file(file_path)
 
     def show_conflicts(self):
@@ -123,6 +153,9 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         pixmap = pixmap.scaledToWidth(128)
         pixmap = pixmap.scaledToHeight(128)
         self.label_qr.setPixmap(pixmap)
+        with data_session_scope() as session:
+            self.btn_register.setDisabled(
+                ISCC.already_exists(session, self.meta_id, self.content_id, self.data_id, self.instance_id))
 
 class ISCCModel(QAbstractTableModel):
     def __init__(self, parent=None):
@@ -136,12 +169,9 @@ class ISCCModel(QAbstractTableModel):
         # signals.permissions_changed.connect(self.update_num_guardians)
 
     def update_data(self):
-        self.isccs = [{
-            'iscc': 'GRP33BK272VUD-W51K85H57OKUD-L988YUL4R1NJD-MEPU8D3L2T5ZT',
-            'title': 'Title',
-            'date': datetime.now(),
-            'publisher': 'Publisher'
-        }]
+        with data_session_scope() as session:
+            self.isccs = ISCC.get_all_iscc(session)
+            self.aliases = Alias.get_aliases(session)
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 0:
@@ -162,22 +192,22 @@ class ISCCModel(QAbstractTableModel):
         row = idx.row()
         col = idx.column()
         iscc = self.isccs[row]
+        iscc_code = iscc.ISCC.meta_id + '' + iscc.ISCC.content_id + '' + iscc.ISCC.data_id + '' + iscc.ISCC.instance_id
         if not idx.isValid():
             return None
 
         if role == Qt.EditRole and col == 0:
-            return iscc['iscc']
+            return iscc_code
 
         if role == Qt.DisplayRole:
             if col == 0:
-                # return self.aliases[candidate.address_to]
-                return iscc['iscc']
+                return iscc_code
             elif col == 1:
-                return iscc['title']
+                return iscc.ISCC.title
             elif idx.column() == 2:
-                return "{}".format(iscc['date'])
+                return "{}".format(iscc.time)
             elif idx.column() == 3:
-                return iscc['publisher']
+                return self.aliases[iscc.ISCC.address]
 
 
 class ISCCTableView(QTableView):

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from datetime import datetime
 from hashlib import sha256
 
 from PyQt5.QtCore import QMimeData, QUrl, pyqtSlot, QObject, QEvent, pyqtSignal, QThread, QDir, QAbstractTableModel, \

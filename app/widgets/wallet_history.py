@@ -91,6 +91,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 normalized = tx[col].quantize(Decimal('.01'), rounding=ROUND_DOWN)
                 display = "{0:n}".format(normalized)
                 return display
+            if col == self.TXTYPE:
+                return None
             return tx[col]
 
         if role == Qt.DecorationRole and col == self.TXTYPE and tx[col] in self.transaction_types:

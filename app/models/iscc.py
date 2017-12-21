@@ -25,7 +25,7 @@ class ISCC(data_base):
         return "(%s-%s-%s-%s)" % (self.meta_id, self.content_id, self.data_id, self.instance_id)
 
     @staticmethod
-    def get_conflicts(data_db, meta_id, content_id, data_id, instance_id) -> bool:
+    def get_conflicts(data_db, meta_id, content_id, data_id, instance_id) -> []:
         return data_db.query(ISCC).filter(or_(meta_id == ISCC.meta_id, content_id == ISCC.content_id,
                                               data_id == ISCC.data_id, instance_id == ISCC.instance_id)).all()
 

@@ -403,7 +403,7 @@ def process_permissions():
                 signals.is_admin_changed.emit(is_admin)
             if is_miner != profile.is_miner:
                 profile.is_miner = is_miner
-                signals.is_miner_changed(is_miner)
+                signals.is_miner_changed.emit(is_miner)
 
     signals.permissions_changed.emit()
 

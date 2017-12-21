@@ -16,7 +16,7 @@ class Block(data_base):
 
     hash = Column(LargeBinary, primary_key=True)
     mining_time = Column(DateTime)
-    height = Column(Integer)
+    height = Column(Integer, index=True)
 
     class Meta:
         database = data_db

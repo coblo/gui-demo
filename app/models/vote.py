@@ -15,6 +15,7 @@ class Vote(data_base):
 
     vote_id = Column(Integer, autoincrement=True, primary_key=True)
     txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE", deferrable=True, initially="DEFERRED"))
+    pos_in_tx = Column(Integer)
     from_address = Column(String)
     to_address = Column(String)
     start_block = Column(Integer)

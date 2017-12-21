@@ -16,6 +16,7 @@ class Alias(data_base):
 
     alias_id = Column(Integer, autoincrement=True, primary_key=True)
     txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE", deferrable=True, initially="DEFERRED"))
+    pos_in_tx = Column(Integer)
     address = Column(String)
     alias = Column(String)
 
@@ -28,7 +29,7 @@ class Alias(data_base):
         address_to_alias = {}
         alias_in_use = set()
 
-        for alias_entry in data_db.query(Alias.address, Alias.alias).join(Transaction, Block).order_by(Block.height.desc(), Transaction.pos_in_block.desc()).all():
+        for alias_entry in data_db.query(Alias.address, Alias.alias).join(Transaction, Block).order_by(Block.height.desc(), Transaction.pos_in_block.desc(), Alias.pos_in_tx.desc()).all():
             if alias_entry.address in address_to_alias or alias_entry.alias in alias_in_use:
                 continue
 

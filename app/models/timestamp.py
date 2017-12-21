@@ -14,6 +14,7 @@ class Timestamp(data_base):
 
     timestamp_id = Column(Integer, autoincrement=True, primary_key=True)
     txid = Column(String, ForeignKey('transactions.txid', ondelete="CASCADE", deferrable=True, initially="DEFERRED"))
+    pos_in_tx = Column(Integer)
     address = Column(String)
     hash = Column(String, index=True)
     comment = Column(String)
@@ -28,5 +29,6 @@ class Timestamp(data_base):
                 query(Block.time, Timestamp.address, Timestamp.comment).
                 join(Transaction, Timestamp.txid == Transaction.txid).
                 join(Timestamp, Block.hash == Transaction.block).
-                filter(Timestamp.hash == hash_value)
+                filter(Timestamp.hash == hash_value).
+                order_by(Block.height.asc(), Transaction.pos_in_block.asc(), Timestamp.pos_in_tx.asc())
                 ).all()

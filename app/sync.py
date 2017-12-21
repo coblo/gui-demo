@@ -172,7 +172,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version, che
         if 'scriptSig' in vin:
             public_key = vin['scriptSig']['asm'].split(' ')[1]
             signers.append(public_key_to_address(public_key, pubkeyhash_version, checksum_value))
-    for vout in raw_transaction["vout"]:
+    for i, vout in enumerate(raw_transaction["vout"]):
         for item in vout["items"]:
             # stream item
             if item["type"] == "stream":
@@ -188,6 +188,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version, che
                             comment += data.get('comment', '')
                     data_db.add(Timestamp(
                         txid=txid,
+                        pos_in_tx=i,
                         hash=item["key"],
                         comment=comment,
                         address=publishers[0]
@@ -202,6 +203,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version, che
                     relevant = True
                     data_db.add(Alias(
                         txid=txid,
+                        pos_in_tx=i,
                         address=publishers[0],
                         alias=alias
                     ))
@@ -217,6 +219,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version, che
                         Address.create_if_not_exists(data_db, signers[vout['n']])
                         data_db.add(Vote(
                             txid=txid,
+                            pos_in_tx=i,
                             from_address=signers[vout['n']],
                             to_address=address,
                             start_block=perm['startblock'],

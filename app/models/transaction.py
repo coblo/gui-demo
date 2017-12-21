@@ -1,27 +1,37 @@
 # -*- coding: utf-8 -*-
 import logging
-import peewee
-from app.models.db import data_db
 
+from sqlalchemy import String, Column, Integer, ForeignKey, LargeBinary, exists
+
+from app.models.db import data_base
 
 log = logging.getLogger(__name__)
 
 
-class Transaction(peewee.Model):
-    """Wallet transactions"""
-    MINING_REWARD, PAYMENT, VOTE, PUBLISH = 'mining_reward', 'payment', 'vote', 'publish'
+class Transaction(data_base):
+    __tablename__ = "transactions"
+    """Transactions"""
 
-    datetime = peewee.DateTimeField()
-    txtype = peewee.CharField()
-    comment = peewee.CharField()
-    amount = peewee.DecimalField(max_digits=17, decimal_places=8)
-    balance = peewee.DecimalField(max_digits=17, decimal_places=8)
-    confirmations = peewee.SmallIntegerField()
-    txid = peewee.CharField(primary_key=True)
+    txid = Column(String, primary_key=True)
+    block = Column(LargeBinary, ForeignKey('blocks.hash', deferrable=True, ondelete="CASCADE", initially="DEFERRED"), nullable=True)
+    pos_in_block = Column(Integer)
 
-    class Meta:
-        database = data_db
+    def __repr__(self):
+        return "Transaction(%s)" % (self.txid)
 
-    def value_by_col(self, col):
-        fn = self._meta.sorted_field_names[col]
-        return getattr(self, fn)
+    @staticmethod
+    def create_if_not_exists(data_db, transaction):
+        old_transaction = data_db.query(Transaction).filter(Transaction.txid == transaction.txid).first()
+        if old_transaction is None:
+            data_db.add(transaction)
+        elif old_transaction.block is None and transaction.block is not None:  # transaction was unconfirmed before
+            old_transaction.block = transaction.block
+            old_transaction.pos_in_block = transaction.pos_in_block
+
+    @staticmethod
+    def transaction_in_db(data_db,txid):
+        return data_db.query(exists().where(Transaction.txid == txid)).scalar()
+
+    @staticmethod
+    def delete_unconfirmed(data_db):
+        return data_db.query(Transaction).filter(Transaction.block.is_(None)).delete()

@@ -4,10 +4,9 @@ from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import QHeaderView, QWidget
 from decimal import Decimal, ROUND_DOWN
 
-from app.models import Transaction
+from app.models import WalletTransaction
 from app.ui.wallet_history import Ui_widget_wallet_history
 from app.signals import signals
-
 
 class WalletHistory(QWidget, Ui_widget_wallet_history):
     def __init__(self, parent):
@@ -31,51 +30,37 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     COMMENT = 2
     AMOUNT = 3
     BALANCE = 4
-    CONFIRMATIONS = 5
-    TXID = 6
 
     transaction_types = {
-        Transaction.PAYMENT: "Payment",
-        Transaction.VOTE: "Skill grant/revoke",
-        Transaction.MINING_REWARD: "Mining Reward",
-        Transaction.PUBLISH: "Publish"
+        WalletTransaction.PAYMENT: "Payment",
+        WalletTransaction.VOTE: "Skill grant/revoke",
+        WalletTransaction.MINING_REWARD: "Mining Reward",
+        WalletTransaction.PUBLISH: "Publish"
     }
 
     transaction_type_to_icon = {
-        Transaction.PAYMENT: QIcon(),
-        Transaction.VOTE: QIcon(),
-        Transaction.MINING_REWARD: QIcon(),
-        Transaction.PUBLISH: QIcon()
+        WalletTransaction.PAYMENT: QIcon(),
+        WalletTransaction.VOTE: QIcon(),
+        WalletTransaction.MINING_REWARD: QIcon(),
+        WalletTransaction.PUBLISH: QIcon()
     }
 
     def __init__(self, parent=None):
         super().__init__()
         self.header = ['', 'Date', 'Comment', 'Amount', 'Balance']
-        self.transaction_type_to_icon[Transaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[Transaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[Transaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[Transaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[WalletTransaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[WalletTransaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[WalletTransaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[WalletTransaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
 
-        self.txs = []
-        self.insert_db_data(Transaction.select())
+        self.txs = None
         self.sort_index = self.DATETIME
         self.sort_order = Qt.AscendingOrder
-        self.sort(self.sort_index, self.sort_order)
-        signals.listwallettransactions.connect(self.listwallettransactions)
+        self.refreshData()
+        signals.wallet_transactions_changed.connect(self.refreshData)
 
     def insert_db_data(self, data):
-        self.txs = self.txs + [self.tx_to_tuple(o) for o in data]
-
-    def tx_to_tuple(self, tx) -> tuple:
-        return (
-            tx.txtype,
-            tx.datetime,
-            tx.comment,
-            tx.amount,
-            tx.balance,
-            tx.confirmations,
-            tx.txid
-        )
+        self.txs = self.txs + [data]
 
     def rowCount(self, parent=None, *args, **kwargs):
         return len(self.txs)
@@ -92,30 +77,29 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         row, col = index.row(), index.column()
         tx = self.txs[row]
         if role == Qt.DisplayRole:
-            value = tx[col]
-            if isinstance(value, Decimal):
-                if col == self.AMOUNT:
-                    if value == 0:
-                        value = 0
-                    normalized = value
-                else:
-                    normalized = value.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+            if col == self.DATETIME:
+                return 'unconfirmed' if tx[col] is None else "{}".format(tx[col])
+            if col == self.AMOUNT:
+                amount = tx[col]
+                if amount == 0:
+                    amount = 0
+                display = "{0:n}".format(amount)
+                return '+' + display if amount > 0 else display
+            if col == self.BALANCE:
+                if tx[col] is None:
+                    return '-'
+                normalized = tx[col].quantize(Decimal('.01'), rounding=ROUND_DOWN)
                 display = "{0:n}".format(normalized)
-                return '+' + display if value > 0 and col == self.AMOUNT else display
-            elif isinstance(value, datetime):
-                if tx[self.CONFIRMATIONS] == 0:
-                    return 'Unconfirmed'
-                else:
-                    return value.strftime("%Y-%m-%d %H:%M")
-            elif col == self.TXTYPE:
-                return ""
-            else:
-                return str(value)
+                return display
+            if col == self.TXTYPE:
+                return None
+            return tx[col]
+
         if role == Qt.DecorationRole and col == self.TXTYPE and tx[col] in self.transaction_types:
             return self.transaction_type_to_icon[tx[col]]
         if role == Qt.ToolTipRole:
             if col == self.BALANCE:
-                return "{0:n}".format(tx[col])
+                return '_' if tx[col] is None else "{0:n}".format(tx[col])
             elif col == self.TXTYPE and tx[col] in self.transaction_types:
                 return self.transaction_types[tx[col]]
             else:
@@ -125,7 +109,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         elif role == Qt.TextAlignmentRole and col == self.TXTYPE and tx[col] in self.transaction_types:
             return self.transaction_type_to_icon[tx[col]].actualSize()
         elif role == Qt.ForegroundRole:
-            if col == self.AMOUNT and tx[self.AMOUNT] < 0:
+            if col == self.AMOUNT and tx[col] < 0:
                 return QVariant(QColor(Qt.red))
         elif role == Qt.FontRole and col == self.AMOUNT:
             font = QFont("RobotoCondensed-Light", 9)
@@ -136,28 +120,38 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.sort_index = p_int
         self.sort_order = order
         self.layoutAboutToBeChanged.emit()
-        if p_int == self.AMOUNT:
-            self.txs.sort(key=lambda x: x[p_int].copy_abs(), reverse=(order != Qt.DescendingOrder))
+        if p_int == self.DATETIME:
+            self.txs.sort(key=lambda x: (datetime.now() if x[p_int] is None else x[p_int]), reverse=(order != Qt.DescendingOrder))
         else:
             self.txs.sort(key=lambda x: x[p_int], reverse=(order != Qt.DescendingOrder))
         self.layoutChanged.emit()
 
-    @pyqtSlot(list, list)
-    def listwallettransactions(self, new_transactions, new_confirmations):
-        # add new lines
-        self.beginInsertRows(QModelIndex(), 0, len(new_transactions))
-        self.insert_db_data(new_transactions)
-        self.endInsertRows()
 
-        # update confirmations column
-        if len(new_confirmations) > 0:
-            confirmations_map = {i.txid: i for i in new_confirmations}
-            for index, tx_1 in enumerate(self.txs):
-                if tx_1[self.TXID] in confirmations_map:
-                    lst = list(self.txs[index])
-                    lst[self.CONFIRMATIONS] = confirmations_map[tx_1[self.TXID]].confirmations
-                    self.txs[index] = tuple(lst)
-                    self.dataChanged.emit(self.index(index, self.CONFIRMATIONS), self.index(index, self.CONFIRMATIONS), [Qt.DisplayRole])
-
+    def refreshData(self):
+        from app.models.db import data_session_scope
+        self.beginResetModel()
+        with data_session_scope() as session:
+            self.txs = WalletTransaction.get_wallet_history(session)
+        self.endResetModel()
         self.sort(self.sort_index, self.sort_order)
 
+    #
+    # @pyqtSlot(object)
+    # def add_new_transaction(self, new_transactions):
+    #     # add new lines
+    #     self.beginInsertRows(QModelIndex(), 0, 1)
+    #     self.insert_db_data(new_transactions)
+    #     self.endInsertRows()
+    #
+    #     self.sort(self.sort_index, self.sort_order)
+    #
+    # @pyqtSlot(object)
+    # def update_transaction(self, new_transactions):
+    #     # update confirmations column
+    #     for index, tx_1 in enumerate(self.txs):
+    #         if tx_1['txid'] == new_transactions['txid']:
+    #             self.txs[index] = new_transactions
+    #             self.dataChanged.emit(self.index(index, self.DATETIME), self.index(index, self.DATETIME), [Qt.DisplayRole])
+    #             self.dataChanged.emit(self.index(index, self.BALANCE), self.index(index, self.BALANCE), [Qt.DisplayRole])
+    #
+    #     self.sort(self.sort_index, self.sort_order)

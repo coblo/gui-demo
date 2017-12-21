@@ -2,56 +2,43 @@
 import getpass
 import logging
 import os
-import peewee
-
 from decimal import Decimal
+
+from sqlalchemy import String, Column, Boolean, Float
+from sqlalchemy.event import listens_for
+from sqlalchemy.ext.declarative import declarative_base
 
 import app
 from app.helpers import gen_password
-from app.models.db import profile_db
 from app.signals import signals
-from app.backend.rpc import get_active_rpc_client
-from app.tools.validators import is_valid_username
-from app.exceptions import RpcResponseError, CharmError
 
 log = logging.getLogger(__name__)
+Profile_Base = declarative_base()
 
 
-class Profile(peewee.Model):
+class Profile(Profile_Base):
     """Application profile to mangage different Nodes/Accounts"""
+    __tablename__ = 'profiles'
 
-    name = peewee.CharField(primary_key=True)
-    rpc_host = peewee.CharField()
-    rpc_port = peewee.CharField()
-    rpc_user = peewee.CharField()
-    rpc_password = peewee.CharField()
-    rpc_use_ssl = peewee.BooleanField()
-    manage_node = peewee.BooleanField()
-    exit_on_close = peewee.BooleanField()
-    active = peewee.BooleanField()
+    name = Column(String, primary_key=True)
+    rpc_host = Column(String)
+    rpc_port = Column(String)
+    rpc_user = Column(String)
+    rpc_password = Column(String)
+    rpc_use_ssl = Column(Boolean)
+    manage_node = Column(Boolean)
+    exit_on_close = Column(Boolean)
+    active = Column(Boolean)
 
     # state of variables shown in gui
-    alias = peewee.CharField(default='')
-    address = peewee.CharField(default='')
-    balance = peewee.DecimalField(default=Decimal())
-    is_admin = peewee.BooleanField(default=False)
-    is_miner = peewee.BooleanField(default=False)
-
-    class Meta:
-        database = profile_db
+    alias = Column(String, default='')
+    address = Column(String, default='')
+    balance = Column(Float(asdecimal=True), default=Decimal())
+    is_admin = Column(Boolean, default=False)
+    is_miner = Column(Boolean, default=False)
 
     def __repr__(self):
         return 'Profile(%s, %s, %s...)' % (self.name, self.rpc_host, self.rpc_user)
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        signals.profile_changed.emit(self)
-
-    def set_active(self):
-        with profile_db.atomic():
-            Profile.update(active=False).execute()
-            self.active = True
-            self.save()
 
     @property
     def data_db_filepath(self):
@@ -59,36 +46,44 @@ class Profile(peewee.Model):
         return os.path.join(app.DATA_DIR, self.name + '-data.db')
 
     @staticmethod
-    def get_active() -> 'Profile':
+    def get_active(profile_db) -> 'Profile':
         """Return currently active Pofile"""
-        return Profile.select().where(Profile.active).first()
+        return profile_db.query(Profile).filter(Profile.active).first()
 
     @staticmethod
-    def create_default_profile():
+    def create_default_profile(profile_db): # todo: ungetestet
         """Create a default profile for local node connection"""
         log.debug('creating default profile')
-        p_obj, created = Profile.get_or_create(
+        default_profile = Profile(
             name=app.DEFAULT_PROFILE_NAME,
-            defaults=dict(
-                rpc_host=app.DEFAULT_RPC_HOST,
-                rpc_port=app.DEFAULT_RPC_PORT,
-                rpc_user=getpass.getuser(),
-                rpc_password=gen_password(),
-                rpc_use_ssl=False,
-                manage_node=True,
-                exit_on_close=False,
-                active=True,
-            )
+            rpc_host=app.DEFAULT_RPC_HOST,
+            rpc_port=app.DEFAULT_RPC_PORT,
+            rpc_user=getpass.getuser(),
+            rpc_password=gen_password(),
+            rpc_use_ssl=False,
+            manage_node=True,
+            exit_on_close=False,
+            active=True,
         )
-        return p_obj
+        profile_db.add(default_profile)
+
+
+@listens_for(Profile, "after_update")
+@listens_for(Profile, "after_insert")
+def after_update(mapper, connection, profile):
+    signals.profile_changed.emit(profile)
 
 
 if __name__ == '__main__':
     import app.helpers
-    app.helpers.init_logging()
     from app.models import init_profile_db
+    from app.models.db import profile_session_scope
+    app.helpers.init_logging()
+
     init_profile_db()
-    for p in Profile.select().execute():
-        print(p)
-    p = Profile.select().first()
-    p.set_active()
+    with profile_session_scope() as session:
+        for p in session.query(Profile).all():
+            print(p)
+
+        p = session.query(Profile).first()
+        p.active = True

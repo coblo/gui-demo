@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Enum constants"""
+import enum
 from enum import Enum
 
 
@@ -22,17 +23,6 @@ class Method(Enum):
         return self.value[1]
 
 
-class Permission(Enum):
-    """A blockchain permission
-
-    """
-
-    admin = 1
-    create = 2
-    issue = 3
-    mine = 4
-
-
 class Stream(Enum):
     """A build in multichain stream where:
 
@@ -48,11 +38,9 @@ class Stream(Enum):
         return self.value[1]
 
 
-class SettingKey(Enum):
-
-    alias = 1
-    address = 2
-    balance = 3
-    is_admin = 4
-    is_miner = 5
-
+ISSUE, CREATE, MINE, ADMIN = 'issue', 'create', 'mine', 'admin'
+class PermTypes(enum.Enum):
+    issue = 0
+    create = 1
+    mine = 2
+    admin = 3

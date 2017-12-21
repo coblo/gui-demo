@@ -1,24 +1,24 @@
 import logging
+
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QApplication
 
-import app
+from app import enums
 from app import helpers
-from app import models
-from app.models import Profile, Permission, CurrentVote
+from app.models import Profile, Permission, PendingVote
+from app.models.db import profile_session_scope, data_session_scope
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.widgets.apply import ApplyDialog
 from app.widgets.candidates import CandidateTableView
+from app.widgets.change_alias import ChangeAlias
 from app.widgets.community_tables import CommunityTableView
+from app.widgets.invite import InviteDialog
 from app.widgets.timestamp import WidgetTimestamping
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
-from app.widgets.invite import InviteDialog
-from app.widgets.change_alias import ChangeAlias
-
 
 log = logging.getLogger(__name__)
 
@@ -34,13 +34,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.data_dir = helpers.init_data_dir()
         self.node_data_dir = helpers.init_node_data_dir()
-        self.profile = Profile.get_active()
+        with profile_session_scope() as session:
+            self.profile = Profile.get_active(session)
 
         # Setup Widgets
         self.setupUi(self)
 
         self.on_profile_changed(self.profile)
         signals.profile_changed.connect(self.on_profile_changed)
+
+        self.permissions_changed()
+        signals.permissions_changed.connect(self.permissions_changed)
 
         # Init Navigation
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
@@ -66,11 +70,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.lout_page_timestamp_v.addWidget(widget_timestamp)
 
         self.table_validators.setParent(None)
-        table_validators = CommunityTableView(self, perm_type=Permission.MINE)
+        table_validators = CommunityTableView(self, perm_type=enums.MINE)
         self.tab_validators.layout().insertWidget(0, table_validators)
 
         self.table_guardians.setParent(None)
-        table_guardians = CommunityTableView(self, perm_type=Permission.ADMIN)
+        table_guardians = CommunityTableView(self, perm_type=enums.ADMIN)
         self.tab_guardians.layout().insertWidget(0, table_guardians)
 
         self.table_candidates.setParent(None)
@@ -93,7 +97,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Connections
         signals.getblockchaininfo.connect(self.getblockchaininfo)
-        signals.listpermissions.connect(self.listpermissions)
         signals.node_started.connect(self.node_started)
 
         if self.profile.manage_node:
@@ -141,11 +144,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def setting_changed_exit_on_close(self, state):
         self.profile.exit_on_close = state == 2
-        self.profile.save()
+        with profile_session_scope() as session:
+            session.add(self.profile)
 
     def setting_changed_manage_node(self, state):
         self.profile.manage_node = state == 2
-        self.profile.save()
+        with profile_session_scope() as session:
+            session.add(self.profile)
+
         if self.profile.manage_node:
             self.node.start()
 
@@ -164,18 +170,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.label_network_info.setText(blockchaininfo.description)
 
     @pyqtSlot()
-    def listpermissions(self):
-        num_validators = Permission.num_validators()
-        log.debug('set num validators %s' % num_validators)
-        self.lbl_num_validators.setText(str(num_validators))
+    def permissions_changed(self):
+        with data_session_scope() as session:
+            num_validators = Permission.num_validators(session)
+            self.lbl_num_validators.setText(str(num_validators))
 
-        num_guardians = Permission.num_guardians()
-        log.debug('set num guardians %s' % num_guardians)
-        self.lbl_num_guardians.setText(str(num_guardians))
+            num_guardians = Permission.num_guardians(session)
+            self.lbl_num_guardians.setText(str(num_guardians))
 
-        num_candidates = CurrentVote.num_candidates()
-        log.debug('set num candidates %s' % num_candidates)
-        self.lbl_num_candidates.setText(str(num_candidates))
+            num_candidates = PendingVote.num_candidates(session)
+            self.lbl_num_candidates.setText(str(num_candidates))
 
 
 if __name__ == '__main__':

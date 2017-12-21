@@ -59,10 +59,10 @@ def init():
     models.init_data_db()
 
 
-def is_first_start():
+def is_first_start(profile_db):
     from app.models.profile import Profile
     """Check if the applications needs to be configured"""
-    if not Profile.get_active():
+    if not Profile.get_active(profile_db):
         return True
     else:
         return False

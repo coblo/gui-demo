@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import base64
 import logging
 import os
+import random
 from binascii import hexlify
 from datetime import datetime
 import qrcode
@@ -22,7 +24,6 @@ log = logging.getLogger(__name__)
 
 
 class WidgetISCC(QWidget, Ui_Widget_ISCC):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -40,22 +41,24 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         # Connections
         self.button_dropzone.clicked.connect(self.file_select_dialog)
         self.btn_search_iscc.clicked.connect(self.search_iscc)
+        self.edit_search_iscc.returnPressed.connect(self.search_iscc)
         self.btn_register.clicked.connect(self.register)
         self.edit_title.textChanged.connect(self.title_changed)
 
         self.table_iscc.setParent(None)
-        table_iscc = ISCCTableView(self)
-        self.tab_search.layout().insertWidget(1, table_iscc)
+        self.table_iscc = ISCCTableView(self)
+        self.tab_search.layout().insertWidget(1, self.table_iscc)
 
         self.widget_generated_iscc.setHidden(True)
 
-    def search_iscc(self):
-        pass
+    def search_iscc(self):  # todo: wenn man einen ganzen iscc sucht findet man nichts...
+        search_term = self.edit_search_iscc.text()
+        self.table_iscc.model().update_data(search_term)
 
     def register(self):
-        #todo subscribe
+        # todo subscribe
         client = get_active_rpc_client()
-        data = dict(title=self.edit_title.text()) #todo: extra
+        data = dict(title=self.edit_title.text())  # todo: extra
         serialized = ubjson.dumpb(data)
         data_hex = hexlify(serialized).decode('utf-8')
         error = None
@@ -88,8 +91,12 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
     def process_file(self, file_path):
         with open(file_path, 'rb') as infile:
             self.instance_id = iscc_lib.generate_instance_id(infile)
-        self.content_id = iscc_lib.generate_instance_id(b'\x00' * 16) #todo
-        self.data_id = iscc_lib.generate_instance_id(b'\x11' * 16) #todo
+        if file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:
+            self.content_id = iscc_lib.generate_image_hash(file_path)
+        else:
+            self.content_id = base64.b32encode(b'\x10' +  os.urandom(7)).rstrip(b'=').decode('ascii') # todo
+        with open(file_path, 'rb') as infile:
+            self.data_id = iscc_lib.generate_data_id(infile)
         if self.meta_id:
             self.show_conflicts()
 
@@ -168,10 +175,15 @@ class ISCCModel(QAbstractTableModel):
         # signals.votes_changed.connect(self.votes_changed)
         # signals.permissions_changed.connect(self.update_num_guardians)
 
-    def update_data(self):
+    def update_data(self, search_term=None):
+        self.beginResetModel()
         with data_session_scope() as session:
-            self.isccs = ISCC.get_all_iscc(session)
             self.aliases = Alias.get_aliases(session)
+            if search_term:
+                self.isccs = ISCC.filter_iscc(session, search_term)
+            else:
+                self.isccs = ISCC.get_all_iscc(session)
+        self.endResetModel()
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 0:
@@ -192,7 +204,7 @@ class ISCCModel(QAbstractTableModel):
         row = idx.row()
         col = idx.column()
         iscc = self.isccs[row]
-        iscc_code = iscc.ISCC.meta_id + '' + iscc.ISCC.content_id + '' + iscc.ISCC.data_id + '' + iscc.ISCC.instance_id
+        iscc_code = iscc.ISCC.meta_id + '-' + iscc.ISCC.content_id + '-' + iscc.ISCC.data_id + '-' + iscc.ISCC.instance_id
         if not idx.isValid():
             return None
 

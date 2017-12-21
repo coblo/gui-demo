@@ -54,7 +54,11 @@
            <number>9</number>
           </property>
           <item>
-           <widget class="QLineEdit" name="edit_search_iscc"/>
+           <widget class="QLineEdit" name="edit_search_iscc">
+            <property name="placeholderText">
+             <string>Search for title, publisher, meta ID etc...</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="btn_search_iscc">

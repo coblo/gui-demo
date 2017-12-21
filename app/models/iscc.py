@@ -35,6 +35,10 @@ class ISCC(data_base):
                                                  data_id == ISCC.data_id, instance_id == ISCC.instance_id))).scalar()
 
     @staticmethod
+    def conflict_in_meta(data_db, meta_id) -> bool:
+        return data_db.query(exists().where(meta_id == ISCC.meta_id)).scalar()
+
+    @staticmethod
     def get_all_iscc(data_db) -> []:
         from app.models import Transaction, Block
         return data_db.query(ISCC, Block.time).join(Transaction, Block).order_by(Block.time.desc()).all()

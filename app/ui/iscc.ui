@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
-    <height>480</height>
+    <width>639</width>
+    <height>434</height>
    </rect>
   </property>
   <property name="font">
@@ -20,7 +20,16 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin">
-    <number>9</number>
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
    </property>
    <item>
     <widget class="QTabWidget" name="tabWidget_iscc">
@@ -84,7 +93,7 @@
       <attribute name="title">
        <string>Register</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
+      <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,0,0,0">
        <item>
         <widget class="QWidget" name="widget_title" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0">
@@ -148,10 +157,16 @@
        </item>
        <item>
         <widget class="QWidget" name="widget_generated_iscc" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="styleSheet">
           <string notr="true"/>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0">
           <property name="spacing">
            <number>9</number>
           </property>
@@ -170,21 +185,21 @@
           <item>
            <widget class="QLabel" name="label_qr">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>128</horstretch>
+              <verstretch>128</verstretch>
              </sizepolicy>
             </property>
             <property name="minimumSize">
              <size>
               <width>128</width>
-              <height>128</height>
+              <height>32</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>128</width>
-              <height>128</height>
+              <width>100</width>
+              <height>100</height>
              </size>
             </property>
             <property name="styleSheet">
@@ -193,10 +208,19 @@
             <property name="text">
              <string/>
             </property>
+            <property name="indent">
+             <number>0</number>
+            </property>
            </widget>
           </item>
           <item>
            <widget class="QWidget" name="widget_generated_iscc_text" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+              <horstretch>128</horstretch>
+              <verstretch>128</verstretch>
+             </sizepolicy>
+            </property>
             <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0">
              <property name="leftMargin">
               <number>0</number>
@@ -228,6 +252,12 @@
              </item>
              <item>
               <widget class="QLabel" name="label_iscc">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="font">
                 <font>
                  <family>Roboto Light</family>
@@ -262,12 +292,66 @@
        </item>
        <item>
         <widget class="QTableWidget" name="table_conflicts">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="font">
           <font>
            <family>Roboto Light</family>
            <pointsize>8</pointsize>
           </font>
          </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_title_extra">
+         <property name="font">
+          <font>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>If you wish to have an unique Meta ID, add extra information about your document.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget_extra" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <property name="spacing">
+           <number>9</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_extra">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Extra:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="edit_extra"/>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>

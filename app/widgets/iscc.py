@@ -2,9 +2,7 @@
 import base64
 import logging
 import os
-import random
 from binascii import hexlify
-from datetime import datetime
 import qrcode
 import ubjson
 
@@ -36,6 +34,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.data_id = None
         self.instance_id = None
         self.iscc = None
+        self.conflict_in_meta = False
 
         # Intercept drag & drop events from button
         self.button_dropzone.installEventFilter(self)
@@ -46,6 +45,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.edit_search_iscc.returnPressed.connect(self.search_iscc)
         self.btn_register.clicked.connect(self.register)
         self.edit_title.textChanged.connect(self.title_changed)
+        self.edit_extra.textChanged.connect(self.extra_changed)
 
         self.table_iscc.setParent(None)
         self.table_iscc = ISCCTableView(self)
@@ -56,7 +56,9 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.table_conflicts.setParent(None)
         self.table_conflicts = ConflictTableView(self)
         self.table_conflicts.setHidden(True)
-        self.tab_register.layout().insertWidget(5, self.table_conflicts)
+        self.tab_register.layout().insertWidget(4, self.table_conflicts)
+        self.label_title_extra.setHidden(True)
+        self.widget_extra.setHidden(True)
 
     def search_iscc(self):  # todo: wenn man einen ganzen iscc sucht findet man nichts...
         search_term = self.edit_search_iscc.text()
@@ -65,7 +67,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
     def register(self):
         # todo subscribe
         client = get_active_rpc_client()
-        data = dict(title=self.edit_title.text())  # todo: extra
+        data = dict(title=self.edit_title.text())
         serialized = ubjson.dumpb(data)
         data_hex = hexlify(serialized).decode('utf-8')
         error = None
@@ -91,11 +93,23 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
                                 QMessageBox.Close)
 
     def title_changed(self, title):
-        self.meta_id = iscc_lib.generate_meta_id(title=title)
+        extra = ''
+        if self.conflict_in_meta:
+            extra = self.edit_extra.text()
+        if extra:
+            self.meta_id = iscc_lib.generate_meta_id(title=title, extra=extra)
+        else:
+            self.meta_id = iscc_lib.generate_meta_id(title=title)
+        if self.content_id:
+            self.show_conflicts()
+
+    def extra_changed(self, extra):
+        self.meta_id = iscc_lib.generate_meta_id(title=self.edit_title.text(), extra=extra)
         if self.content_id:
             self.show_conflicts()
 
     def process_file(self, file_path):
+        self.button_dropzone.setText(file_path)
         with open(file_path, 'rb') as infile:
             self.instance_id = iscc_lib.generate_instance_id(infile)
         if file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:
@@ -154,7 +168,6 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
 
     def on_drop(self, obj: QObject, event: QDropEvent):
         file_path = event.mimeData().urls()[0].toLocalFile()
-        self.button_dropzone.setText(file_path)
         self.process_file(file_path)
 
     def show_conflicts(self):
@@ -175,9 +188,13 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
                 self.label_title_conflicts.setHidden(False)
                 self.table_conflicts.setHidden(False)
                 self.table_conflicts.model().update_data(conflicts, self.iscc)
+                if ISCC.conflict_in_meta(session, self.meta_id):
+                    self.widget_extra.setHidden(False)
+                    self.conflict_in_meta = True
             else:
                 self.label_title_conflicts.setHidden(True)
                 self.table_conflicts.setHidden(True)
+            self.label_title_extra.setHidden(not self.conflict_in_meta)
 
 class ISCCModel(QAbstractTableModel):
     def __init__(self, parent=None):
@@ -186,9 +203,6 @@ class ISCCModel(QAbstractTableModel):
         self.aliases = []
         self.update_data()
         self.headers = ('ISCC', 'Title', 'Date', 'Publisher')
-
-        # signals.votes_changed.connect(self.votes_changed)
-        # signals.permissions_changed.connect(self.update_num_guardians)
 
     def update_data(self, search_term=None):
         self.beginResetModel()

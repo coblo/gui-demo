@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QAbstractItemView, QApplication, QHeaderView, QMenu,
 
 from app.models import Alias, ISCC
 from app.models.db import data_session_scope
+from app.signals import signals
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ class ISCCModel(QAbstractTableModel):
         self.aliases = []
         self.update_data()
         self.headers = ('ISCC', 'Title', 'Date', 'Publisher')
+        signals.iscc_inserted.connect(self.update_data)
 
     def update_data(self, search_term=None):
         self.beginResetModel()
@@ -61,7 +63,7 @@ class ISCCModel(QAbstractTableModel):
             elif col == 1:
                 return iscc.ISCC.title
             elif idx.column() == 2:
-                return "{}".format(iscc.time)
+                return "{}".format(iscc.mining_time)
             elif idx.column() == 3:
                 return self.aliases[iscc.ISCC.address]
 

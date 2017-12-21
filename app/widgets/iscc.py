@@ -18,6 +18,7 @@ from app.models import ISCC
 from app.tools import iscc as iscc_lib
 from app.widgets.iscc_table import ISCCTableView
 from app.widgets.iscc_conflicts_table import ConflictTableView
+from app.signals import signals
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +60,8 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.label_title_extra.setHidden(True)
         self.widget_extra.setHidden(True)
 
+        signals.iscc_inserted.connect(self.update_conflicts)
+
     def search_iscc(self):  # todo: wenn man einen ganzen iscc sucht findet man nichts...
         search_term = self.edit_search_iscc.text()
         self.table_iscc.model().update_data(search_term)
@@ -90,6 +93,10 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         else:
             QMessageBox.warning(QMessageBox(), 'Error while publishing', str(error), QMessageBox.Close,
                                 QMessageBox.Close)
+
+    def update_conflicts(self):
+        if self.iscc:
+            self.show_conflicts()
 
     def title_changed(self, title):
         extra = ''

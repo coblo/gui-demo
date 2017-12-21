@@ -26,7 +26,7 @@ class Timestamp(data_base):
     def get_timestamps_for_hash(data_db, hash_value: str) -> []:
         # The first table mentioned is in the FROM clause
         return (data_db.
-                query(Block.time, Timestamp.address, Timestamp.comment).
+                query(Block.mining_time, Timestamp.address, Timestamp.comment).
                 join(Transaction, Timestamp.txid == Transaction.txid).
                 join(Timestamp, Block.hash == Transaction.block).
                 filter(Timestamp.hash == hash_value).

@@ -22,7 +22,7 @@ class Block(data_base):
         database = data_db
 
     def __repr__(self):
-        return "Block(h=%s, t=%s, txs=%s)" % (self.height, self.mining_time, self.txcount)
+        return "Block(h=%s, t=%s, txs=%s)" % (self.height, self.mining_time)
 
     @staticmethod
     def block_exists(data_db, block_hash):

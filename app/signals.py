@@ -37,6 +37,7 @@ class Signals(QObject):
     # wallettransactions changed
     wallet_transaction_inserted = pyqtSignal(object)
     wallet_transaction_updated = pyqtSignal(object)
+    new_unconfirmed = pyqtSignal(str)
 
     block_sync_changed = pyqtSignal(dict)
     transactions_changed = pyqtSignal(list)

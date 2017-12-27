@@ -10,6 +10,7 @@ from decimal import Decimal
 from app.backend.rpc import get_active_rpc_client
 from app.models import Address
 from app.models import Alias
+from app.signals import signals
 from app.tools.validators import AddressValidator
 from app.ui.wallet_send import Ui_widget_wallet_send
 
@@ -128,6 +129,8 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
             if response['error'] is not None:
                 err_msg = response['error']['message']
                 raise RuntimeError(err_msg)
+            else:
+                signals.new_unconfirmed.emit('transfer')
             self.on_cancel_clicked()
             QApplication.restoreOverrideCursor()
         except Exception as e:

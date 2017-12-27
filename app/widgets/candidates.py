@@ -2,7 +2,6 @@
 import logging
 from functools import partial
 import math
-from collections import OrderedDict
 
 from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot
 from PyQt5.QtGui import QFont, QCursor
@@ -11,7 +10,7 @@ from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeader
 
 from app import enums
 from app.models import Alias
-from app.models import Profile, Address, PendingVote, Permission
+from app.models import Profile, PendingVote, Permission
 from app.models.db import data_session_scope, profile_session_scope
 from app.signals import signals
 from app import ADMIN_CONSENUS_ADMIN, ADMIN_CONSENUS_MINE
@@ -149,6 +148,7 @@ class ButtonDelegate(QStyledItemDelegate):
                     sender.setDisabled(True)
                     sender.setStyleSheet(
                         "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                    signals.new_unconfirmed.emit('vote')
                 QApplication.restoreOverrideCursor()
             except Exception as e:
                 err_msg = str(e)

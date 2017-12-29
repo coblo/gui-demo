@@ -33,6 +33,12 @@
    </property>
    <item>
     <widget class="QTabWidget" name="tabWidget_iscc">
+     <property name="font">
+      <font>
+       <family>Oswald</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -44,11 +50,17 @@
        </sizepolicy>
       </property>
       <attribute name="title">
-       <string>Search</string>
+       <string>SEARCH</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QWidget" name="widget_search" native="true">
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <property name="leftMargin">
            <number>0</number>
@@ -85,17 +97,29 @@
         </widget>
        </item>
        <item>
-        <widget class="QTableView" name="table_iscc"/>
+        <widget class="QTableView" name="table_iscc">
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+           <pointsize>8</pointsize>
+          </font>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_register">
       <attribute name="title">
-       <string>Register</string>
+       <string>REGISTER</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,0,0,0">
        <item>
         <widget class="QWidget" name="widget_title" native="true">
+         <property name="font">
+          <font>
+           <family>Roboto Light</family>
+          </font>
+         </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0">
           <property name="spacing">
            <number>9</number>
@@ -282,6 +306,7 @@
         <widget class="QLabel" name="label_title_conflicts">
          <property name="font">
           <font>
+           <family>Roboto</family>
            <pointsize>16</pointsize>
           </font>
          </property>
@@ -310,6 +335,7 @@
         <widget class="QLabel" name="label_title_extra">
          <property name="font">
           <font>
+           <family>Roboto Light</family>
            <pointsize>8</pointsize>
           </font>
          </property>
@@ -340,6 +366,7 @@
            <widget class="QLabel" name="label_extra">
             <property name="font">
              <font>
+              <family>Roboto Light</family>
               <pointsize>8</pointsize>
              </font>
             </property>
@@ -414,6 +441,7 @@
             </property>
             <property name="font">
              <font>
+              <family>Roboto</family>
               <pointsize>16</pointsize>
              </font>
             </property>

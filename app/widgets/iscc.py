@@ -67,7 +67,6 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.table_iscc.model().update_data(search_term)
 
     def register(self):
-        # todo subscribe
         client = get_active_rpc_client()
         data = dict(title=self.edit_title.text())
         serialized = ubjson.dumpb(data)
@@ -90,6 +89,8 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.iscc = None
             self.widget_generated_iscc.setHidden(True)
             self.button_dropzone.setText('Drop your image or text file here or click to choose.')
+            self.label_title_conflicts.setHidden(True)
+            self.table_conflicts.setHidden(True)
         else:
             QMessageBox.warning(QMessageBox(), 'Error while publishing', str(error), QMessageBox.Close,
                                 QMessageBox.Close)
@@ -115,7 +116,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.show_conflicts()
 
     def process_file(self, file_path):
-        self.button_dropzone.setText(file_path)
+        self.button_dropzone.setText(file_path.split('/')[-1])
         with open(file_path, 'rb') as infile:
             self.instance_id = iscc_lib.generate_instance_id(infile)
         if file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:

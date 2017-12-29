@@ -65,7 +65,8 @@ class ISCCModel(QAbstractTableModel):
             elif idx.column() == 2:
                 return "{}".format(iscc.mining_time)
             elif idx.column() == 3:
-                return self.aliases[iscc.ISCC.address]
+                address = iscc.ISCC.address
+                return self.aliases[address] if address in self.aliases else "{}".format(address)
 
 
 class ISCCTableView(QTableView):

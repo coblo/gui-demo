@@ -5,6 +5,7 @@ import logging
 from PyQt5 import QtCore
 
 from app import sync
+from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
 from app.models import Alias
 from app.models import Profile
@@ -76,6 +77,7 @@ class Updater(QtCore.QThread):
                         log.exception(e)
 
                 synced_blockhash = node_block_hash
+                signals.sync_cycle_finished.emit()
 
             # update the unconfirmed transactions
             try:

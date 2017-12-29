@@ -35,7 +35,7 @@ class Timestamp(data_base):
 
     @staticmethod
     def get_timestamps_for_address(data_db, address: str):
-        result = data_db.query(Block.time, Timestamp.hash, Timestamp.comment).join(Transaction, Timestamp).filter(Timestamp.address == address).all()
+        result = data_db.query(Block.mining_time, Timestamp.hash, Timestamp.comment).join(Transaction, Timestamp).filter(Timestamp.address == address).all()
 
         return result
 

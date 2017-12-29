@@ -71,10 +71,11 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
                 err_msg = response['error']['message']
                 raise RuntimeError(err_msg)
             else:
-                QMessageBox.information(QWidget(), 'Changing alias successful',
-                                        'The transaction to change your alias was sent successful. It may take some'
-                                        ' minutes to validate your transaction. After validation your alias will be'
-                                        ' changed.', QMessageBox.Ok, QMessageBox.Ok)
+                signals.new_unconfirmed.emit('alias change')
+                # QMessageBox.information(QWidget(), 'Changing alias successful',
+                #                         'The transaction to change your alias was sent successful. It may take some'
+                #                         ' minutes to validate your transaction. After validation your alias will be'
+                #                         ' changed.', QMessageBox.Ok, QMessageBox.Ok)
         except Exception as e:
             err_msg = str(e)
             error_dialog = QMessageBox()

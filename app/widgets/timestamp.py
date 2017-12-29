@@ -14,6 +14,7 @@ from app.signals import signals
 from app.api import put_timestamp
 from app.exceptions import RpcResponseError
 from app.models.timestamp import Timestamp
+from app.signals import signals
 from app.ui.timestamp import Ui_WidgetTimestamping
 
 log = logging.getLogger(__name__)
@@ -157,6 +158,7 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
             self.label_register_comment.setText(
                 'Timestamp registered. Transaction ID is: %s' % txid
             )
+            signals.new_unconfirmed.emit('timestamp registration')
         except Exception as e:
             self.edit_comment.hide()
             self.label_register_comment.setText(

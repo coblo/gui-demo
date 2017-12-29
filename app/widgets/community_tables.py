@@ -190,6 +190,7 @@ class ButtonDelegate(QStyledItemDelegate):
                     sender.setDisabled(True)
                     sender.setStyleSheet(
                         "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                    signals.new_unconfirmed.emit('vote')
                 QApplication.restoreOverrideCursor()
             except Exception as e:
                 err_msg = str(e)

@@ -1,7 +1,8 @@
 import logging
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import QTimer, pyqtSlot
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication
 
 from app import enums
@@ -53,6 +54,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_grp_nav.setId(self.btn_nav_settings, 3)
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
+
+        # Hide information widget
+        font = QFont('Roboto Light', 10)
+        self.label_info_text.setFont(font)
+        self.btn_close_info.setFont(font)
+        font.setUnderline(True)
+        self.btn_to_wallet.setFont(font)
+        self.widget_information.setHidden(True)
+        signals.new_unconfirmed.connect(self.show_information)
+        self.btn_close_info.clicked.connect(self.hide_information)
+        self.btn_to_wallet.clicked.connect(self.change_to_wallet)
 
         # Patch custom widgets
         self.tab_widget_cummunity.setStyleSheet('QPushButton {padding: 5 12 5 12; font: 10pt "Roboto Light"}')
@@ -162,6 +174,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dialog = ChangeAlias(self)
         dialog.show()
         return dialog
+
+    def change_to_wallet(self):
+        self.wgt_content.setCurrentIndex(0)
+
+    def show_information(self, type):
+        self.widget_information.setHidden(False)
+        self.btn_to_wallet.setHidden(self.wgt_content.currentIndex() == 0)
+        self.label_info_text.setText('Your {} has been submitted to the blockchain.'.format(type))
+        QTimer().singleShot(5000, self.hide_information)
+
+    def hide_information(self):
+        self.widget_information.setHidden(True)
+        self.label_info_text.setText('')
 
     @pyqtSlot(object)
     def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):

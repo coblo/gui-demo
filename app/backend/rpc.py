@@ -123,6 +123,9 @@ class RpcClient:
     def liststreamitems(self, stream, verbose=False, count=10000000, start=0, local_ordering=False):
         return self._call('liststreamitems', stream, verbose, count, start, local_ordering)
 
+    def liststreampublisheritems(self, stream, address, verbose=False, count=10000000, start=0, local_ordering=False):
+        return self._call('liststreampublisheritems', stream, address, verbose, count, start, local_ordering)
+
     def liststreamkeys(self, stream, keys='*', verbose=False, count=10000000, start=0, local_ordering=False):
         return self._call('liststreamkeys', stream, keys, verbose, count, start, local_ordering)
 

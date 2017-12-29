@@ -32,3 +32,10 @@ class Timestamp(data_base):
                 filter(Timestamp.hash == hash_value).
                 order_by(Block.height.asc(), Transaction.pos_in_block.asc(), Timestamp.pos_in_tx.asc())
                 ).all()
+
+    @staticmethod
+    def get_timestamps_for_address(data_db, address: str):
+        result = data_db.query(Block.mining_time, Timestamp.hash, Timestamp.comment).join(Transaction, Timestamp).filter(Timestamp.address == address).all()
+
+        return result
+

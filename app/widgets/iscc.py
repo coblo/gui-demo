@@ -5,6 +5,8 @@ import os
 from binascii import hexlify
 import qrcode
 import ubjson
+from PyQt5.QtCore import QThread
+from PyQt5.QtCore import pyqtSignal
 
 from PyQt5.QtCore import pyqtSlot, QDir, QEvent, QMimeData, QObject, QUrl
 from PyQt5.QtGui import QDragLeaveEvent, QDropEvent, QPixmap, QDragEnterEvent
@@ -91,6 +93,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.button_dropzone.setText('Drop your image or text file here or click to choose.')
             self.label_title_conflicts.setHidden(True)
             self.table_conflicts.setHidden(True)
+            signals.new_unconfirmed.emit('ISCC registration')
         else:
             QMessageBox.warning(QMessageBox(), 'Error while publishing', str(error), QMessageBox.Close,
                                 QMessageBox.Close)
@@ -116,17 +119,18 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.show_conflicts()
 
     def process_file(self, file_path):
-        self.button_dropzone.setText(file_path.split('/')[-1])
-        with open(file_path, 'rb') as infile:
-            self.instance_id = iscc_lib.generate_instance_id(infile)
-        if file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:
-            self.content_id = iscc_lib.generate_image_hash(file_path)
-        else:
-            self.content_id = base64.b32encode(b'\x10' +  os.urandom(7)).rstrip(b'=').decode('ascii') # todo
-        with open(file_path, 'rb') as infile:
-            self.data_id = iscc_lib.generate_data_id(infile)
-        if self.meta_id:
-            self.show_conflicts()
+        self.current_filepath = file_path
+        self.button_dropzone.setText("Processing File...")
+        self.button_dropzone.setDisabled(True)
+        self.hash_thread = ISCCGEnerator(file_path, self)
+        self.hash_thread.finished.connect(self.hash_thread_finished)
+
+        self.hash_thread.start()
+
+    @pyqtSlot()
+    def hash_thread_finished(self):
+        self.button_dropzone.setDisabled(False)
+        self.button_dropzone.setText(self.current_filepath.split("/")[-1])
 
     @pyqtSlot()
     def file_select_dialog(self):
@@ -202,3 +206,25 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
                 self.label_title_conflicts.setHidden(True)
                 self.table_conflicts.setHidden(True)
             self.label_title_extra.setHidden(not self.conflict_in_meta)
+
+class ISCCGEnerator(QThread):
+
+    #: emits num bytes processed
+
+    def __init__(self, file_path, parent, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.file_path = file_path
+        self.result = None
+        self.parent = parent
+
+    def run(self):
+        with open(self.file_path, 'rb') as infile:
+            self.parent.instance_id = iscc_lib.generate_instance_id(infile)
+        if self.file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:
+            self.parent.content_id = iscc_lib.generate_image_hash(self.file_path)
+        else:
+            self.parent.content_id = base64.b32encode(b'\x10' +  os.urandom(7)).rstrip(b'=').decode('ascii') # todo
+        with open(self.file_path, 'rb') as infile:
+            self.parent.data_id = iscc_lib.generate_data_id(infile)
+        if self.parent.meta_id:
+            self.parent.show_conflicts()

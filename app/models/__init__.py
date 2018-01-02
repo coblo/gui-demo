@@ -90,15 +90,21 @@ def init_data_db():
     data_db.configure(bind=engine)
 
     log.debug("check data-db schema")
+    reset_blocks = False
     for table_name, table in data_base.metadata.tables.items():
         log.debug("check {}-db schema".format(table.name))
-        if not check_table_ddl_against_model(data_db, table) and engine.dialect.has_table(engine, table_name):
+        if not check_table_ddl_against_model(data_db, table):
             log.debug("{}-db schema outdated, resetting".format(table.name))
-            table.drop(engine)
+            reset_blocks = True
+            if engine.dialect.has_table(engine, table_name):
+                table.drop(engine)
+
         else:
             log.debug("{}-db schema up to date".format(table.name))
 
     data_base.metadata.create_all(engine)
+    if reset_blocks:
+        data_db().query(Block).delete()
     return data_db
 
 

@@ -184,8 +184,6 @@ class CandidateTableView(QTableView):
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(40)
 
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-
         with profile_session_scope() as session:
             self.setColumnHidden(4, not Profile.get_active(session).is_admin)
 

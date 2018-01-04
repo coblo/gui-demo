@@ -34,6 +34,8 @@ class Signals(QObject):
     #: profile changed
     profile_changed = pyqtSignal(object)
 
+    iscc_inserted = pyqtSignal()
+
     # wallettransactions changed
     wallet_transaction_inserted = pyqtSignal(object)
     wallet_transaction_updated = pyqtSignal(object)

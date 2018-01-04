@@ -9,6 +9,7 @@
     <file>resources/Oswald-SemiBold.ttf</file>
   </qresource>
   <qresource prefix="images">
+    <file>resources/fingerprint_black.svg</file>
     <file>resources/wizard_logo.png</file>
     <file>resources/mining_reward.svg</file>
     <file>resources/paper_plane_black.svg</file>

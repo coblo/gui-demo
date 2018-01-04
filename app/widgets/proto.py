@@ -17,6 +17,7 @@ from app.widgets.candidates import CandidateTableView
 from app.widgets.change_alias import ChangeAlias
 from app.widgets.community_tables import CommunityTableView
 from app.widgets.invite import InviteDialog
+from app.widgets.iscc import WidgetISCC
 from app.widgets.timestamp import WidgetTimestamping
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
@@ -49,9 +50,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Init Navigation
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
-        self.btn_grp_nav.setId(self.btn_nav_timestamp, 1)
-        self.btn_grp_nav.setId(self.btn_nav_community, 2)
-        self.btn_grp_nav.setId(self.btn_nav_settings, 3)
+        self.btn_grp_nav.setId(self.btn_nav_iscc, 1)
+        self.btn_grp_nav.setId(self.btn_nav_timestamp, 2)
+        self.btn_grp_nav.setId(self.btn_nav_community, 3)
+        self.btn_grp_nav.setId(self.btn_nav_settings, 4)
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
 
@@ -77,6 +79,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         wallet_history = WalletHistory(self)
         self.lout_page_wallet_v.addWidget(wallet_history)
+
+        widget_iscc = WidgetISCC(self)
+        self.lout_page_iscc_v.addWidget(widget_iscc)
 
         widget_timestamp = WidgetTimestamping(self)
         self.lout_page_timestamp_v.addWidget(widget_timestamp)

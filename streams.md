@@ -43,3 +43,14 @@ comment about the timestamped document like document name, version or
 reason for timestamping. The maximum processed length of `comment` is
 280 characters.
 
+## testiscc
+The `ISCC` stream is open and used to publish document identitfier. The iscc
+key must be the whole iscc, formatted as `MetaID`-`ContentID`-`ContentID`-`DataID`.
+The data_hex value has to be a hex encoded json, formatted as:
+
+    {
+        "title": "my_title",
+        "extra": "my_extra"
+    }
+
+where extra is optional.

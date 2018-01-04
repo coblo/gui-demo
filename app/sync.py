@@ -11,6 +11,7 @@ from app.backend.rpc import get_active_rpc_client
 from app.helpers import batchwise
 from app.models import Address, Permission, Transaction, PendingVote, Block, Profile, Alias, MiningReward, \
     WalletTransaction, Timestamp, Vote
+from app.models import ISCC
 from app.models.db import profile_session_scope, data_session_scope
 from app.responses import Getblockchaininfo
 from app.signals import signals
@@ -206,6 +207,28 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version, che
                         pos_in_tx=i,
                         address=publishers[0],
                         alias=alias
+                    ))
+                    # flush for the primary key
+                    data_db.flush()
+                elif item['name'] == "testiscc":
+                    iscc = item["key"].split('-')
+                    if len(iscc) != 4:
+                        continue
+                    meta_id, content_id, data_id, instance_id = iscc
+                    if ISCC.already_exists(data_db, meta_id, content_id, data_id, instance_id):
+                        continue
+                    data = ubjson.loadb(unhexlify(raw_transaction['data'][0]))
+                    if 'title' not in data:
+                        continue
+                    relevant = True
+                    data_db.add(ISCC(
+                        txid=txid,
+                        address=publishers[0],
+                        meta_id=meta_id,
+                        content_id=content_id,
+                        data_id=data_id,
+                        instance_id=instance_id,
+                        title=data['title']
                     ))
                     # flush for the primary key
                     data_db.flush()

@@ -174,7 +174,10 @@ class RpcClient:
         payload = {"id": method, "method": method, "params": args}
         serialized = json.dumps(payload, cls=DecimalEncoder)
         response = requests.post(self._url, data=serialized, verify=False)
-        return response.json(parse_float=Decimal)
+        if response.status_code != 200:
+            return {'error': response.reason}
+        else:
+            return response.json(parse_float=Decimal)
 
 
 if __name__ == '__main__':

@@ -202,13 +202,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def permissions_changed(self):
         with data_session_scope() as session:
             num_validators = Permission.num_validators(session)
-        self.lbl_num_validators.setText(str(num_validators))
+            self.lbl_num_validators.setText(str(num_validators))
 
             num_guardians = Permission.num_guardians(session)
-        self.lbl_num_guardians.setText(str(num_guardians))
+            self.lbl_num_guardians.setText(str(num_guardians))
 
             num_candidates = PendingVote.num_candidates(session)
-        self.lbl_num_candidates.setText(str(num_candidates))
+            self.lbl_num_candidates.setText(str(num_candidates))
 
 
 if __name__ == '__main__':

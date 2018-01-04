@@ -9,6 +9,7 @@ import app
 from app.backend.rpc import RpcClient
 from app.helpers import gen_password
 from app.ui.settings_profile import Ui_settings_profile
+from app.models.db import profile_session_scope
 
 from app.models import Profile
 
@@ -27,7 +28,8 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
         self.btn_save_changed_profile.setHidden(True)
         self.btn_cancel_changed_profile.setHidden(True)
 
-        self.active_profile = Profile.get_active()
+        with profile_session_scope() as session:
+            self.active_profile = Profile.get_active(session)
         self.refill_profile_form(self.active_profile)
 
         self.fill_combobox()
@@ -54,37 +56,11 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
         self.adding_profile = True
 
     def on_save(self):
-        if self.adding_profile:
-            try:
-                new_profile = Profile.create(
-                    name=self.edit_name.text(),
-                    rpc_host=self.edit_host.text(),
-                    rpc_port=int(self.edit_port.text()),
-                    rpc_user=self.edit_rpc_user.text(),
-                    rpc_password=self.edit_rpc_password.text(),
-                    rpc_use_ssl=self.check_box_use_ssl.checkState() == Qt.Checked,
-                    manage_node=self.check_manage_node.checkState() == Qt.Checked,
-                    exit_on_close=self.check_exit_close.checkState() == Qt.Checked,
-                    active=False
-                )
-                new_profile.save()
-                if self.check_activate_profile.checkState() == Qt.Checked:
-                    new_profile.set_active()
-                self.adding_profile = False
-                self.switch_profile_add_view(False)
-                self.refill_profile_form(profile=Profile.get_active())
-                self.switch_test_mode(True)
-            except Exception as e:
-                err_msg = str(e)
-                error_dialog = QMessageBox()
-                error_dialog.setWindowTitle('Error while creating Profile')
-                error_dialog.setText(err_msg)
-                error_dialog.setIcon(QMessageBox.Warning)
-                error_dialog.exec_()
-
-        else:
-            try:
-                Profile.update(
+        err_msg = False
+        with profile_session_scope() as session:
+            if self.adding_profile:
+                try:
+                    profile = Profile(
                         name=self.edit_name.text(),
                         rpc_host=self.edit_host.text(),
                         rpc_port=int(self.edit_port.text()),
@@ -92,30 +68,55 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
                         rpc_password=self.edit_rpc_password.text(),
                         rpc_use_ssl=self.check_box_use_ssl.checkState() == Qt.Checked,
                         manage_node=self.check_manage_node.checkState() == Qt.Checked,
-                        exit_on_close=self.check_exit_close.checkState() == Qt.Checked
-                ).where(Profile.name == self.active_profile.name).execute()
-                self.switch_test_mode(True)
-            except Exception as e:
-                err_msg = str(e)
+                        exit_on_close=self.check_exit_close.checkState() == Qt.Checked,
+                        active=False
+                    )
+                    session.add(profile)
+                    if self.check_activate_profile.checkState() == Qt.Checked:
+                        profile.set_active(session)
+                    self.adding_profile = False
+                    self.switch_profile_add_view(False)
+                    self.refill_profile_form(profile=Profile.get_active(session))
+                    self.switch_test_mode(True)
+                except Exception as e:
+                    err_msg = str(e)
+            else:
+                try:
+                    session.query(Profile).filter(Profile.name == self.active_profile.name).update({
+                        "name": self.edit_name.text(),
+                        "rpc_host": self.edit_host.text(),
+                        "rpc_port": int(self.edit_port.text()),
+                        "rpc_user": self.edit_rpc_user.text(),
+                        "rpc_password": self.edit_rpc_password.text(),
+                        "rpc_use_ssl": self.check_box_use_ssl.checkState() == Qt.Checked,
+                        "manage_node": self.check_manage_node.checkState() == Qt.Checked,
+                        "exit_on_close": self.check_exit_close.checkState() == Qt.Checked
+                    })
+                    self.switch_test_mode(True)
+                except Exception as e:
+                    err_msg = str(e)
+            self.fill_combobox()
+            self.active_profile = Profile.get_active(session)
+            if err_msg:
                 error_dialog = QMessageBox()
                 error_dialog.setWindowTitle('Error while creating Profile')
                 error_dialog.setText(err_msg)
                 error_dialog.setIcon(QMessageBox.Warning)
                 error_dialog.exec_()
 
-        self.fill_combobox()
-        self.active_profile = Profile.get_active()
-
     def on_reset(self):
         if self.adding_profile:
             self.adding_profile = False
             self.switch_profile_add_view(False)
-        self.refill_profile_form(profile=Profile.get_active())
+        self.switch_test_mode(True)
+        with profile_session_scope() as session:
+            self.refill_profile_form(profile=Profile.get_active(session))
 
     def on_save_change_profile(self):
         self.switch_profile_change_view(False)
-        new_profile = Profile.select().where(Profile.name == self.cb_profile.currentText()).first()
-        new_profile.set_active()
+        with profile_session_scope() as session:
+            new_profile = session.query(Profile).filter(Profile.name == self.cb_profile.currentText()).first()
+            new_profile.set_active(session)
         self.refill_profile_form(new_profile)
 
     def on_cancel_change_profile(self):
@@ -147,12 +148,17 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
 
     def switch_test_mode(self, test_mode=False):
         self.btn_save.clicked.connect(self.test_connection if test_mode else self.on_save)
-        self.btn_save.clicked.disconnect(self.on_save if test_mode else self.test_connection)
+        try:
+            self.btn_save.clicked.disconnect(self.on_save if test_mode else self.test_connection)
+        except Exception:
+            pass
         self.btn_save.setText('Test Connection' if test_mode else 'Save')
         self.edit_host.setDisabled(not test_mode)
         self.edit_port.setDisabled(not test_mode)
         self.edit_rpc_user.setDisabled(not test_mode)
         self.edit_rpc_password.setDisabled(not test_mode)
+        self.check_manage_node.setDisabled(not test_mode)
+        self.check_box_use_ssl.setDisabled(not test_mode)
 
     def refill_profile_form(self, profile=None):
         if profile is not None:
@@ -181,12 +187,14 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
 
     def fill_combobox(self):
         self.cb_profile.clear()
-        profiles = Profile.select()
+        with profile_session_scope() as session:
+            profiles = session.query(Profile).all()
         for profile in profiles:
             self.cb_profile.addItem(profile.name)
         self.cb_profile.setCurrentText(self.active_profile.name)
 
     def test_connection(self):
+        err_msg = False
         client = RpcClient(
             host=self.edit_host.text(),
             port=int(self.edit_port.text()),
@@ -198,8 +206,11 @@ class SettingsProfile(QtWidgets.QDialog, Ui_settings_profile):
             response = client.getruntimeparams()
             if response['error'] is None:
                 self.switch_test_mode(False)
+            else:
+                err_msg = response['error']
         except Exception as e:
             err_msg = str(e)
+        if err_msg:
             error_dialog = QMessageBox()
             error_dialog.setWindowTitle('Connection Error')
             error_dialog.setText(err_msg)

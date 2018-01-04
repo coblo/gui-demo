@@ -45,6 +45,14 @@ class Profile(Profile_Base):
         """Return database path for this profile"""
         return os.path.join(app.DATA_DIR, self.name + '-data.db')
 
+    def set_active(self, profile_db):
+        """Set all other profiles inactive and the given profile active"""
+        for profile in profile_db.query(Profile).all():
+            if profile== self:
+                profile.active = True
+            elif profile.active:
+                profile.active = False
+
     @staticmethod
     def get_active(profile_db) -> 'Profile':
         """Return currently active Pofile"""

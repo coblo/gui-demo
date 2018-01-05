@@ -1,27 +1,92 @@
+import webbrowser
 from datetime import datetime
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, QVariant, Qt, pyqtSlot
-from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont
-from PyQt5.QtWidgets import QHeaderView, QWidget
 from decimal import Decimal, ROUND_DOWN
+from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
+from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont, QCursor
+from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QWidget, QPushButton, QStyledItemDelegate, QTableView
 
 from app.models import WalletTransaction
 from app.ui.wallet_history import Ui_widget_wallet_history
 from app.signals import signals
 
+
 class WalletHistory(QWidget, Ui_widget_wallet_history):
     def __init__(self, parent):
         super().__init__(parent)
         self.setupUi(self)
+        self.table_wallet_history.setParent(None)
+        table = TransactionTableView(self)
+        self.layout_box_wallet_history.insertWidget(0, table)
+
+
+class TransactionTableView(QTableView):
+    def __init__(self, *args, **kwargs):
+        QTableView.__init__(self, *args, **kwargs)
+
         self.table_model = TransactionHistoryTableModel(self)
-        self.table_wallet_history.setModel(self.table_model)
-        self.table_wallet_history.horizontalHeader().setSortIndicator(1, Qt.AscendingOrder)
-        header = self.table_wallet_history.horizontalHeader()
+        self.setModel(self.table_model)
+
+        font = QFont()
+        font.setFamily("Roboto Light")
+        font.setPointSize(10)
+
+        header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.Stretch)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        header.setFont(font)
 
+        # Row height
+        self.verticalHeader().setVisible(False)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.verticalHeader().setDefaultSectionSize(40)
+
+        self.setFont(font)
+        self.setAlternatingRowColors(True)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setShowGrid(False)
+        self.setSortingEnabled(False)
+        self.setCornerButtonEnabled(True)
+        self.create_table_buttons()
+
+    def create_table_buttons(self):
+        self.setItemDelegateForColumn(5, ButtonDelegate(self))
+        for row in range(0, self.table_model.rowCount()):
+            self.openPersistentEditor(self.table_model.index(row, 5))
+        # TODO find a better way to fix button sizes collapsing on update
+        w, h = self.size().width(), self.size().height()
+        self.resize(w + 1, h)
+        self.resize(w, h)
+
+
+class ButtonDelegate(QStyledItemDelegate):
+    def __init__(self, parent):
+        QStyledItemDelegate.__init__(self, parent)
+        self.info_icon = QIcon()
+        self.info_icon.addPixmap(QPixmap(":/images/resources/info.png"), QIcon.Normal, QIcon.Off)
+
+    def createEditor(self, parent, option, idx):
+        db = self.parent().table_model.txs
+        table_entry = db[idx.row()]
+        btn = QPushButton('', parent)
+        btn.setIcon(self.info_icon)
+        btn.setStyleSheet(
+            "QPushButton {margin: 8 4 8 4; border: none;}")
+        btn.setObjectName(table_entry.txid)
+        btn.clicked.connect(self.on_revoke_clicked)
+        btn.setCursor(QCursor(Qt.PointingHandCursor))
+        return btn
+
+    def on_revoke_clicked(self):
+        sender = self.sender()
+        txid = sender.objectName()
+        link = 'https://explorer.content-blockchain.org/Content%20Blockchain%20Project%20(Testnet)/tx/'
+        link += txid
+        webbrowser.open(link)
 
 class TransactionHistoryTableModel(QAbstractTableModel):
 
@@ -30,6 +95,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     COMMENT = 2
     AMOUNT = 3
     BALANCE = 4
+    INFO = 5
 
     transaction_types = {
         WalletTransaction.PAYMENT: "Payment",
@@ -47,7 +113,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def __init__(self, parent=None):
         super().__init__()
-        self.header = ['', 'Date', 'Comment', 'Amount', 'Balance']
+        self.header = ['', 'Date', 'Comment', 'Amount', 'Balance', '']
         self.transaction_type_to_icon[WalletTransaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
         self.transaction_type_to_icon[WalletTransaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
         self.transaction_type_to_icon[WalletTransaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
@@ -93,6 +159,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 return display
             if col == self.TXTYPE:
                 return None
+            if col == self.INFO:
+                return None
             return tx[col]
 
         if role == Qt.DecorationRole and col == self.TXTYPE and tx[col] in self.transaction_types:
@@ -106,8 +174,6 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 return None
         elif role == Qt.TextAlignmentRole and col not in (self.COMMENT, self.DATETIME):
             return QVariant(Qt.AlignRight | Qt.AlignVCenter)
-        elif role == Qt.TextAlignmentRole and col == self.TXTYPE and tx[col] in self.transaction_types:
-            return self.transaction_type_to_icon[tx[col]].actualSize()
         elif role == Qt.ForegroundRole:
             if col == self.AMOUNT and tx[col] < 0:
                 return QVariant(QColor(Qt.red))
@@ -134,24 +200,3 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             self.txs = WalletTransaction.get_wallet_history(session)
         self.endResetModel()
         self.sort(self.sort_index, self.sort_order)
-
-    #
-    # @pyqtSlot(object)
-    # def add_new_transaction(self, new_transactions):
-    #     # add new lines
-    #     self.beginInsertRows(QModelIndex(), 0, 1)
-    #     self.insert_db_data(new_transactions)
-    #     self.endInsertRows()
-    #
-    #     self.sort(self.sort_index, self.sort_order)
-    #
-    # @pyqtSlot(object)
-    # def update_transaction(self, new_transactions):
-    #     # update confirmations column
-    #     for index, tx_1 in enumerate(self.txs):
-    #         if tx_1['txid'] == new_transactions['txid']:
-    #             self.txs[index] = new_transactions
-    #             self.dataChanged.emit(self.index(index, self.DATETIME), self.index(index, self.DATETIME), [Qt.DisplayRole])
-    #             self.dataChanged.emit(self.index(index, self.BALANCE), self.index(index, self.BALANCE), [Qt.DisplayRole])
-    #
-    #     self.sort(self.sort_index, self.sort_order)

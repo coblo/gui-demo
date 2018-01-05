@@ -21,6 +21,7 @@ from app.widgets.iscc import WidgetISCC
 from app.widgets.timestamp import WidgetTimestamping
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
+from app.widgets.settings_profile import SettingsProfile
 
 log = logging.getLogger(__name__)
 
@@ -106,11 +107,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_apply_validator.clicked.connect(apply_dialog.exec)
 
         # Settings
-        self.check_box_exit_on_close.setChecked(self.profile.exit_on_close)
-        self.check_box_exit_on_close.stateChanged['int'].connect(self.setting_changed_exit_on_close)
-        self.check_manage_node.setChecked(self.profile.manage_node)
-        self.check_manage_node.stateChanged['int'].connect(self.setting_changed_manage_node)
         self.btn_alias_change.clicked.connect(self.on_change_alias)
+        profile_settings = SettingsProfile(self)
+        self.layout_profile_settings.insertWidget(0, profile_settings)
 
         # Connections
         signals.getblockchaininfo.connect(self.getblockchaininfo)

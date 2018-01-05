@@ -14,7 +14,6 @@ log = logging.getLogger(__name__)
 def init_logging():
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger("peewee").setLevel(logging.WARNING)
 
 
 def init_data_dir():

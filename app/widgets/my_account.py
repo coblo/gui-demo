@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import QWidget, QMessageBox
 from PyQt5.QtCore import pyqtSlot
 
 from decimal import Decimal, ROUND_DOWN
+
+from app.models import profile_session_scope
 from app.ui.my_account import Ui_MyAccount
 from app.models import Profile, init_profile_db
 from app.signals import signals
@@ -18,16 +20,14 @@ class MyAccount(QWidget, Ui_MyAccount):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
-        from app.models.db import profile_session_scope
-        with profile_session_scope() as session:
-            self.profile = Profile.get_active(session)
-        self.on_profile_changed(self.profile)
+        self.on_profile_changed()
 
         signals.profile_changed.connect(self.on_profile_changed)
 
-    @pyqtSlot(Profile)
-    def on_profile_changed(self, new_profile):
-        self.profile = new_profile
+    @pyqtSlot()
+    def on_profile_changed(self):
+        with profile_session_scope() as session:
+            self.profile = Profile.get_active(session)
         self.lbl_wallet_alias.setText(self.profile.alias)
         self.lbl_wallet_address.setText(self.profile.address)
 

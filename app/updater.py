@@ -46,6 +46,7 @@ class Updater(QtCore.QThread):
             profile = Profile.get_active(profile_session)
             with data_session_scope() as data_session:
                 profile.alias = Alias.get_alias_by_address(data_session, profile.address)
+                signals.profile_changed.emit()
 
         while True:
 

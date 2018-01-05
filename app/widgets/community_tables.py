@@ -4,7 +4,7 @@ import logging
 import math
 
 import timeago
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtGui import QCursor, QFont
@@ -15,11 +15,9 @@ from app import enums
 from app.backend.rpc import get_active_rpc_client
 from app.models import Alias
 from app.models import MiningReward
-from app.models import Permission, Profile, PendingVote, Block, Vote
+from app.models import Permission, Profile, PendingVote, Vote
 from app.models.db import data_session_scope, profile_session_scope
 from app.signals import signals
-
-from peewee import fn
 
 from app import ADMIN_CONSENUS_MINE, ADMIN_CONSENUS_ADMIN
 

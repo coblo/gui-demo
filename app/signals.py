@@ -32,7 +32,7 @@ class Signals(QObject):
     # custom signals
 
     #: profile changed
-    profile_changed = pyqtSignal(object)
+    profile_changed = pyqtSignal()
 
     iscc_inserted = pyqtSignal()
 

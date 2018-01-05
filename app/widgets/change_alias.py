@@ -5,11 +5,10 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QDialogButtonBox
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtWidgets import QWidget
-from peewee import fn
 
 from app.backend.rpc import get_active_rpc_client
-from app.models import Address, Alias, data_db
+from app.models import Alias
+from app.models import profile_session_scope
 from app.ui.dialog_change_alias import Ui_dialog_change_alias
 from app.models import Profile
 from app.signals import signals
@@ -36,9 +35,10 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
         self.buttonBox.button(QDialogButtonBox.Save).setDisabled(True)
 
     @pyqtSlot(Profile)
-    def on_profile_changed(self, new_profile):
-        self.profile = new_profile
-        self.edit_alias.setText(new_profile.alias)
+    def on_profile_changed(self):
+        with profile_session_scope() as session:
+            self.profile = Profile.get_active(session)
+        self.edit_alias.setText(self.profile.alias)
 
     def on_alias_changed(self, text):
         from app.models.db import data_session_scope

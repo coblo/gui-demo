@@ -18,6 +18,8 @@ from app.widgets.change_alias import ChangeAlias
 from app.widgets.community_tables import CommunityTableView
 from app.widgets.invite import InviteDialog
 from app.widgets.iscc import WidgetISCC
+from app.widgets.profile_table import ProfileTableView
+from app.widgets.profile_settings import ProfileSettingsDialog
 from app.widgets.timestamp import WidgetTimestamping
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
@@ -36,13 +38,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.data_dir = helpers.init_data_dir()
         self.node_data_dir = helpers.init_node_data_dir()
-        with profile_session_scope() as session:
-            self.profile = Profile.get_active(session)
 
         # Setup Widgets
         self.setupUi(self)
 
-        self.on_profile_changed(self.profile)
+        self.on_profile_changed()
         signals.profile_changed.connect(self.on_profile_changed)
 
         self.permissions_changed()
@@ -106,11 +106,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_apply_validator.clicked.connect(apply_dialog.exec)
 
         # Settings
-        self.check_box_exit_on_close.setChecked(self.profile.exit_on_close)
-        self.check_box_exit_on_close.stateChanged['int'].connect(self.setting_changed_exit_on_close)
-        self.check_manage_node.setChecked(self.profile.manage_node)
-        self.check_manage_node.stateChanged['int'].connect(self.setting_changed_manage_node)
         self.btn_alias_change.clicked.connect(self.on_change_alias)
+        self.table_profiles.setParent(None)
+        table_profiles = ProfileTableView()
+        self.layout_profile_settings.insertWidget(0, table_profiles)
+        self.btn_add_profile.clicked.connect(self.add_profile)
 
         # Connections
         signals.getblockchaininfo.connect(self.getblockchaininfo)
@@ -125,13 +125,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.show()
 
-    @pyqtSlot(Profile)
-    def on_profile_changed(self, new_profile):
+    @pyqtSlot()
+    def on_profile_changed(self):
         """Read current active profile and set gui labels"""
-        self.profile = new_profile
+        with profile_session_scope() as session:
+            self.profile = Profile.get_active(session)
         log.debug('load current profile %s' % self.profile)
 
-        self.lbl_alias.setText(new_profile.alias)
+        self.lbl_alias.setText(self.profile.alias)
 
         self.lbl_skill_is_admin.setEnabled(self.profile.is_admin)
         self.lbl_skill_is_miner.setEnabled(self.profile.is_miner)
@@ -159,18 +160,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             event.ignore()
             self.hide()
 
-    def setting_changed_exit_on_close(self, state):
-        self.profile.exit_on_close = state == 2
-        with profile_session_scope() as session:
-            session.add(self.profile)
-
-    def setting_changed_manage_node(self, state):
-        self.profile.manage_node = state == 2
-        with profile_session_scope() as session:
-            session.add(self.profile)
-
-        if self.profile.manage_node:
-            self.node.start()
+    def add_profile(self):
+        dialog = ProfileSettingsDialog(profile=None)
+        dialog.exec()
 
     def node_started(self):
         self.updater.start()

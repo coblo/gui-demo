@@ -12,6 +12,16 @@ options = {
             'excludes': [],
             'include_msvcr': True,
         },
+    'bdist_mac':
+        {
+            'iconfile': 'dist/app.icns',
+            'custom_info_plist': 'dist/mac.plist',
+        },
+    'bdist_dmg':
+        {
+            'applications_shortcut': True,
+            'volume_label': 'ContentBlockchainProject Demo',
+        },
 }
 
 executables = [

@@ -329,10 +329,11 @@ def process_wallet_txs():
                     amount = 0
                     is_payment = False
                 if is_payment:
+                    comment = wallet_tx.get('comment')
                     session.add(WalletTransaction(
                         txid=wallet_tx['txid'],
                         amount=amount,
-                        comment='',
+                        comment='' if comment is None else comment,
                         tx_type=WalletTransaction.PAYMENT,
                         balance=None
                     ))

@@ -20,7 +20,8 @@ machine readable licenses and contracting rules.git
 
 The smartlicense-stream is readable and writable by every blockchain 
 participant. An SmartLicense is identified by a publisher provided 
-UUID Version 4.
+UUID Version 4. See [smartlicense.proto](../smartlicense/smartlicense.proto)
+for current state of data structure for SmartLicenses.
 
 ## Transaction Models
 

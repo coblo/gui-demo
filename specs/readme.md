@@ -1,6 +1,6 @@
 # Content Blockchain Specifications
 
-This document is governed by the (2/COSS)[https://rfc.unprotocols.org/spec:2/COSS/] (COSS).
+This document is governed by the [2/COSS](https://rfc.unprotocols.org/spec:2/COSS/) (COSS).
 
 | Number                         | Title                  | Type   | Status |
 | ------------------------------ | ---------------------- | ------ | ------ |

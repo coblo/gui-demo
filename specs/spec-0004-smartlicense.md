@@ -11,7 +11,7 @@ License: BSD-2-Clause
 
 ## Purpose
 
-Allow content owners to offer, sell and verify content lincenses via blochain. 
+Allow content owners to offer, sell and verify content lincenses via blockchain. 
 This document specifies an open stream named `smartlicense` and the associated 
 data structures and transaction models that can be used to publish and verify 
 machine readable licenses and contracting rules.

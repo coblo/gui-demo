@@ -14,7 +14,7 @@ License: BSD-2-Clause
 Allow content owners to offer, sell and verify content lincenses via blockchain. 
 This document specifies an open stream named `smartlicense` and the associated 
 data structures and transaction models that can be used to publish and verify 
-machine readable licenses and contracting rules.
+machine readable licenses and contracting rules.git 
 
 ## Schema
 
@@ -36,7 +36,7 @@ user. A minimal JSON-encoded SmartLicense looks like this:
 
 ```json
 {
-  	"licensed_materials": ["2EvGugzdGh5Zp-2LpzWi7kt2kUA-2LpprH51GMPhq-2VhLRzBEdDLa4"],
+  	"materials": ["2EvGugzdGh5Zp-2LpzWi7kt2kUA-2LpprH51GMPhq-2VhLRzBEdDLa4"],
   	"activation_modes": ["ON_CHAIN_ATTESTATION"]
 }
 ```

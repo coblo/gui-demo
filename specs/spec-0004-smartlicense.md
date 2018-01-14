@@ -18,10 +18,16 @@ machine readable licenses and contracting rules.git
 
 ## Schema
 
-The smartlicense-stream is readable and writable by every blockchain 
-participant. An SmartLicense is identified by a publisher provided 
-UUID Version 4. See [smartlicense.proto](../smartlicense/smartlicense.proto)
-for current state of data structure for SmartLicenses.
+The SmartLicense protocol uses multiple streams. All streams are readable and 
+writable by every blockchain participant. A SmartLicense is identified by a 
+publisher provided UUID Version 4. 
+See [smartlicense.proto](../smartlicense/smartlicense.proto) for current state 
+of data structure for SmartLicenses.
+
+## Streams
+
+- `smartlicense`: the primary stream to publish SmartLicenses
+- `smartlicense-attestation`: for publishing license attestations
 
 ## Transaction Models
 
@@ -53,7 +59,7 @@ SmartLicense as data. The data is published in a compact binary encoding
 
 #### Issuing  a License to a user
 
-The publisher registers an entry in the  `smartlicense_attestation` - stream 
+The publisher registers an entry in the  `smartlicense-attestation` - stream 
 with the **Wallet-ID** of the user as key and the **SmartLicense UUID4** as 
 data.
 
@@ -62,7 +68,7 @@ data.
 Given an ISCC content identifier:
 
 - Ask the user to sign a random nonce with his Wallet-ID
-- Lookup the `smartlicense_attestation` stream for SmartLicenses attested to 
+- Lookup the `smartlicense-attestation` stream for SmartLicenses attested to 
 the user
 - ...
 

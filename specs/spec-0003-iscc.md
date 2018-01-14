@@ -2,7 +2,7 @@
 Spec: 3
 Title: ISCC Registration
 Author: Titusz <tp@py7.de>
-Status: Draft
+Status: Raw
 Created: 2018-01-13
 License: BSD-2-Clause
 ---

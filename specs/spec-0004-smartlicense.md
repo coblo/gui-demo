@@ -1,7 +1,7 @@
 ---
 Spec: 4
 Title: Smart Licenses
-Author: Titusz <tp@py7.de>
+Author: Titusz <tp@py7.de>, Patricia <schinke@creations.de>
 Status: Raw
 Created: 2018-01-12
 License: BSD-2-Clause
@@ -12,7 +12,7 @@ License: BSD-2-Clause
 ## Purpose
 
 Allow content owners to offer, sell and verify content lincenses via blockchain. 
-This document specifies an multiple streams and the associated  data structures 
+This document specifies multiple streams and the associated  data structures 
 and transaction models that can be used to publish and verify  machine readable 
 licenses and contracting rules.
 

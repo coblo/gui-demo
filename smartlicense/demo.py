@@ -2,6 +2,7 @@
 import datetime
 from smartlicense import smartlicense_pb2 as sl
 from google.protobuf import json_format
+import ubjson
 
 # Create a SmartLicense object and set Properties
 lic = sl.SmartLicense()
@@ -26,7 +27,6 @@ print('##############################\n\n')
 data_bytes = lic.SerializeToString(deterministic=True)
 print('SmartLicense byte serialized for blockchain storage:')
 print('##############################')
-print('Payload size:', lic.ByteSize(), 'Bytes')
 print(data_bytes.hex())
 print('##############################\n\n')
 
@@ -34,7 +34,6 @@ print('##############################\n\n')
 json_string = json_format.MessageToJson(lic, preserving_proto_field_name=True)
 print('SmartLicense json serialized:')
 print('##############################')
-print('Payload size:', len(json_string.encode('utf-8')), 'Bytes')
 print(json_string)
 print('##############################\n\n')
 
@@ -53,3 +52,10 @@ print('Recovered from json string:')
 print('##############################')
 print(obj2)
 print('##############################\n\n')
+
+obj3 = json_format.MessageToDict(lic, preserving_proto_field_name=True)
+ubdata = ubjson.dumpb(obj3)
+
+print('Payload size json:  ', len(json_string.encode('utf-8')), 'Bytes')
+print('Payload size ubjson:', len(ubdata), 'Bytes')
+print('Payload size proto: ', lic.ByteSize(), 'Bytes')

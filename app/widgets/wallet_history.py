@@ -67,7 +67,11 @@ class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent):
         QStyledItemDelegate.__init__(self, parent)
         self.info_icon = QIcon()
-        self.info_icon.addPixmap(QPixmap(":/images/resources/info.png"), QIcon.Normal, QIcon.Off)
+        self.info_icon.addPixmap(
+            QPixmap(":/images/resources/info_circle.svg"),
+            QIcon.Normal,
+            QIcon.Off
+        )
 
     def createEditor(self, parent, option, idx):
         db = self.parent().table_model.txs

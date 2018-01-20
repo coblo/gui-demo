@@ -33,6 +33,7 @@ class Application(QtWidgets.QApplication):
 
         # Initialize application metadata
         locale.setlocale(locale.LC_ALL, '')
+        log.debug('user locale is {}'.format(locale.getlocale(locale.LC_ALL)))
         self.setOrganizationName(app.ORG_NAME)
         self.setOrganizationDomain(app.ORG_DOMAIN)
         self.setApplicationDisplayName(app.APP_NAME)

@@ -87,6 +87,9 @@ class RpcClient:
     def getblockcount(self):
         return self._call('getblockcount')
 
+    def getchaintips(self):
+        return self._call('getchaintips')
+
     def getinfo(self) -> Optional[dict]:
         return self._call('getinfo')
 

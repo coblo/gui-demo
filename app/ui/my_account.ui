@@ -147,8 +147,11 @@
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
      </property>
      <layout class="QHBoxLayout" name="lout_gbox_wallet_balance_h">
+      <property name="spacing">
+       <number>0</number>
+      </property>
       <item>
-       <widget class="QLabel" name="lbl_wallet_balance">
+       <widget class="QLabel" name="lbl_wallet_balance_predecimal">
         <property name="font">
          <font>
           <family>Roboto Condensed</family>
@@ -157,14 +160,66 @@
           <bold>true</bold>
          </font>
         </property>
+        <property name="styleSheet">
+         <string notr="true">margin: 8px -7px 0 0;</string>
+        </property>
         <property name="text">
-         <string>0.00 CHM</string>
+         <string>0.</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
         </property>
         <property name="textInteractionFlags">
          <set>Qt::TextSelectableByMouse</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_wallet_balance_postdecimal">
+        <property name="font">
+         <font>
+          <family>Roboto Condensed</family>
+          <pointsize>10</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+          <kerning>true</kerning>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">margin: 18px 0 0 0;</string>
+        </property>
+        <property name="text">
+         <string>00000000</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="margin">
+         <number>0</number>
+        </property>
+        <property name="indent">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_wallet_balance_currency">
+        <property name="font">
+         <font>
+          <family>Roboto Condensed</family>
+          <pointsize>21</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">margin-top: 8px;</string>
+        </property>
+        <property name="text">
+         <string>CHM</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
         </property>
        </widget>
       </item>

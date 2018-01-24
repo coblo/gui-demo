@@ -97,8 +97,8 @@ def process_blocks():
     with data_session_scope() as session:
         Transaction.delete_unconfirmed(session)
 
-    # height is 0 indexed,
-        for batch in batchwise(range(last_valid_height+1, block_count_node), 100):
+        # height is 0 indexed,
+        for batch in batchwise(range(last_valid_height + 1, block_count_node), 100):
             try:
                 with data_session_scope() as session:
                     answer = client.listblocks(batch)
@@ -165,10 +165,11 @@ def process_transactions(data_db, block_height, pubkeyhash_version, checksum_val
             )
 
 
-def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version, checksum_value) -> bool: #todo: better name
+def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
+                               checksum_value) -> bool:  # todo: better name
     relevant = False
     txid = raw_transaction["txid"]
-    signers=[] #todo: SIGHASH_ALL
+    signers = []  # todo: SIGHASH_ALL
     for n, vin in enumerate(raw_transaction["vin"]):
         if 'scriptSig' in vin:
             public_key = vin['scriptSig']['asm'].split(' ')[1]
@@ -260,6 +261,11 @@ def process_wallet_txs():
     finished = False
     has_new_transactions = False
     has_new_confirmed_transactions = False
+    try:
+        wallet_addresses = client.getaddresses(False)["result"]
+    except Exception as e:
+        log.debug(e)
+        return
     with data_session_scope() as session:
         while not finished:
             wallet_txs = client.listwallettransactions(count=10, skip=i, verbose=True)
@@ -281,6 +287,10 @@ def process_wallet_txs():
                 amount = wallet_tx['balance']['amount']
                 is_payment = True
                 if wallet_tx.get('generated'):
+                    if session.query(MiningReward.address).join(Block).filter(Block.hash == unhexlify(
+                            wallet_tx["blockhash"])).first().address not in wallet_addresses:
+                        log.debug("wallet transaction is invalid")
+                        continue
                     session.add(WalletTransaction(
                         txid=wallet_tx['txid'],
                         amount=amount,
@@ -320,7 +330,8 @@ def process_wallet_txs():
                     session.add(WalletTransaction(
                         txid=wallet_tx['txid'],
                         amount=amount,
-                        comment='Type:"' + wallet_tx['create']['type'] + '", Name: "' + wallet_tx['create']['name'] + '"',
+                        comment='Type:"' + wallet_tx['create']['type'] + '", Name: "' + wallet_tx['create'][
+                            'name'] + '"',
                         tx_type=WalletTransaction.CREATE,
                         balance=None
                     ))
@@ -437,6 +448,7 @@ def process_permissions():
 
 if __name__ == '__main__':
     import app
+
     app.init()
     with data_session_scope() as session:
         WalletTransaction.compute_balances(session)

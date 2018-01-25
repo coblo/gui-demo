@@ -81,11 +81,11 @@ class ButtonDelegate(QStyledItemDelegate):
         btn.setStyleSheet(
             "QPushButton {margin: 8 4 8 4; border: none;}")
         btn.setObjectName(table_entry.txid)
-        btn.clicked.connect(self.on_revoke_clicked)
+        btn.clicked.connect(self.on_info_clicked)
         btn.setCursor(QCursor(Qt.PointingHandCursor))
         return btn
 
-    def on_revoke_clicked(self):
+    def on_info_clicked(self):
         sender = self.sender()
         txid = sender.objectName()
         link = 'https://explorer.content-blockchain.org/Content%20Blockchain%20Project%20(Testnet)/tx/'
@@ -118,6 +118,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def __init__(self, parent=None):
         super().__init__()
+
+        self.parent = parent
         self.header = ['', 'Date', 'Comment', 'Amount', 'Balance', '']
         self.transaction_type_to_icon[WalletTransaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
         self.transaction_type_to_icon[WalletTransaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
@@ -205,3 +207,5 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             self.txs = WalletTransaction.get_wallet_history(session)
         self.endResetModel()
         self.sort(self.sort_index, self.sort_order)
+        if hasattr(self.parent, "table_model"):
+            self.parent.create_table_buttons()

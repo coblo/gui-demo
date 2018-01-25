@@ -100,6 +100,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     AMOUNT = 3
     BALANCE = 4
     INFO = 5
+    POS_IN_BLOCK = 6
 
     transaction_types = {
         WalletTransaction.PAYMENT: "Payment",
@@ -191,7 +192,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.sort_order = order
         self.layoutAboutToBeChanged.emit()
         if p_int == self.DATETIME:
-            self.txs.sort(key=lambda x: (datetime.now() if x[p_int] is None else x[p_int]), reverse=(order != Qt.DescendingOrder))
+            self.txs.sort(key=lambda x: (datetime.now() if x[p_int] is None else x[p_int], 0-x[self.POS_IN_BLOCK]), reverse=(order != Qt.DescendingOrder))
         else:
             self.txs.sort(key=lambda x: x[p_int], reverse=(order != Qt.DescendingOrder))
         self.layoutChanged.emit()

@@ -62,5 +62,6 @@ class WalletTransaction(data_base):
             WalletTransaction.comment,
             WalletTransaction.amount,
             WalletTransaction.balance,
-            WalletTransaction.txid
+            WalletTransaction.txid,
+            Transaction.pos_in_block
         ).outerjoin(Transaction, Block).order_by(Block.mining_time.desc()).all()

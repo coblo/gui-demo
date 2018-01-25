@@ -54,9 +54,9 @@ class WalletTransaction(data_base):
         return bool(first_unknown_balance)
 
     @staticmethod
-    def get_wallet_history(data_db):
+    def get_wallet_history(data_db, limit=None):
         from app.models import Block, Transaction
-        return data_db.query(
+        query = data_db.query(
             WalletTransaction.tx_type,
             Block.mining_time,
             WalletTransaction.comment,
@@ -64,4 +64,5 @@ class WalletTransaction(data_base):
             WalletTransaction.balance,
             WalletTransaction.txid,
             Transaction.pos_in_block
-        ).outerjoin(Transaction, Block).order_by(Block.mining_time.desc()).all()
+        ).outerjoin(Transaction, Block).order_by(Block.mining_time.desc(), Transaction.pos_in_block.asc())
+        return (query.all() if limit is None else query.limit(limit).all())

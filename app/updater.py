@@ -53,7 +53,7 @@ class Updater(QtCore.QThread):
                 # This triggers Network Info widget update that we always want
                 blockchain_info = sync.getblockchaininfo()
                 # The node is downloading blocks if it has more headers than blocks
-                if blockchain_info['blocks'] != blockchain_info['headers']:
+                if blockchain_info['blocks'] != blockchain_info['headers'] or blockchain_info['reindex']:
                     log.debug('blockchain syncing - skip expensive rpc calls')
                     self.sleep(self.UPDATE_INTERVALL)
                     continue

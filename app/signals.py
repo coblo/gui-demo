@@ -13,6 +13,7 @@ class Signals(QObject):
     node_started = pyqtSignal()
     node_finished = pyqtSignal(int, QProcess.ExitStatus)
     node_error = pyqtSignal(QProcess.ProcessError)
+    rpc_error = pyqtSignal(str)
 
     # simple rpc method syncs
     getinfo = pyqtSignal(object)

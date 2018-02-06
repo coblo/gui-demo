@@ -7,7 +7,7 @@ import app
 from app import helpers
 from app import models
 from app.models import Profile, Permission, CurrentVote
-from app.responses import Getblockchaininfo
+from app.responses import Getblockchaininfo, Getinfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.widgets.apply import ApplyDialog
@@ -78,6 +78,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         table_candidates = CandidateTableView(self)
         self.tab_candidates.layout().insertWidget(0, table_candidates)
 
+        self.label_statusbar = QtWidgets.QLabel('')
+        self.statusbar.addPermanentWidget(self.label_statusbar)
+
         # Dialog Button hookups
         invite_dialog = InviteDialog(self)
         self.button_invite_canditate.clicked.connect(invite_dialog.exec)
@@ -92,9 +95,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.check_manage_node.stateChanged['int'].connect(self.setting_changed_manage_node)
 
         # Connections
+        signals.getinfo.connect(self.getinfo)
         signals.getblockchaininfo.connect(self.getblockchaininfo)
         signals.listpermissions.connect(self.listpermissions)
         signals.node_started.connect(self.node_started)
+        signals.rpc_error.connect(self.rpc_error)
 
         if self.profile.manage_node:
             # Todo check for existing node process
@@ -147,10 +152,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.updater.start()
 
     @pyqtSlot(object)
+    def getinfo(self, info: Getinfo):
+        tpl = "Node: v{} | Protocol: v{} | Relayfee: {} | Connections: {}"
+        netinfo = tpl.format(
+            info.version, info.protocolversion, float(info.relayfee),
+            info.connections,
+        )
+        self.label_network_info.setText(info.description)
+        self.label_statusbar.setText(netinfo)
+
+    @pyqtSlot(object)
     def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):
         self.progress_bar_network_info.setMaximum(blockchaininfo.headers)
         self.progress_bar_network_info.setValue(blockchaininfo.blocks)
-        self.label_network_info.setText(blockchaininfo.description)
+
+    @pyqtSlot(str)
+    def rpc_error(self, emsg):
+        self.statusbar.showMessage(emsg, 1000 * 5)
 
     @pyqtSlot()
     def listpermissions(self):

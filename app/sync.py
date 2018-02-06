@@ -6,7 +6,7 @@ from datetime import datetime
 
 from app.models.vote import Vote
 from app.tools.address import public_key_to_address
-from app.responses import Getblockchaininfo
+from app.responses import Getblockchaininfo, Getinfo
 from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
 from app.enums import Stream
@@ -24,6 +24,7 @@ def getinfo():
     client = get_active_rpc_client()
     profile = Profile.get_active()
     result = client.getinfo()['result']
+    signals.getinfo.emit(Getinfo(**result))
 
     if result['balance'] != profile.balance:
         profile.balance = result['balance']

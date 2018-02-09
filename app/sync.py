@@ -282,6 +282,9 @@ def process_wallet_txs():
                     finished = True
                     break
 
+                if wallet_tx.get('valid') is False:
+                    continue
+
                 has_new_transactions = True
                 has_new_confirmed_transactions = False
                 amount = wallet_tx['balance']['amount']

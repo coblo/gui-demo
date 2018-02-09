@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
 from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont, QCursor
-from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QWidget, QPushButton, QStyledItemDelegate, QTableView
+from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QWidget, QTableView
 
 from app.models import WalletTransaction
 from app.ui.wallet_history import Ui_widget_wallet_history
@@ -51,46 +51,16 @@ class TransactionTableView(QTableView):
         self.setShowGrid(False)
         self.setSortingEnabled(False)
         self.setCornerButtonEnabled(True)
-        self.create_table_buttons()
+        self.clicked.connect(self.info_clicked)
 
-    def create_table_buttons(self):
-        self.setItemDelegateForColumn(5, ButtonDelegate(self))
-        for row in range(0, self.table_model.rowCount()):
-            self.openPersistentEditor(self.table_model.index(row, 5))
-        # TODO find a better way to fix button sizes collapsing on update
-        w, h = self.size().width(), self.size().height()
-        self.resize(w + 1, h)
-        self.resize(w, h)
+    def info_clicked(self, index):
+        if index.column() == 5:
+            db = self.table_model.txs
+            txid = db[index.row()].txid
+            link = 'https://explorer.content-blockchain.org/Content%20Blockchain%20Project%20(Testnet)/tx/'
+            link += txid
+            webbrowser.open(link)
 
-
-class ButtonDelegate(QStyledItemDelegate):
-    def __init__(self, parent):
-        QStyledItemDelegate.__init__(self, parent)
-        self.info_icon = QIcon()
-        self.info_icon.addPixmap(
-            QPixmap(":/images/resources/info_circle.svg"),
-            QIcon.Normal,
-            QIcon.Off
-        )
-
-    def createEditor(self, parent, option, idx):
-        db = self.parent().table_model.txs
-        table_entry = db[idx.row()]
-        btn = QPushButton('', parent)
-        btn.setIcon(self.info_icon)
-        btn.setStyleSheet(
-            "QPushButton {margin: 8 4 8 4; border: none;}")
-        btn.setObjectName(table_entry.txid)
-        btn.clicked.connect(self.on_info_clicked)
-        btn.setCursor(QCursor(Qt.PointingHandCursor))
-        return btn
-
-    def on_info_clicked(self):
-        sender = self.sender()
-        txid = sender.objectName()
-        link = 'https://explorer.content-blockchain.org/Content%20Blockchain%20Project%20(Testnet)/tx/'
-        link += txid
-        webbrowser.open(link)
 
 class TransactionHistoryTableModel(QAbstractTableModel):
 
@@ -125,6 +95,9 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.transaction_type_to_icon[WalletTransaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
         self.transaction_type_to_icon[WalletTransaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
         self.transaction_type_to_icon[WalletTransaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
+
+        self.info_icon = QIcon()
+        self.info_icon.addPixmap(QPixmap(":/images/resources/info_circle.svg"), QIcon.Normal, QIcon.Off)
 
         self.txs = None
         self.sort_index = self.DATETIME
@@ -170,13 +143,18 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 return None
             return tx[col]
 
-        if role == Qt.DecorationRole and col == self.TXTYPE and tx[col] in self.transaction_types:
-            return self.transaction_type_to_icon[tx[col]]
+        if role == Qt.DecorationRole:
+            if col == self.TXTYPE and tx[col] in self.transaction_types:
+                return self.transaction_type_to_icon[tx[col]]
+            elif col == self.INFO:
+                return self.info_icon
         if role == Qt.ToolTipRole:
             if col == self.BALANCE:
                 return '_' if tx[col] is None else "{0:n}".format(tx[col])
             elif col == self.TXTYPE and tx[col] in self.transaction_types:
                 return self.transaction_types[tx[col]]
+            elif col == self.INFO:
+                return self.info_icon
             else:
                 return None
         elif role == Qt.TextAlignmentRole and col not in (self.COMMENT, self.DATETIME):
@@ -207,5 +185,3 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             self.txs = WalletTransaction.get_wallet_history(session)
         self.endResetModel()
         self.sort(self.sort_index, self.sort_order)
-        if hasattr(self.parent, "table_model"):
-            self.parent.create_table_buttons()

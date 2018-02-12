@@ -5,11 +5,12 @@ from PyQt5.QtCore import QTimer, pyqtSlot
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication
 
+import app
 from app import enums
 from app import helpers
 from app.models import Profile, Permission, PendingVote
 from app.models.db import profile_session_scope, data_session_scope
-from app.responses import Getblockchaininfo
+from app.responses import Getblockchaininfo, Getinfo
 from app.signals import signals
 from app.ui.proto import Ui_MainWindow
 from app.widgets.apply import ApplyDialog
@@ -98,6 +99,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         table_candidates = CandidateTableView(self)
         self.tab_candidates.layout().insertWidget(0, table_candidates)
 
+        # Statusbar
+        self.label_statusbar = QtWidgets.QLabel('')
+        self.statusbar.addPermanentWidget(self.label_statusbar)
+
         # Dialog Button hookups
         invite_dialog = InviteDialog(self)
         self.button_invite_canditate.clicked.connect(invite_dialog.exec)
@@ -113,6 +118,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_alias_change.clicked.connect(self.on_change_alias)
 
         # Connections
+        signals.getinfo.connect(self.getinfo)
         signals.getblockchaininfo.connect(self.getblockchaininfo)
         signals.node_started.connect(self.node_started)
         signals.blockschanged.connect(self.getdatabaseinfo)
@@ -196,6 +202,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def hide_information(self):
         self.widget_information.setHidden(True)
         self.label_info_text.setText('')
+
+    @pyqtSlot(object)
+    def getinfo(self, info: Getinfo):
+        tpl = "Gui: v{} | Node: v{} | Protocol: v{} | Relayfee: {} | Connections: {}"
+        netinfo = tpl.format(
+            app.APP_VERSION, info.version, info.protocolversion,
+            float(info.relayfee), info.connections,
+        )
+        self.label_network_info.setText(info.description)
+        self.label_statusbar.setText(netinfo)
+
 
     @pyqtSlot(object)
     def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):

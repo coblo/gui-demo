@@ -24,6 +24,7 @@ class Signals(QObject):
     permissions_changed = pyqtSignal()
     liststreamitems_alias = pyqtSignal()
     listblocks = pyqtSignal()
+    blockschanged = pyqtSignal(object)
 
     application_start = pyqtSignal()
 

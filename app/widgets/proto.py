@@ -121,6 +121,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         signals.getinfo.connect(self.getinfo)
         signals.getblockchaininfo.connect(self.getblockchaininfo)
         signals.node_started.connect(self.node_started)
+        signals.rpc_error.connect(self.rpc_error)
         signals.blockschanged.connect(self.getdatabaseinfo)
         with data_session_scope() as session:
             from app.models import Block
@@ -217,6 +218,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.progress_bar_network_info.setMaximum(blockchaininfo.headers)
         self.progress_bar_database_info.setMaximum(blockchaininfo.headers)
         self.progress_bar_network_info.setValue(blockchaininfo.blocks)
+
+    @pyqtSlot(str)
+    def rpc_error(self, msg: str):
+        self.statusbar.showMessage(msg, 1000 * 5)
 
     @pyqtSlot(object)
     def getdatabaseinfo(self, databaseinfo):

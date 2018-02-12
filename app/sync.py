@@ -13,7 +13,7 @@ from app.models import Address, Permission, Transaction, PendingVote, Block, Pro
     WalletTransaction, Timestamp, Vote
 from app.models import ISCC
 from app.models.db import profile_session_scope, data_session_scope
-from app.responses import Getblockchaininfo
+from app.responses import Getblockchaininfo, Getinfo
 from app.signals import signals
 from app.tools.address import public_key_to_address
 from app.tools.validators import is_valid_username
@@ -30,6 +30,7 @@ def getinfo():
         profile = Profile.get_active(session)
         try:
             result = client.getinfo()['result']
+            signals.getinfo.emit(Getinfo(**result))
             if result['balance'] != profile.balance:
                 profile.balance = result['balance']
         except Exception as e:

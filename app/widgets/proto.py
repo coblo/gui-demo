@@ -115,6 +115,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Connections
         signals.getblockchaininfo.connect(self.getblockchaininfo)
         signals.node_started.connect(self.node_started)
+        signals.blockschanged.connect(self.getdatabaseinfo)
+        with data_session_scope() as session:
+            from app.models import Block
+            self.getdatabaseinfo(session.query(Block).count())
 
         if self.profile.manage_node:
             # Todo check for existing node process
@@ -196,8 +200,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @pyqtSlot(object)
     def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):
         self.progress_bar_network_info.setMaximum(blockchaininfo.headers)
+        self.progress_bar_database_info.setMaximum(blockchaininfo.headers)
         self.progress_bar_network_info.setValue(blockchaininfo.blocks)
-        self.label_network_info.setText(blockchaininfo.description)
+
+    @pyqtSlot(object)
+    def getdatabaseinfo(self, databaseinfo):
+        if self.progress_bar_database_info.maximum() != 0:
+            self.progress_bar_database_info.setValue(databaseinfo)
+
 
     @pyqtSlot()
     def permissions_changed(self):

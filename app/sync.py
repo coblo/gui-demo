@@ -123,6 +123,7 @@ def process_blocks():
                         if block['txcount'] > 1:
                             process_transactions(session, block['height'], pubkeyhash_version, checksum_value)
                         signals.database_blocks_updated.emit(block['height'], block_count_node)
+                        signals.blockschanged.emit(session.query(Block).count())
             except Exception as e:
                 log.debug(e)
                 return

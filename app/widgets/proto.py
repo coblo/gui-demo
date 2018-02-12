@@ -118,7 +118,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         signals.blockschanged.connect(self.getdatabaseinfo)
         with data_session_scope() as session:
             from app.models import Block
-            self.getdatabaseinfo(session.query(Block).count())
+            self.progress_bar_database_info.setValue(session.query(Block).count())
 
         if self.profile.manage_node:
             # Todo check for existing node process
@@ -205,8 +205,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @pyqtSlot(object)
     def getdatabaseinfo(self, databaseinfo):
-        if self.progress_bar_database_info.maximum() != 0:
-            self.progress_bar_database_info.setValue(databaseinfo)
+        self.progress_bar_database_info.setValue(databaseinfo)
 
 
     @pyqtSlot()

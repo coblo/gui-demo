@@ -153,8 +153,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @pyqtSlot(object)
     def getinfo(self, info: Getinfo):
-        tpl = "Node: v{} | Protocol: v{} | Relayfee: {} | Connections: {}"
+        tpl = "Gui: v{} | Node: v{} | Protocol: v{} | " \
+              "Relayfee: {} | Connections: {}"
         netinfo = tpl.format(
+            app.APP_VERSION,
             info.version, info.protocolversion, float(info.relayfee),
             info.connections,
         )

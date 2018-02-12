@@ -34,12 +34,12 @@ class MyAccount(QWidget, Ui_MyAccount):
 
         postdecimal = math.floor(self.profile.balance * 100000000 % 100000000)
         predecimal = self.profile.balance.quantize(Decimal(), rounding=ROUND_DOWN)
+        balance = self.profile.balance.quantize(Decimal("0.00000001"), rounding=ROUND_DOWN)
+        spacer = "{0:n}".format(balance)[-9]
         self.lbl_wallet_balance_postdecimal.setText("{}".format(postdecimal))
-        self.lbl_wallet_balance_predecimal.setText("{0:n},".format(predecimal))
+        self.lbl_wallet_balance_predecimal.setText("{0:n}{1}".format(predecimal, spacer))
         self.lbl_wallet_balance_currency.setText(CURRENCY_CODE)
-        self.gbox_wallet_my_balance.setToolTip("{0:n} {1}".format(
-            self.profile.balance.quantize(Decimal("0.00000001"), rounding=ROUND_DOWN), CURRENCY_CODE
-        ))
+        self.gbox_wallet_my_balance.setToolTip("{0:n} {1}".format(balance, CURRENCY_CODE))
 
 
 if __name__ == '__main__':

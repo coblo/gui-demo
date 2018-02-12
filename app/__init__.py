@@ -9,8 +9,8 @@ ORG_NAME = 'Content-Blockchain'
 ORG_DOMAIN = 'content-blockchain.org'
 APP_NAME = 'Coblo'
 MAJOR = 0
-MINOR = 1
-PATCH = 0
+MINOR = 2
+PATCH = 3
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
 

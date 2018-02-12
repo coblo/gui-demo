@@ -1361,7 +1361,14 @@ QLabel[enabled=&quot;true&quot;] {
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="font">
+    <font>
+     <family>Roboto Light</family>
+     <pointsize>9</pointsize>
+    </font>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>

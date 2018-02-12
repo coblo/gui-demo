@@ -13,7 +13,7 @@ from app.models import Address, Permission, Transaction, PendingVote, Block, Pro
     WalletTransaction, Timestamp, Vote
 from app.models import ISCC
 from app.models.db import profile_session_scope, data_session_scope
-from app.responses import Getblockchaininfo
+from app.responses import Getblockchaininfo, Getinfo
 from app.signals import signals
 from app.tools.address import public_key_to_address
 from app.tools.validators import is_valid_username
@@ -30,6 +30,7 @@ def getinfo():
         profile = Profile.get_active(session)
         try:
             result = client.getinfo()['result']
+            signals.getinfo.emit(Getinfo(**result))
             if result['balance'] != profile.balance:
                 profile.balance = result['balance']
         except Exception as e:
@@ -137,18 +138,14 @@ def process_transactions(data_db, block_height, pubkeyhash_version, checksum_val
     client = get_active_rpc_client()
 
     try:
-        block = client.getblock(hash_or_height='{}'.format(block_height))['result']
+        block = client.getblock(hash_or_height='{}'.format(block_height), verbose=4)['result']
     except Exception as e:
         log.debug(e)
         return
 
-    for pos_in_block, txid in enumerate(block['tx']):
+    for pos_in_block, tx in enumerate(block['tx']):
         try:
-            tx = client.getrawtransaction(txid, 4)
-            if tx["error"]:
-                log.debug(tx["error"])
-                continue
-            tx_relevant = process_inputs_and_outputs(data_db, tx["result"], pubkeyhash_version, checksum_value)
+            tx_relevant = process_inputs_and_outputs(data_db, tx, pubkeyhash_version, checksum_value)
 
         except Exception as e:
             log.debug(e)
@@ -159,7 +156,7 @@ def process_transactions(data_db, block_height, pubkeyhash_version, checksum_val
             Transaction.create_if_not_exists(
                 data_db,
                 Transaction(
-                    txid=txid,
+                    txid=tx['txid'],
                     pos_in_block=pos_in_block,
                     block=unhexlify(block['hash'])
                 )

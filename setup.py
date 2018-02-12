@@ -39,7 +39,7 @@ executables = [
 
 setup(
     name='Coblo',
-    version='0.2.1',
+    version='0.2.3',
     description='Content Blockchain Demo',
     options=options,
     executables=executables

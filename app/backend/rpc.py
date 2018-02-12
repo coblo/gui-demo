@@ -8,6 +8,7 @@ from typing import Optional
 # Don´t remove this import. Its a hack for cx freezing
 from multiprocessing import Queue
 
+from app.signals import signals
 
 log = logging.getLogger(__name__)
 
@@ -176,7 +177,12 @@ class RpcClient:
         args = [arg for arg in args if arg is not None]
         payload = {"id": method, "method": method, "params": args}
         serialized = json.dumps(payload, cls=DecimalEncoder)
-        response = requests.post(self._url, data=serialized, verify=False)
+        try:
+            response = requests.post(self._url, data=serialized, verify=False)
+            data = response.json(parse_float=Decimal)
+        except Exception as e:
+            signals.rpc_error.emit(e.__class__.__name__)
+            raise
         return response.json(parse_float=Decimal)
 
 

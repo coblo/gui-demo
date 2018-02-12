@@ -205,14 +205,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @pyqtSlot(object)
     def getinfo(self, info: Getinfo):
-        tpl = "Gui: v{} | Node: v{} | Protocol: v{} | Relayfee: {} | Connections: {}"
+        tpl = "Gui: v{} | Net: {} | Node: v{} | Protocol: v{} | Relayfee: {} | Connections: {}"
         netinfo = tpl.format(
-            app.APP_VERSION, info.version, info.protocolversion,
+            app.APP_VERSION, info.description, info.version, info.protocolversion,
             float(info.relayfee), info.connections,
         )
-        self.label_network_info.setText(info.description)
         self.label_statusbar.setText(netinfo)
-
 
     @pyqtSlot(object)
     def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):

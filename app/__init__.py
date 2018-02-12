@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 """Global constants and pre-app initialization stuff."""
 from os.path import abspath, dirname, join, exists
+from os import environ
 import sys
 import appdirs
 
+# Enable QT High-Dpi Support
+environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = "1"
 
 ORG_NAME = 'Content-Blockchain'
 ORG_DOMAIN = 'content-blockchain.org'
 APP_NAME = 'Coblo'
 MAJOR = 0
-MINOR = 1
-PATCH = 0
+MINOR = 2
+PATCH = 2
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
 

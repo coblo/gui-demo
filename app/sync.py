@@ -254,6 +254,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
 
 
 def process_wallet_txs():
+    import itertools
     client = get_active_rpc_client()
     i = 0
     finished = False
@@ -265,33 +266,57 @@ def process_wallet_txs():
         log.debug(e)
         return
     with data_session_scope() as session:
-        while not finished:
-            wallet_txs = client.listwallettransactions(count=10, skip=i, verbose=True)
-            i += 10
+        latest_valid_txid = WalletTransaction.get_latest_txid(session)
+    offset = 0
+    while not finished:
+        with data_session_scope() as session:
+            # 101 to make sure that when going back 100 we don't end up with 0
+            wallet_txs = client.listwallettransactions(count=101, skip=offset, verbose=True)
             if wallet_txs['error'] is not None:
                 log.debug(wallet_txs['error'])
                 break
 
-            if len(wallet_txs['result']) == 0:
-                break
+            # check if latest tx is in current block and save position when found
+            latest_valid_txid_index = -1
+            for index, tx in enumerate(wallet_txs['result']):
+                if tx['txid'] == latest_valid_txid:
+                    # the next block-update-iteration should delete this invalid transaction
+                    if not tx['valid']:
+                        log.debug('latest transaction was invalid, sync waits for deletion of invalid blocks')
+                        return
+                    latest_valid_txid_index = index
 
-            for wallet_tx in reversed(wallet_txs['result']):
-                if WalletTransaction.wallet_transaction_in_db(session, wallet_tx['txid']):
-                    finished = True
-                    break
+            # the latest tx is not in the batch
+            if latest_valid_txid_index == -1:
+                # no more transactions in the wallet
+                if len(wallet_txs['result']) < 101:
+                    # our latest tx is not in the wallet anymore
+                    if latest_valid_txid is not None:
+                        log.debug('Invalid latest wallet transaction')
+                        break
+                    else:
+                        # the case that there are no TXs in the database is handled, by not going back further
+                        pass
+                else:
+                    offset += 100
+                    continue
 
+            # break the loop if there are no more new transactions in the wallet
+            finished = offset == 0
+            # have some overlapping transactions in case that new ones have arrived
+            offset = max(offset - 90, 0)
+
+            # skip the existing transactions
+            for wallet_tx in itertools.islice(wallet_txs['result'], latest_valid_txid_index + 1, None):
                 if wallet_tx.get('valid') is False:
                     continue
 
+                latest_valid_txid = wallet_tx['txid']
                 has_new_transactions = True
                 has_new_confirmed_transactions = False
                 amount = wallet_tx['balance']['amount']
                 is_payment = True
                 if wallet_tx.get('generated'):
-                    if session.query(MiningReward.address).join(Block).filter(Block.hash == unhexlify(
-                            wallet_tx["blockhash"])).first().address not in wallet_addresses:
-                        log.debug("wallet transaction is invalid")
-                        continue
                     session.add(WalletTransaction(
                         txid=wallet_tx['txid'],
                         amount=amount,
@@ -373,6 +398,7 @@ def process_wallet_txs():
                             block=None
                         )
                     )
+        signals.wallet_transactions_changed.emit()
 
     if has_new_transactions:
         if has_new_confirmed_transactions:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from sqlalchemy import Column, String, ForeignKey, Enum, Float, Integer, exists
+from sqlalchemy import Column, String, ForeignKey, Enum, Float, Integer, exists, func
 
 from app.models.db import data_base
 
@@ -26,8 +26,14 @@ class WalletTransaction(data_base):
         return "MyTransaction(%s, %s)" % (self.txid, self.tx_type)
 
     @staticmethod
-    def wallet_transaction_in_db(data_db, txid):
-        return data_db.query(exists().where(WalletTransaction.txid == txid)).scalar()
+    def get_latest_txid(data_db):
+        # return data_db.query(func.count(func.distinct(WalletTransaction.txid)).label("count")).filter(WalletTransaction.txid.in_(txids)).scalar()
+        # from app.models import Transaction
+        # return (data_db.query(WalletTransaction.txid)
+        #         .filter(
+        #             exists().where((Transaction.txid == WalletTransaction.txid) & Transaction.block.isnot(None))
+        #         ).order_by(WalletTransaction.wallet_txid.desc()).limit(1)).scalar()
+        return (data_db.query(WalletTransaction.txid).order_by(WalletTransaction.wallet_txid.desc()).limit(1)).scalar()
 
     @staticmethod
     def compute_balances(data_db) -> bool:

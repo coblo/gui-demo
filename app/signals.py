@@ -44,6 +44,7 @@ class Signals(QObject):
     is_admin_changed = pyqtSignal(bool)
     is_miner_changed = pyqtSignal(bool)
 
+    on_balance_status_changed = pyqtSignal(bool)
     balance_changed = pyqtSignal(float)
 
     # emitted when the sync for new blocks was finished

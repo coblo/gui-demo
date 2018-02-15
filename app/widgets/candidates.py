@@ -102,6 +102,11 @@ class CandidateModel(QAbstractTableModel):
 class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent):
         QStyledItemDelegate.__init__(self, parent)
+        self.balance_is_zero = True
+        signals.on_balance_status_changed.connect(self.on_balance_status_changed)
+
+    def on_balance_status_changed(self, balance_is_zero):
+        self.balance_is_zero = balance_is_zero
 
     def createEditor(self, parent, option, idx):
         db = self.parent().table_model.candidates
@@ -120,7 +125,9 @@ class ButtonDelegate(QStyledItemDelegate):
                 "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         else:
             btn.setCursor(QCursor(Qt.PointingHandCursor))
-        btn.setDisabled(already_voted)
+        btn.setDisabled(already_voted or self.balance_is_zero)
+        if self.balance_is_zero:
+            btn.setToolTip("You need coins to vote.")
         return btn
 
     def on_grant_clicked(self, skill):

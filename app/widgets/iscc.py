@@ -61,8 +61,18 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.tab_register.layout().insertWidget(4, self.table_conflicts)
         self.label_title_extra.setHidden(True)
         self.widget_extra.setHidden(True)
+        self.balance_is_zero = True
 
         signals.iscc_inserted.connect(self.update_conflicts)
+        signals.on_balance_status_changed.connect(self.on_balance_status_changed)
+
+    def on_balance_status_changed(self, balance_is_zero):
+        self.balance_is_zero = balance_is_zero
+        if balance_is_zero:
+            self.btn_register.setDisabled(True)
+            self.btn_register.setToolTip("You need coins to register an ISCC.")
+        else:
+            self.btn_register.setToolTip("")
 
     def search_iscc(self):  # todo: wenn man einen ganzen iscc sucht findet man nichts...
         search_term = self.edit_search_iscc.text()
@@ -192,8 +202,9 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         pixmap = pixmap.scaledToHeight(128)
         self.label_qr.setPixmap(pixmap)
         with data_session_scope() as session:
-            self.btn_register.setDisabled(
-                ISCC.already_exists(session, self.meta_id, self.content_id, self.data_id, self.instance_id))
+            if not self.balance_is_zero:
+                self.btn_register.setDisabled(
+                    ISCC.already_exists(session, self.meta_id, self.content_id, self.data_id, self.instance_id))
             conflicts = ISCC.get_conflicts(session, self.meta_id, self.content_id, self.data_id, self.instance_id)
             if len(conflicts) > 0:
                 self.label_title_conflicts.setHidden(False)

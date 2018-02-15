@@ -9,7 +9,6 @@ from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QDragLeaveEvent, QFont
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTableWidgetItem, QHeaderView, QMessageBox
 
 from app.models import Profile, profile_session_scope
-from app.signals import signals
 from app.api import put_timestamp
 from app.exceptions import RpcResponseError
 from app.models.timestamp import Timestamp
@@ -49,6 +48,8 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.balance_is_zero = True
+
         self.setupUi(self)
         self.reset()
         self.hash_thread = None
@@ -78,6 +79,15 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.button_dropzone.clicked.connect(self.file_select_dialog)
         self.button_reset.clicked.connect(self.reset)
         self.button_register.clicked.connect(self.register_timestamp)
+        signals.on_balance_status_changed.connect(self.on_balance_status_changed)
+
+    def on_balance_status_changed(self, balance_is_zero):
+        self.button_register.setDisabled(balance_is_zero)
+        self.balance_is_zero = balance_is_zero
+        if balance_is_zero:
+            self.button_register.setToolTip("You need coins to register a timestamp.")
+        else:
+            self.button_register.setToolTip("")
 
     def showEvent(self, show_event):
         self.table_my_timestamps.model().refresh_data()
@@ -266,7 +276,8 @@ class WidgetTimestamping(QWidget, Ui_WidgetTimestamping):
         self.edit_comment.show()
         self.edit_comment.setEnabled(True)
         self.button_reset.setEnabled(True)
-        self.button_register.setEnabled(True)
+        if not self.balance_is_zero:
+            self.button_register.setEnabled(True)
 
 
 class TimestampTableModel(QAbstractTableModel):

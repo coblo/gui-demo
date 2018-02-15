@@ -1,4 +1,5 @@
 import logging
+import webbrowser
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer, pyqtSlot
@@ -25,6 +26,9 @@ from app.widgets.wallet_send import WalletSend
 
 log = logging.getLogger(__name__)
 
+TRANSACTION_INFORMATION = 'transaction information'
+BALANCE_INFORMATION = 'balance information'
+
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
@@ -43,6 +47,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Setup Widgets
         self.setupUi(self)
 
+        # Hide information widget
+        font = QFont('Roboto Light', 10)
+        self.label_info_text.setFont(font)
+        self.btn_close_info.setFont(font)
+        font.setUnderline(True)
+        self.btn_info_action.setFont(font)
+        self.widget_information.setHidden(True)
+        self.btn_close_info.clicked.connect(self.hide_information)
+        signals.new_unconfirmed.connect(self.show_transaction_info)
+        self.information_type = None
+
         self.on_profile_changed(self.profile)
         signals.profile_changed.connect(self.on_profile_changed)
 
@@ -57,17 +72,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_grp_nav.setId(self.btn_nav_settings, 4)
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
-
-        # Hide information widget
-        font = QFont('Roboto Light', 10)
-        self.label_info_text.setFont(font)
-        self.btn_close_info.setFont(font)
-        font.setUnderline(True)
-        self.btn_to_wallet.setFont(font)
-        self.widget_information.setHidden(True)
-        signals.new_unconfirmed.connect(self.show_information)
-        self.btn_close_info.clicked.connect(self.hide_information)
-        self.btn_to_wallet.clicked.connect(self.change_to_wallet)
 
         # Patch custom widgets
         self.tab_widget_cummunity.setStyleSheet('QPushButton {padding: 5 12 5 12; font: 10pt "Roboto Light"}')
@@ -123,6 +127,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         signals.node_started.connect(self.node_started)
         signals.rpc_error.connect(self.rpc_error)
         signals.blockschanged.connect(self.getdatabaseinfo)
+        signals.on_balance_status_changed.connect(self.on_balance_status_changed)
         with data_session_scope() as session:
             from app.models import Block
             self.progress_bar_database_info.setValue(session.query(Block).count())
@@ -159,9 +164,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_apply_guardian.setVisible(not self.profile.is_admin)
         self.button_invite_canditate.setVisible(self.profile.is_admin)
 
-        self.btn_alias_change.setDisabled(self.profile.balance <= 0)
         if self.profile.balance <= 0:
+            self.balance_is_0()
+            signals.on_balance_status_changed.emit(True)
+        else:
+            signals.on_balance_status_changed.emit(False)
+            if self.information_type == BALANCE_INFORMATION:
+                self.hide_information()
+
+    def on_balance_status_changed(self, balance_is_zero):
+        self.btn_alias_change.setDisabled(balance_is_zero)
+        self.button_invite_canditate.setDisabled(balance_is_zero)
+        if balance_is_zero:
             self.btn_alias_change.setToolTip('You need coins to change your alias.')
+            self.button_invite_canditate.setToolTip('You need coins to invite a candidate.')
 
     def closeEvent(self, event):
         if self.profile.exit_on_close:
@@ -194,15 +210,33 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def change_to_wallet(self):
         self.wgt_content.setCurrentIndex(0)
 
-    def show_information(self, type):
+    def balance_is_0(self):
+        if self.information_type is None:
+            self.show_balance_info()
+        elif self.information_type == TRANSACTION_INFORMATION:
+            QTimer().singleShot(6000, self.show_balance_info)
+
+    def show_transaction_info(self, type):
         self.widget_information.setHidden(False)
-        self.btn_to_wallet.setHidden(self.wgt_content.currentIndex() == 0)
+        self.btn_info_action.setHidden(self.wgt_content.currentIndex() == 0)
+        self.btn_info_action.setText("See transaction log for confirmation.")
+        self.btn_info_action.clicked.connect(self.change_to_wallet)
         self.label_info_text.setText('Your {} has been submitted to the blockchain.'.format(type))
+        self.information_type = TRANSACTION_INFORMATION
         QTimer().singleShot(5000, self.hide_information)
 
     def hide_information(self):
         self.widget_information.setHidden(True)
-        self.label_info_text.setText('')
+        self.btn_info_action.clicked.disconnect()
+        self.information_type = None
+
+    def show_balance_info(self):
+        self.widget_information.setHidden(False)
+        self.btn_info_action.setHidden(False)
+        self.btn_info_action.setText("Get some coins here.")
+        self.btn_info_action.clicked.connect(lambda: webbrowser.open(app.GET_COINS_URL))
+        self.label_info_text.setText("You have no coins. Every transaction needs coins.")
+        self.information_type = BALANCE_INFORMATION
 
     @pyqtSlot(object)
     def getinfo(self, info: Getinfo):

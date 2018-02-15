@@ -1299,7 +1299,7 @@ QLabel[enabled=&quot;true&quot;] {
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="btn_to_wallet">
+        <widget class="QToolButton" name="btn_info_action">
          <property name="font">
           <font>
            <family>Roboto Light</family>
@@ -1314,7 +1314,7 @@ QLabel[enabled=&quot;true&quot;] {
           <enum>Qt::NoFocus</enum>
          </property>
          <property name="text">
-          <string>See transaction log for confirmation.</string>
+          <string/>
          </property>
         </widget>
        </item>

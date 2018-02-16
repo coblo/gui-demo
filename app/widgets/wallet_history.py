@@ -5,6 +5,7 @@ from PyQt5 import QtCore
 from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
+from PyQt5.QtCore import QModelIndex
 from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QWidget, QTableView
 
@@ -177,6 +178,9 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
         self.wallet_transactions_left = True
 
+        self.num_unconfirmed_raw = 0
+        self.num_unconfirmed_processed = 0
+
         self.balance = 0
         self.raw_txs = []
         self.txs = []
@@ -264,11 +268,34 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.layoutChanged.emit()
 
     def wallet_transactions_changed(self, transactions):
-        self.beginResetModel()
-        self.raw_txs = transactions
-        self.txs = self.process_wallet_transactions(transactions)
-        self.endResetModel()
-        self.sort(self.sort_index, self.sort_order)
+        if len(self.raw_txs) == 0:
+            self.beginResetModel()
+            self.raw_txs = transactions
+            self.txs = self.process_wallet_transactions(transactions)
+            self.endResetModel()
+            self.sort(self.sort_index, self.sort_order)
+        else:
+            # handle unconfirmed
+            if self.num_unconfirmed_raw > 0:
+                self.beginRemoveRows(QModelIndex(), 0, self.num_unconfirmed_processed)
+                self.raw_txs = self.raw_txs[:len(self.raw_txs)-self.num_unconfirmed_raw]
+                self.txs = self.txs[self.num_unconfirmed_processed:]
+                self.endRemoveRows()
+                self.num_unconfirmed_processed = 0
+                self.num_unconfirmed_raw= 0
+            # insert new transactions
+            latest_tx_id = self.raw_txs[-1]["txid"]
+            new_txs = []
+            for tx in reversed(transactions):
+                if tx["txid"] != latest_tx_id:
+                    new_txs = [tx] + new_txs
+                else:
+                    break
+            processed_txs = self.process_wallet_transactions(new_txs)
+            self.beginInsertRows(QModelIndex(), 0, 0)
+            self.raw_txs += new_txs
+            self.txs = processed_txs + self.txs
+            self.endInsertRows()
 
     def balance_changed(self, balance):
         self.balance = Decimal(balance).quantize(Decimal("0.00000001"), rounding=ROUND_DOWN)
@@ -282,20 +309,29 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 self.wallet_transactions_left = False
         except Exception as e:
             log.debug(e)
+        last_balance = self.txs[-1][self.BALANCE] if len(self.txs)>0 else self.balance
+        processed_transactions = self.process_wallet_transactions(new_txs, last_balance)
+        self.beginInsertRows(QModelIndex(), len(self.txs), len(self.txs)+len(processed_transactions))
         self.raw_txs = new_txs + self.raw_txs
-        self.wallet_transactions_changed(self.raw_txs)
+        self.txs += processed_transactions
+        self.endInsertRows()
 
-    def process_wallet_transactions(self, transactions):
+    def process_wallet_transactions(self, transactions, total_balance=None):
         processed_transactions = []
         sum_transaction_above = 0
+        if total_balance is None:
+            total_balance = self.balance
         for tx in reversed(transactions):
             if tx.get("valid") is False:
                 continue
             txid = tx["txid"]
             amount = tx["balance"]["amount"]
             is_payment = True
-            balance = Decimal(self.balance) - sum_transaction_above
+            balance = Decimal(total_balance) - sum_transaction_above
             sum_transaction_above += amount
+            unconfirmed = not tx.get("blocktime")
+            if unconfirmed:
+                self.num_unconfirmed_raw += 1
             timestamp = datetime.fromtimestamp(tx["blocktime"]) if tx.get("blocktime") else None
             pos_in_block = tx.get('blockindex', 0)
             if tx.get("generated"):
@@ -310,6 +346,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 ))
                 amount = 0
                 is_payment = False
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
             for item in tx["items"]:
                 processed_transactions.append((
                     self.PUBLISH,
@@ -322,6 +360,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 ))
                 amount = 0
                 is_payment = False
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
             for perm in tx["permissions"]:
                 processed_transactions.append((
                     self.VOTE,
@@ -334,6 +374,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 ))
                 amount = 0
                 is_payment = False
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
             if tx.get("create"):
                 processed_transactions.append((
                     "Create",
@@ -346,6 +388,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 ))
                 amount = 0
                 is_payment = False
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
             if is_payment:
                 processed_transactions.append((
                     self.PAYMENT,
@@ -356,5 +400,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                     txid,
                     pos_in_block
                 ))
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
 
         return processed_transactions

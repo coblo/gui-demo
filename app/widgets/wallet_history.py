@@ -74,7 +74,7 @@ class WalletTransactionsUpdater(QtCore.QThread):
                     balance_after = client.getbalance()["result"]
                     if balance_before != balance_after:
                         log.debug("Balance changed while updating")
-                        # todo: handle this
+                        continue
                     signals.balance_changed.emit(balance_before)
                     signals.wallet_transactions_changed.emit(wallet_transactions)
 

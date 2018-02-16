@@ -175,7 +175,10 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.info_icon = QIcon()
         self.info_icon.addPixmap(QPixmap(":/images/resources/info_circle.svg"), QIcon.Normal, QIcon.Off)
 
+        self.wallet_transactions_left = True
+
         self.balance = 0
+        self.raw_txs = []
         self.txs = []
         self.sort_index = self.DATETIME
         self.sort_order = Qt.AscendingOrder
@@ -244,6 +247,12 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             return QVariant(font)
         return None
 
+    def canFetchMore(self, index):
+        return self.rowCount() >= 100 and self.wallet_transactions_left
+
+    def fetchMore(self, index):
+        self.fetch_next_wallet_transactions()
+
     def sort(self, p_int, order=None):
         self.sort_index = p_int
         self.sort_order = order
@@ -256,12 +265,25 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
     def wallet_transactions_changed(self, transactions):
         self.beginResetModel()
+        self.raw_txs = transactions
         self.txs = self.process_wallet_transactions(transactions)
         self.endResetModel()
         self.sort(self.sort_index, self.sort_order)
 
     def balance_changed(self, balance):
         self.balance = Decimal(balance).quantize(Decimal("0.00000001"), rounding=ROUND_DOWN)
+
+    def fetch_next_wallet_transactions(self):
+        client = get_active_rpc_client()
+        new_txs = []
+        try:
+            new_txs = client.listwallettransactions(count=100, skip=self.rowCount(), verbose=True)["result"]
+            if len(new_txs) < 100:
+                self.wallet_transactions_left = False
+        except Exception as e:
+            log.debug(e)
+        self.raw_txs = new_txs + self.raw_txs
+        self.wallet_transactions_changed(self.raw_txs)
 
     def process_wallet_transactions(self, transactions):
         processed_transactions = []

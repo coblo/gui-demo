@@ -248,7 +248,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         return None
 
     def canFetchMore(self, index):
-        return self.rowCount() >= 100 and self.wallet_transactions_left
+        return len(self.raw_txs) >= 100 and self.wallet_transactions_left
 
     def fetchMore(self, index):
         self.fetch_next_wallet_transactions()
@@ -277,7 +277,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         client = get_active_rpc_client()
         new_txs = []
         try:
-            new_txs = client.listwallettransactions(count=100, skip=self.rowCount(), verbose=True)["result"]
+            new_txs = client.listwallettransactions(count=100, skip=len(self.raw_txs), verbose=True)["result"]
             if len(new_txs) < 100:
                 self.wallet_transactions_left = False
         except Exception as e:

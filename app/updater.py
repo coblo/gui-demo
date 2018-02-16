@@ -49,7 +49,7 @@ class Updater(QtCore.QThread):
 
         while True:
 
-            log.debug('check for new block or new local wallet updates')
+            log.debug('check for new blocks')
             try:
                 # This triggers Network Info widget update that we always want
                 blockchain_info = sync.getblockchaininfo()

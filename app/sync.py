@@ -10,7 +10,7 @@ from app import enums
 from app.backend.rpc import get_active_rpc_client
 from app.helpers import batchwise
 from app.models import Address, Permission, Transaction, PendingVote, Block, Profile, Alias, MiningReward, \
-    WalletTransaction, Timestamp, Vote
+    Timestamp, Vote
 from app.models import ISCC
 from app.models.db import profile_session_scope, data_session_scope
 from app.responses import Getblockchaininfo, Getinfo
@@ -253,160 +253,6 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
     return relevant
 
 
-def process_wallet_txs():
-    import itertools
-    client = get_active_rpc_client()
-    i = 0
-    finished = False
-    has_new_transactions = False
-    has_new_confirmed_transactions = False
-    try:
-        wallet_addresses = client.getaddresses(False)["result"]
-    except Exception as e:
-        log.debug(e)
-        return
-    with data_session_scope() as session:
-        latest_valid_txid = WalletTransaction.get_latest_txid(session)
-    offset = 0
-    while not finished:
-        with data_session_scope() as session:
-            # 101 to make sure that when going back 100 we don't end up with 0
-            wallet_txs = client.listwallettransactions(count=101, skip=offset, verbose=True)
-            if wallet_txs['error'] is not None:
-                log.debug(wallet_txs['error'])
-                break
-
-            # check if latest tx is in current block and save position when found
-            latest_valid_txid_index = -1
-            for index, tx in enumerate(wallet_txs['result']):
-                if tx['txid'] == latest_valid_txid:
-                    # the next block-update-iteration should delete this invalid transaction
-                    if not tx['valid']:
-                        log.debug('latest transaction was invalid, sync waits for deletion of invalid blocks')
-                        return
-                    latest_valid_txid_index = index
-
-            # the latest tx is not in the batch
-            if latest_valid_txid_index == -1:
-                # no more transactions in the wallet
-                if len(wallet_txs['result']) < 101:
-                    # our latest tx is not in the wallet anymore
-                    if latest_valid_txid is not None:
-                        log.debug('Invalid latest wallet transaction')
-                        break
-                    else:
-                        # the case that there are no TXs in the database is handled, by not going back further
-                        pass
-                else:
-                    offset += 100
-                    continue
-
-            # break the loop if there are no more new transactions in the wallet
-            finished = offset == 0
-            # have some overlapping transactions in case that new ones have arrived
-            offset = max(offset - 90, 0)
-
-            # skip the existing transactions
-            for wallet_tx in itertools.islice(wallet_txs['result'], latest_valid_txid_index + 1, None):
-                if wallet_tx.get('valid') is False:
-                    continue
-
-                latest_valid_txid = wallet_tx['txid']
-                has_new_transactions = True
-                has_new_confirmed_transactions = False
-                amount = wallet_tx['balance']['amount']
-                is_payment = True
-                if wallet_tx.get('generated'):
-                    session.add(WalletTransaction(
-                        txid=wallet_tx['txid'],
-                        amount=amount,
-                        comment='',
-                        tx_type=WalletTransaction.MINING_REWARD,
-                        balance=None
-                    ))
-                    # flush for primary key
-                    session.flush()
-                    amount = 0
-                    is_payment = False
-                for item in wallet_tx['items']:
-                    session.add(WalletTransaction(
-                        txid=wallet_tx['txid'],
-                        amount=amount,
-                        comment='Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
-                        tx_type=WalletTransaction.PUBLISH,
-                        balance=None
-                    ))
-                    # flush for primary key
-                    session.flush()
-                    amount = 0
-                    is_payment = False
-                for perm in wallet_tx['permissions']:
-                    session.add(WalletTransaction(
-                        txid=wallet_tx['txid'],
-                        amount=amount,
-                        comment='',
-                        tx_type=WalletTransaction.VOTE,
-                        balance=None
-                    ))
-                    # flush for primary key
-                    session.flush()
-                    amount = 0
-                    is_payment = False
-                if wallet_tx.get('create'):
-                    session.add(WalletTransaction(
-                        txid=wallet_tx['txid'],
-                        amount=amount,
-                        comment='Type:"' + wallet_tx['create']['type'] + '", Name: "' + wallet_tx['create'][
-                            'name'] + '"',
-                        tx_type=WalletTransaction.CREATE,
-                        balance=None
-                    ))
-                    # flush for primary key
-                    session.flush()
-                    amount = 0
-                    is_payment = False
-                if is_payment:
-                    comment = wallet_tx.get('comment')
-                    session.add(WalletTransaction(
-                        txid=wallet_tx['txid'],
-                        amount=amount,
-                        comment='' if comment is None else comment,
-                        tx_type=WalletTransaction.PAYMENT,
-                        balance=None
-                    ))
-                    # flush for primary key
-                    session.flush()
-                # check if we already have the block
-                if wallet_tx.get('blockhash') and Block.block_exists(session, wallet_tx.get('blockhash')):
-                    has_new_confirmed_transactions = True
-                    # if the block is already in our database we can create the transaction with as a "confirmed" one
-                    Transaction.create_if_not_exists(
-                        session,
-                        Transaction(
-                            txid=wallet_tx['txid'],
-                            pos_in_block=wallet_tx.get('blockindex', 0),
-                            block=unhexlify(wallet_tx.get('blockhash'))
-                        )
-                    )
-                else:
-                    # create as unconfirmed, if the block isn't in our database yet even if the transaction is confirmed
-                    Transaction.create_if_not_exists(
-                        session,
-                        Transaction(
-                            txid=wallet_tx['txid'],
-                            pos_in_block=wallet_tx.get('blockindex', 0),
-                            block=None
-                        )
-                    )
-        signals.wallet_transactions_changed.emit()
-
-    if has_new_transactions:
-        if has_new_confirmed_transactions:
-            with data_session_scope() as session:
-                WalletTransaction.compute_balances(session)
-        signals.wallet_transactions_changed.emit()
-
-
 def process_permissions():
     # todo: check if we have new perms / votes
     client = get_active_rpc_client()
@@ -477,5 +323,3 @@ if __name__ == '__main__':
     import app
 
     app.init()
-    with data_session_scope() as session:
-        WalletTransaction.compute_balances(session)

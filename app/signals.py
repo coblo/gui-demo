@@ -21,7 +21,7 @@ class Signals(QObject):
     getruntimeparams = pyqtSignal(object)
 
     # database rpc syncs
-    wallet_transactions_changed = pyqtSignal()
+    wallet_transactions_changed = pyqtSignal(list)
     permissions_changed = pyqtSignal()
     liststreamitems_alias = pyqtSignal()
     listblocks = pyqtSignal()
@@ -37,10 +37,6 @@ class Signals(QObject):
     profile_changed = pyqtSignal(object)
 
     iscc_inserted = pyqtSignal()
-
-    # wallettransactions changed
-    wallet_transaction_inserted = pyqtSignal(object)
-    wallet_transaction_updated = pyqtSignal(object)
     new_unconfirmed = pyqtSignal(str)
 
     block_sync_changed = pyqtSignal(dict)
@@ -48,6 +44,8 @@ class Signals(QObject):
 
     is_admin_changed = pyqtSignal(bool)
     is_miner_changed = pyqtSignal(bool)
+
+    balance_changed = pyqtSignal(float)
 
     # emitted when the sync for new blocks was finished
     sync_cycle_finished = pyqtSignal()

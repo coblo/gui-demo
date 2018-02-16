@@ -79,12 +79,4 @@ class Updater(QtCore.QThread):
                 synced_blockhash = node_block_hash
                 signals.sync_cycle_finished.emit()
 
-            # update the unconfirmed transactions
-            try:
-                sync.process_wallet_txs()
-            except Exception as e:
-                log.exception(e)
-            except (KeyError, IndexError):
-                log.debug('no wallet transactions found')
-
             self.sleep(self.UPDATE_INTERVALL)

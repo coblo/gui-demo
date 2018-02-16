@@ -12,7 +12,6 @@ from app.models.alias import Alias
 from app.models.block import Block
 from app.models.miningreward import MiningReward
 from app.models.iscc import ISCC
-from app.models.wallet_transaction import WalletTransaction
 from app.models.pendingvote import PendingVote
 from app.models.permission import Permission
 from app.models.transaction import Transaction

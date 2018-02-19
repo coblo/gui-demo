@@ -48,7 +48,10 @@ class WalletTransactionsUpdater(QtCore.QThread):
                 # This triggers Network Info widget update that we always want
                 blockchain_info = client.getblockchaininfo()['result']
                 # The node is downloading blocks if it has more headers than blocks
-                blockchain_downloading = blockchain_info['blocks'] != blockchain_info['headers']
+                if blockchain_info['blocks'] != blockchain_info['headers']:
+                    log.debug('blockchain syncing - skip expensive rpc calls')
+                    self.sleep(self.UPDATE_INTERVALL)
+                    continue
                 wallet_transactions = client.listwallettransactions(count=100)["result"]
                 latest_tx_hash = wallet_transactions[99]["txid"]
                 latest_confirmed_wallet_tx = ''
@@ -58,11 +61,6 @@ class WalletTransactionsUpdater(QtCore.QThread):
                         break
             except Exception as e:
                 log.exception('cannot get blocks via rpc: %s' % e)
-                self.sleep(self.UPDATE_INTERVALL)
-                continue
-
-            if blockchain_downloading:
-                log.debug('blockchain syncing - skip expensive rpc calls')
                 self.sleep(self.UPDATE_INTERVALL)
                 continue
 
@@ -188,6 +186,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.sort_order = Qt.AscendingOrder
         signals.wallet_transactions_changed.connect(self.wallet_transactions_changed)
         signals.balance_changed.connect(self.balance_changed)
+        signals.profile_changed.connect(self.profile_changed)
 
     def insert_db_data(self, data):
         self.txs = self.txs + [data]
@@ -315,6 +314,14 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         self.raw_txs = new_txs + self.raw_txs
         self.txs += processed_transactions
         self.endInsertRows()
+
+    def profile_changed(self, profile):
+        if profile.balance != self.balance:
+            self.balance_changed(profile.balance)
+            self.beginResetModel()
+            self.txs = self.process_wallet_transactions(self.raw_txs)
+            self.endResetModel()
+            self.sort(self.sort_index, self.sort_order)
 
     def process_wallet_transactions(self, transactions, total_balance=None):
         processed_transactions = []

@@ -19,7 +19,6 @@ class Updater(QtCore.QThread):
     UPDATE_INTERVALL = 3
 
     sync_funcs = (
-        sync.getinfo,
         sync.getruntimeparams,
         sync.getblockchaininfo,
         sync.process_blocks,
@@ -65,6 +64,8 @@ class Updater(QtCore.QThread):
                 log.debug('blockchain syncing - skip expensive rpc calls')
                 self.sleep(self.UPDATE_INTERVALL)
                 continue
+
+            sync.getinfo()
 
             if node_block_hash != synced_blockhash:
                 log.debug('starting full sync round')

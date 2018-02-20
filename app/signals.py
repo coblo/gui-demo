@@ -23,15 +23,14 @@ class Signals(QObject):
     # database rpc syncs
     wallet_transactions_changed = pyqtSignal(list)
     permissions_changed = pyqtSignal()
-    liststreamitems_alias = pyqtSignal()
     listblocks = pyqtSignal()
     blockschanged = pyqtSignal(object)
+    alias_list_changed = pyqtSignal()
+    new_address = pyqtSignal()
 
     application_start = pyqtSignal()
 
     votes_changed = pyqtSignal()
-
-    # custom signals
 
     #: profile changed
     profile_changed = pyqtSignal(object)

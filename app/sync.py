@@ -96,8 +96,6 @@ def process_blocks():
     block_count_node = client.getblockcount()['result']
 
     with data_session_scope() as session:
-        Transaction.delete_unconfirmed(session)
-
         # height is 0 indexed,
         for batch in batchwise(range(last_valid_height + 1, block_count_node), 100):
             try:

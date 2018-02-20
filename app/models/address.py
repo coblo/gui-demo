@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, String
-from sqlalchemy import exists
+from sqlalchemy import Column, String, exists
+from sqlalchemy.event import listens_for
 
 from app.models.db import data_base
+from app.signals import signals
 
 
 class Address(data_base):
@@ -22,26 +23,7 @@ class Address(data_base):
         if not data_db.query(exists().where(Address.address == address)).scalar():
             data_db.add(Address(address=address))
 
-    # @classmethod #todo: in die Klassen mining_reqards und votes verlagern
-    # def with_last_mined(cls):
-    #     """Queryset annotated with .last_mined"""
-    #     from app.models import Block
-    #     return cls.select().annotate(Block, fn.MAX(Block.time).alias('last_mined'))
-    #
-    # @classmethod
-    # def with_last_voted(cls):
-    #     """Queryset annotated with .last_voted"""
-    #     from app.models import Vote
-    #     return cls.select().annotate(Vote, fn.MAX(Vote.time).alias('last_voted'))
-    #
-    # def get_last_mined(self):
-    #     from app.models import Block
-    #     latest_block = self.mined_blocks.order_by(Block.time.desc()).first()
-    #     if latest_block:
-    #         return latest_block.time
-    #
-    # def get_last_voted(self):
-    #     from app.models import Vote
-    #     latest_vote = self.votes_given.order_by(Vote.time.desc()).first()
-    #     if latest_vote:
-    #         return latest_vote.time
+
+@listens_for(Address, "after_insert")
+def after_update(mapper, connection, address):
+    signals.new_address.emit()

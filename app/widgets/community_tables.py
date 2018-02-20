@@ -236,7 +236,7 @@ class CommunityTableView(QTableView):
         self.setColumnHidden(5, not self.profile.is_admin)
 
         header = self.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Interactive)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)

@@ -39,7 +39,6 @@ class Updater(QtCore.QThread):
     def run(self):
 
         synced_blockhash = ''
-        blockchain_downloading = False
 
         with profile_session_scope() as profile_session:
             profile = Profile.get_active(profile_session)

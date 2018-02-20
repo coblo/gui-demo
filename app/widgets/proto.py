@@ -215,9 +215,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @pyqtSlot(object)
     def getblockchaininfo(self, blockchaininfo: Getblockchaininfo):
-        self.progress_bar_network_info.setMaximum(blockchaininfo.headers)
-        self.progress_bar_database_info.setMaximum(blockchaininfo.headers)
-        self.progress_bar_network_info.setValue(blockchaininfo.blocks)
+        self.progress_bar_network_info.setMaximum(blockchaininfo.headers + 1)
+        self.progress_bar_database_info.setMaximum(blockchaininfo.headers + 1)
+        self.progress_bar_network_info.setValue(blockchaininfo.blocks + 1)
 
     @pyqtSlot(str)
     def rpc_error(self, msg: str):

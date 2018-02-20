@@ -60,7 +60,7 @@ class PermissionModel(QAbstractTableModel):
             elif self._perm_type == enums.ADMIN:
                 self._data = list(Permission.guardians(session))
             self._alias_list = Alias.get_aliases(session)
-        self.already_revoked = PendingVote.already_revoked(session)
+        self.already_revoked = PendingVote.already_revoked(session, self._perm_type)
 
     def fill_count_lists(self):
         with data_session_scope() as session:

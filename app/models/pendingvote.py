@@ -62,11 +62,11 @@ class PendingVote(data_base):
             (PendingVote.end_block == Permission.MAX_END_BLOCK)).all()
 
     @staticmethod
-    def already_revoked(data_db):
+    def already_revoked(data_db, perm_type):
         from app.models import Profile
         from app.models.db import profile_session_scope
         with profile_session_scope() as session:
             profile = Profile.get_active(session)
         return data_db.query(PendingVote.address_to, PendingVote.perm_type).filter(
             (PendingVote.address_from == profile.address) & (PendingVote.start_block == 0) &
-            (PendingVote.end_block == 0)).all()
+            (PendingVote.end_block == 0) & (PendingVote.perm_type == perm_type)).all()

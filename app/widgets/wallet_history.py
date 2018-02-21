@@ -53,7 +53,7 @@ class WalletTransactionsUpdater(QtCore.QThread):
                     self.sleep(self.UPDATE_INTERVALL)
                     continue
                 wallet_transactions = client.listwallettransactions(count=100)["result"]
-                latest_tx_hash = wallet_transactions[99]["txid"]
+                latest_tx_hash = wallet_transactions[-1]["txid"]
                 latest_confirmed_wallet_tx = ''
                 for tx in reversed(wallet_transactions):
                     if tx.get("blocktime"):

@@ -50,6 +50,7 @@ class PermissionModel(QAbstractTableModel):
 
         signals.permissions_changed.connect(self.permissions_changed)
         signals.votes_changed.connect(self.permissions_changed)
+        signals.alias_list_changed.connect(self.alias_list_changed)
         self.fill_count_lists()
 
     def load_data(self):
@@ -59,7 +60,7 @@ class PermissionModel(QAbstractTableModel):
             elif self._perm_type == enums.ADMIN:
                 self._data = list(Permission.guardians(session))
             self._alias_list = Alias.get_aliases(session)
-        self.already_revoked = PendingVote.already_revoked(session)
+        self.already_revoked = PendingVote.already_revoked(session, self._perm_type)
 
     def fill_count_lists(self):
         with data_session_scope() as session:
@@ -131,6 +132,12 @@ class PermissionModel(QAbstractTableModel):
         if idx.column() == 1:
             return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
         return super().flags(idx)
+
+    def alias_list_changed(self):
+        self.beginResetModel()
+        with data_session_scope() as session:
+            self._alias_list = Alias.get_aliases(session)
+        self.endResetModel()
 
     @pyqtSlot()
     def permissions_changed(self):

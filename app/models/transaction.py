@@ -31,7 +31,3 @@ class Transaction(data_base):
     @staticmethod
     def transaction_in_db(data_db,txid):
         return data_db.query(exists().where(Transaction.txid == txid)).scalar()
-
-    @staticmethod
-    def delete_unconfirmed(data_db):
-        return data_db.query(Transaction).filter(Transaction.block.is_(None)).delete()

@@ -10,6 +10,7 @@ from decimal import Decimal
 from app.backend.rpc import get_active_rpc_client
 from app.models import Address
 from app.models import Alias
+from app.models.db import data_session_scope
 from app.signals import signals
 from app.tools.validators import AddressValidator
 from app.ui.wallet_send import Ui_widget_wallet_send
@@ -35,32 +36,11 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.address_valid = False
         self.btn_send_send.clicked.connect(self.on_send_clicked)
 
-        address_list =[]
-        from app.models.db import data_session_scope
-        with data_session_scope() as session:
-            for address, alias in Alias.get_aliases(session).items():
-                address_list.append("{} ({})".format(alias, address))
-            for address in session.query(Address).all():
-                address_list.append(address.address)
-        completer = QCompleter(address_list, self.edit_address)
-        completer_delegate = QStyledItemDelegate(completer)
-        completer.setCaseSensitivity(Qt.CaseInsensitive)
-        completer.popup().setItemDelegate(completer_delegate)
-        completer.popup().setStyleSheet(
-            """
-            QAbstractItemView {
-                font: 10pt "Roboto Light";
-                border: 1px solid #41ADFF;
-                border-top: 0px;
-                background-color: #FFF79A;
-                border-radius: 2px;
-            }
-            QAbstractItemView::item  {
-                margin-top: 3px;
-            }           
-            """
-        )
-        self.edit_address.setCompleter(completer)
+        self.edit_completer()
+
+        # Connect signals
+        signals.alias_list_changed.connect(self.edit_completer)
+        signals.new_address.connect(self.edit_completer)
 
     def on_address_edit(self, text):
         address_with_alias_re = re.compile('^.* \(.*\)$')
@@ -142,3 +122,29 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
             QApplication.restoreOverrideCursor()
             error_dialog.exec_()
 
+    def edit_completer(self):
+        address_list = []
+        with data_session_scope() as session:
+            for address, alias in Alias.get_aliases(session).items():
+                address_list.append("{} ({})".format(alias, address))
+            for address in session.query(Address).all():
+                address_list.append(address.address)
+        completer = QCompleter(address_list, self.edit_address)
+        completer_delegate = QStyledItemDelegate(completer)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.popup().setItemDelegate(completer_delegate)
+        completer.popup().setStyleSheet(
+            """
+            QAbstractItemView {
+                font: 10pt "Roboto Light";
+                border: 1px solid #41ADFF;
+                border-top: 0px;
+                background-color: #FFF79A;
+                border-radius: 2px;
+            }
+            QAbstractItemView::item  {
+                margin-top: 3px;
+            }
+            """
+        )
+        self.edit_address.setCompleter(completer)

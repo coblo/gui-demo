@@ -4,18 +4,6 @@ app.init()
 from app.backend.rpc import get_active_rpc_client
 client = get_active_rpc_client()
 
-from app.models.db import data_session_scope
-from app.models import WalletTransaction
-
-
-sum = 0
-with data_session_scope() as session:
-    wtxs = session.query(WalletTransaction).all()
-    for tx in wtxs:
-        sum += tx.amount
-
-print("db wallet", sum)
-
 i = 0
 sum = 0
 while True:

@@ -22,9 +22,11 @@ class Node(QProcess):
         self.finished.connect(signals.node_finished)
         self.errorOccurred.connect(self.node_error)
         self.errorOccurred.connect(signals.node_error)
-        self.setProcessChannelMode(QProcess.MergedChannels)
+        # self.setProcessChannelMode(QProcess.MergedChannels)
         self.readyReadStandardOutput.connect(self.on_stdout_ready)
+        self.readyReadStandardError.connect(self.on_stderr_ready)
         self.decoder = QTextCodec.codecForLocale()
+        self.reindex_required = False
 
     def start(self, *args, **kwargs):
         """Start node with active profile settings.
@@ -47,17 +49,22 @@ class Node(QProcess):
 
         if self.state() == self.NotRunning:
             node_path = os.path.join(app.APP_DIR, 'app/bin/multichaind')
-            log.debug('starting node at: {}'.format(node_path))
+            if self.reindex_required:
+                log.debug('starting node at: {} with -reindex=1'.format(node_path))
+            else:
+                log.debug('starting node at: {}'.format(node_path))
 
             # TODO only launch full bootstrap ip in first launch
             launch_args = [
                     app.NODE_BOOTSTRAP,
                     '-server=1',
-                    '-daemon',
+                    # '-daemon',
                     '-autosubscribe=assets,streams',
                     '-autocombineminconf=4294967294',
                     # '-maxshowndata=32',
                     # '-printtoconsole',
+                    '-reindex=' + ("1" if self.reindex_required else "0"),
+                    # '-shortoutput',
                     '-rpcuser={}'.format(self.profile.rpc_user),
                     '-rpcpassword={}'.format(self.profile.rpc_password),
                     '-rpcbind={}'.format(self.profile.rpc_host),
@@ -70,6 +77,7 @@ class Node(QProcess):
                 launch_args.append('-initprivkey={}'.format(initprivkey))
 
             super().start(node_path, launch_args, QIODevice.ReadOnly)
+            self.reindex_required = False
         else:
             log.debug('node already started - state: {}'.format(self.state()))
 
@@ -83,6 +91,8 @@ class Node(QProcess):
         log.debug('node started')
 
     def node_finished(self, code, status):
+        if code == self.CrashExit:
+            self.start()
         log.debug('node finished code {} status {}'.format(code, status))
 
     def node_error(self, error):
@@ -95,3 +105,12 @@ class Node(QProcess):
             if text:
                 signals.node_message.emit(text)
 
+    def on_stderr_ready(self):
+        data = self.readAllStandardError()
+        text = self.decoder.toUnicode(data).strip()
+        if text:
+            # check if the node needs a reindex to recover
+            # multichaind doesn't seem to use error codes
+            if "Please restart multichaind with reindex=1" in text:
+                self.reindex_required = True
+                signals.node_message.emit(text)

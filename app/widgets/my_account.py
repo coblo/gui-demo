@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
+import locale
 
 import math
-from PyQt5.QtWidgets import QWidget, QMessageBox
+from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import pyqtSlot
 
 from decimal import Decimal, ROUND_DOWN
 from app.ui.my_account import Ui_MyAccount
-from app.models import Profile, init_profile_db
+from app.models import Profile
 from app.signals import signals
 from app import CURRENCY_CODE
 
@@ -34,12 +35,15 @@ class MyAccount(QWidget, Ui_MyAccount):
 
         postdecimal = math.floor(self.profile.balance * 100000000 % 100000000)
         predecimal = self.profile.balance.quantize(Decimal(), rounding=ROUND_DOWN)
-        balance = self.profile.balance.quantize(Decimal("0.00000001"), rounding=ROUND_DOWN)
-        spacer = "{0:n}".format(balance)[-9]
+        if self.profile.balance == 0:
+            balance = Decimal(0)
+        else:
+            balance = self.profile.balance.quantize(Decimal("0.00000001"), rounding=ROUND_DOWN)
+        spacer = locale.localeconv()['mon_decimal_point']
         self.lbl_wallet_balance_postdecimal.setText("{}".format(postdecimal))
         self.lbl_wallet_balance_predecimal.setText("{0:n}{1}".format(predecimal, spacer))
         self.lbl_wallet_balance_currency.setText(CURRENCY_CODE)
-        self.gbox_wallet_my_balance.setToolTip("{0:n} {1}".format(balance, CURRENCY_CODE))
+        self.gbox_wallet_my_balance.setToolTip("{0:.8} {1}".format(balance, CURRENCY_CODE))
 
 
 if __name__ == '__main__':

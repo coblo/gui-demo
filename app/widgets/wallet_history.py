@@ -1,14 +1,19 @@
 import webbrowser
+import logging
+
+from PyQt5 import QtCore
 from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
 from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
-from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont, QCursor
+from PyQt5.QtCore import QModelIndex
+from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QWidget, QTableView
 
-from app.models import WalletTransaction
 from app.ui.wallet_history import Ui_widget_wallet_history
 from app.signals import signals
+from app.backend.rpc import get_active_rpc_client
 
+log = logging.getLogger(__name__)
 
 class WalletHistory(QWidget, Ui_widget_wallet_history):
     def __init__(self, parent):
@@ -17,6 +22,68 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
         self.table_wallet_history.setParent(None)
         table = TransactionTableView(self)
         self.layout_box_wallet_history.insertWidget(0, table)
+
+
+class WalletTransactionsUpdater(QtCore.QThread):
+    UPDATE_INTERVALL = 3
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        log.debug('init wallet transaction updater')
+
+    @property
+    def client(self):
+        """Always use the rpc connection for the current profile"""
+        return get_active_rpc_client()
+
+    def run(self):
+        client = get_active_rpc_client()
+        synced_wallet_tx = ''
+        synced_confirmed_wallet_tx = ''
+
+        while True:
+
+            log.debug('check for new local wallet updates')
+            try:
+                # This triggers Network Info widget update that we always want
+                blockchain_info = client.getblockchaininfo()['result']
+                # The node is downloading blocks if it has more headers than blocks
+                if blockchain_info['blocks'] != blockchain_info['headers']:
+                    log.debug('blockchain syncing - skip expensive rpc calls')
+                    self.sleep(self.UPDATE_INTERVALL)
+                    continue
+                wallet_transactions = client.listwallettransactions(count=100)["result"]
+                latest_tx_hash = wallet_transactions[99]["txid"]
+                latest_confirmed_wallet_tx = ''
+                for tx in reversed(wallet_transactions):
+                    if tx.get("blocktime"):
+                        latest_confirmed_wallet_tx = tx["txid"]
+                        break
+            except Exception as e:
+                log.exception('cannot get blocks via rpc: %s' % e)
+                self.sleep(self.UPDATE_INTERVALL)
+                continue
+
+            if latest_tx_hash != synced_wallet_tx or latest_confirmed_wallet_tx != synced_confirmed_wallet_tx:
+                log.debug('syncing new wallet transactions')
+
+                try:
+                    balance_before = client.getbalance()["result"]
+                    wallet_transactions = client.listwallettransactions(count=100, verbose=True)["result"]
+                    balance_after = client.getbalance()["result"]
+                    if balance_before != balance_after:
+                        log.debug("Balance changed while updating")
+                        continue
+                    signals.balance_changed.emit(balance_before)
+                    signals.wallet_transactions_changed.emit(wallet_transactions)
+
+                except Exception as e:
+                    log.exception(e)
+
+                synced_wallet_tx = latest_tx_hash
+                synced_confirmed_wallet_tx = latest_confirmed_wallet_tx
+
+            self.sleep(self.UPDATE_INTERVALL)
 
 
 class TransactionTableView(QTableView):
@@ -53,10 +120,13 @@ class TransactionTableView(QTableView):
         self.setCornerButtonEnabled(True)
         self.clicked.connect(self.info_clicked)
 
+        self.updater = WalletTransactionsUpdater(self)
+        self.updater.start()
+
     def info_clicked(self, index):
         if index.column() == 5:
             db = self.table_model.txs
-            txid = db[index.row()].txid
+            txid = db[index.row()][self.table_model.INFO]
             link = 'https://explorer.content-blockchain.org/Content%20Blockchain%20Project%20(Testnet)/tx/'
             link += txid
             webbrowser.open(link)
@@ -72,18 +142,23 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     INFO = 5
     POS_IN_BLOCK = 6
 
+    PAYMENT = "Payment",
+    VOTE = "Skill grant/revoke",
+    MINING_REWARD = "Mining Reward",
+    PUBLISH = "Publish"
+
     transaction_types = {
-        WalletTransaction.PAYMENT: "Payment",
-        WalletTransaction.VOTE: "Skill grant/revoke",
-        WalletTransaction.MINING_REWARD: "Mining Reward",
-        WalletTransaction.PUBLISH: "Publish"
+        PAYMENT,
+        VOTE,
+        MINING_REWARD,
+        PUBLISH
     }
 
     transaction_type_to_icon = {
-        WalletTransaction.PAYMENT: QIcon(),
-        WalletTransaction.VOTE: QIcon(),
-        WalletTransaction.MINING_REWARD: QIcon(),
-        WalletTransaction.PUBLISH: QIcon()
+        PAYMENT: QIcon(),
+        VOTE: QIcon(),
+        MINING_REWARD: QIcon(),
+        PUBLISH: QIcon()
     }
 
     def __init__(self, parent=None):
@@ -91,19 +166,27 @@ class TransactionHistoryTableModel(QAbstractTableModel):
 
         self.parent = parent
         self.header = ['', 'Date', 'Comment', 'Amount', 'Balance', '']
-        self.transaction_type_to_icon[WalletTransaction.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[WalletTransaction.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[WalletTransaction.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
-        self.transaction_type_to_icon[WalletTransaction.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[self.PAYMENT].addPixmap(QPixmap(":/images/resources/money_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[self.VOTE].addPixmap(QPixmap(":/images/resources/vote_hammer_black.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[self.MINING_REWARD].addPixmap(QPixmap(":/images/resources/mining_reward.svg"), QIcon.Normal, QIcon.Off)
+        self.transaction_type_to_icon[self.PUBLISH].addPixmap(QPixmap(":/images/resources/paper_plane_black.svg"), QIcon.Normal, QIcon.Off)
 
         self.info_icon = QIcon()
         self.info_icon.addPixmap(QPixmap(":/images/resources/info_circle.svg"), QIcon.Normal, QIcon.Off)
 
-        self.txs = None
+        self.wallet_transactions_left = True
+
+        self.num_unconfirmed_raw = 0
+        self.num_unconfirmed_processed = 0
+
+        self.balance = 0
+        self.raw_txs = []
+        self.txs = []
         self.sort_index = self.DATETIME
         self.sort_order = Qt.AscendingOrder
-        self.refreshData()
-        signals.wallet_transactions_changed.connect(self.refreshData)
+        signals.wallet_transactions_changed.connect(self.wallet_transactions_changed)
+        signals.balance_changed.connect(self.balance_changed)
+        signals.profile_changed.connect(self.profile_changed)
 
     def insert_db_data(self, data):
         self.txs = self.txs + [data]
@@ -167,6 +250,12 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             return QVariant(font)
         return None
 
+    def canFetchMore(self, index):
+        return len(self.raw_txs) >= 100 and self.wallet_transactions_left
+
+    def fetchMore(self, index):
+        self.fetch_next_wallet_transactions()
+
     def sort(self, p_int, order=None):
         self.sort_index = p_int
         self.sort_order = order
@@ -177,11 +266,148 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             self.txs.sort(key=lambda x: x[p_int], reverse=(order != Qt.DescendingOrder))
         self.layoutChanged.emit()
 
+    def wallet_transactions_changed(self, transactions):
+        if len(self.raw_txs) == 0:
+            self.beginResetModel()
+            self.raw_txs = transactions
+            self.txs = self.process_wallet_transactions(transactions)
+            self.endResetModel()
+            self.sort(self.sort_index, self.sort_order)
+        else:
+            # handle unconfirmed
+            if self.num_unconfirmed_raw > 0:
+                self.beginRemoveRows(QModelIndex(), 0, self.num_unconfirmed_processed)
+                self.raw_txs = self.raw_txs[:len(self.raw_txs)-self.num_unconfirmed_raw]
+                self.txs = self.txs[self.num_unconfirmed_processed:]
+                self.endRemoveRows()
+                self.num_unconfirmed_processed = 0
+                self.num_unconfirmed_raw= 0
+            # insert new transactions
+            latest_tx_id = self.raw_txs[-1]["txid"]
+            new_txs = []
+            for tx in reversed(transactions):
+                if tx["txid"] != latest_tx_id:
+                    new_txs = [tx] + new_txs
+                else:
+                    break
+            processed_txs = self.process_wallet_transactions(new_txs)
+            self.beginInsertRows(QModelIndex(), 0, 0)
+            self.raw_txs += new_txs
+            self.txs = processed_txs + self.txs
+            self.endInsertRows()
 
-    def refreshData(self):
-        from app.models.db import data_session_scope
-        self.beginResetModel()
-        with data_session_scope() as session:
-            self.txs = WalletTransaction.get_wallet_history(session)
-        self.endResetModel()
-        self.sort(self.sort_index, self.sort_order)
+    def balance_changed(self, balance):
+        self.balance = Decimal(balance).quantize(Decimal("0.00000001"), rounding=ROUND_DOWN)
+
+    def fetch_next_wallet_transactions(self):
+        client = get_active_rpc_client()
+        new_txs = []
+        try:
+            new_txs = client.listwallettransactions(count=100, skip=len(self.raw_txs), verbose=True)["result"]
+            if len(new_txs) < 100:
+                self.wallet_transactions_left = False
+        except Exception as e:
+            log.debug(e)
+        last_balance = self.txs[-1][self.BALANCE] if len(self.txs)>0 else self.balance
+        processed_transactions = self.process_wallet_transactions(new_txs, last_balance)
+        self.beginInsertRows(QModelIndex(), len(self.txs), len(self.txs)+len(processed_transactions))
+        self.raw_txs = new_txs + self.raw_txs
+        self.txs += processed_transactions
+        self.endInsertRows()
+
+    def profile_changed(self, profile):
+        if profile.balance != self.balance:
+            self.balance_changed(profile.balance)
+            self.beginResetModel()
+            self.txs = self.process_wallet_transactions(self.raw_txs)
+            self.endResetModel()
+            self.sort(self.sort_index, self.sort_order)
+
+    def process_wallet_transactions(self, transactions, total_balance=None):
+        processed_transactions = []
+        sum_transaction_above = 0
+        if total_balance is None:
+            total_balance = self.balance
+        for tx in reversed(transactions):
+            if tx.get("valid") is False:
+                continue
+            txid = tx["txid"]
+            amount = tx["balance"]["amount"]
+            is_payment = True
+            balance = Decimal(total_balance) - sum_transaction_above
+            sum_transaction_above += amount
+            unconfirmed = not tx.get("blocktime")
+            if unconfirmed:
+                self.num_unconfirmed_raw += 1
+            timestamp = datetime.fromtimestamp(tx["blocktime"]) if tx.get("blocktime") else None
+            pos_in_block = tx.get('blockindex', 0)
+            if tx.get("generated"):
+                processed_transactions.append((
+                    self.MINING_REWARD,
+                    timestamp,
+                    '',
+                    amount,
+                    balance,
+                    txid,
+                    pos_in_block
+                ))
+                amount = 0
+                is_payment = False
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
+            for item in tx["items"]:
+                processed_transactions.append((
+                    self.PUBLISH,
+                    timestamp,
+                    'Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
+                    amount,
+                    balance,
+                    txid,
+                    pos_in_block
+                ))
+                amount = 0
+                is_payment = False
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
+            for perm in tx["permissions"]:
+                processed_transactions.append((
+                    self.VOTE,
+                    timestamp,
+                    '',
+                    amount,
+                    balance,
+                    txid,
+                    pos_in_block
+                ))
+                amount = 0
+                is_payment = False
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
+            if tx.get("create"):
+                processed_transactions.append((
+                    "Create",
+                    timestamp,
+                    'Type:"' + tx['create']['type'] + '", Name: "' + tx['create']['name'] + '"',
+                    amount,
+                    balance,
+                    txid,
+                    pos_in_block
+                ))
+                amount = 0
+                is_payment = False
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
+            if is_payment:
+                processed_transactions.append((
+                    self.PAYMENT,
+                    timestamp,
+                    '' if tx.get("comment") is None else tx.get("comment"),
+                    amount,
+                    balance,
+                    txid,
+                    pos_in_block
+                ))
+                if unconfirmed:
+                    self.num_unconfirmed_processed += 1
+
+        return processed_transactions

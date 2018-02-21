@@ -5,7 +5,8 @@ from sqlalchemy import Column, String, ForeignKey, Integer, exists
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import aliased
 
-from app.models.db import data_base, profile_session_scope, data_db, data_session_scope
+from app.signals import signals
+from app.models.db import data_base, profile_session_scope
 
 log = logging.getLogger(__name__)
 
@@ -60,3 +61,4 @@ def after_update(mapper, connection, alias):
         profile = Profile.get_active(session)
         if alias.address == profile.address:
             profile.alias = alias.alias
+    signals.alias_list_changed.emit()

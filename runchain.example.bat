@@ -1,6 +1,6 @@
-# Example Windows batch file to launch blockchain node
-# Update path to chain exexutable and connection string and rename this file to runchain.bat
-# Testchain Seed Nodes are: 89.163.206.83:8375 and 85.197.78.50:8375
+rem Example Windows batch file to launch blockchain node
+rem Update path to chain exexutable and connection string and rename this file to runchain.bat
+rem Testchain Seed Nodes are: 89.163.206.83:8375 and 85.197.78.50:8375
 
 %~dp0/app/bin/multichaind.exe coblo@89.163.206.83:8375 ^
 -printtoconsole ^

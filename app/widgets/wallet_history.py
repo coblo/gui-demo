@@ -1,19 +1,18 @@
-import webbrowser
 import logging
-
-from PyQt5 import QtCore
+import webbrowser
 from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
-from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt, pyqtSignal
-from PyQt5.QtCore import QModelIndex
+
+from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt, pyqtSignal, QThread, QModelIndex
 from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont, QCursor
 from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QWidget, QTableView
 
-from app.ui.wallet_history import Ui_widget_wallet_history
-from app.signals import signals
 from app.backend.rpc import get_active_rpc_client
+from app.signals import signals
+from app.ui.wallet_history import Ui_widget_wallet_history
 
 log = logging.getLogger(__name__)
+
 
 class WalletHistory(QWidget, Ui_widget_wallet_history):
     def __init__(self, parent):
@@ -24,7 +23,7 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
         self.layout_box_wallet_history.insertWidget(0, table)
 
 
-class WalletTransactionsUpdater(QtCore.QThread):
+class WalletTransactionsUpdater(QThread):
     UPDATE_INTERVALL = 3
 
     def __init__(self, parent=None):

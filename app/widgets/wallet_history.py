@@ -142,16 +142,17 @@ class TransactionHistoryTableModel(QAbstractTableModel):
     INFO = 5
     POS_IN_BLOCK = 6
 
-    PAYMENT = "Payment",
-    VOTE = "Skill grant/revoke",
-    MINING_REWARD = "Mining Reward",
-    PUBLISH = "Publish"
+    PAYMENT = "payment"
+    VOTE = "vote"
+    MINING_REWARD = "mining_reward"
+    PUBLISH = "publish"
+    CREATE = "create"
 
-    transaction_types = {
-        PAYMENT,
-        VOTE,
-        MINING_REWARD,
-        PUBLISH
+    transaction_type_to_text = {
+        PAYMENT: "Payment",
+        VOTE: "Skill grant/revoke",
+        MINING_REWARD: "Mining Reward",
+        PUBLISH: "Publish"
     }
 
     transaction_type_to_icon = {
@@ -227,15 +228,15 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             return tx[col]
 
         if role == Qt.DecorationRole:
-            if col == self.TXTYPE and tx[col] in self.transaction_types:
+            if col == self.TXTYPE and tx[col] in self.transaction_type_to_icon:
                 return self.transaction_type_to_icon[tx[col]]
             elif col == self.INFO:
                 return self.info_icon
         if role == Qt.ToolTipRole:
             if col == self.BALANCE:
                 return '_' if tx[col] is None else "{0:n}".format(tx[col])
-            elif col == self.TXTYPE and tx[col] in self.transaction_types:
-                return self.transaction_types[tx[col]]
+            elif col == self.TXTYPE and tx[col] in self.transaction_type_to_text:
+                return self.transaction_type_to_text[tx[col]]
             elif col == self.INFO:
                 return self.info_icon
             else:

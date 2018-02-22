@@ -4,9 +4,9 @@ import logging
 from PyQt5 import QtCore
 from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
-from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt
+from PyQt5.QtCore import QAbstractTableModel, QVariant, Qt, pyqtSignal
 from PyQt5.QtCore import QModelIndex
-from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont
+from PyQt5.QtGui import QColor, QIcon, QPixmap, QFont, QCursor
 from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QWidget, QTableView
 
 from app.ui.wallet_history import Ui_widget_wallet_history
@@ -97,6 +97,7 @@ class TransactionTableView(QTableView):
         font.setFamily("Roboto Light")
         font.setPointSize(10)
 
+        self.setHorizontalHeader(WalletHistoryHeader(Qt.Horizontal))
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
@@ -105,12 +106,14 @@ class TransactionTableView(QTableView):
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
         header.setFont(font)
+        header.on_enter.connect(self.reset_cursor)
 
         # Row height
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(40)
 
+        self.setMouseTracking(True)
         self.setFont(font)
         self.setAlternatingRowColors(True)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -120,8 +123,23 @@ class TransactionTableView(QTableView):
         self.setCornerButtonEnabled(True)
         self.clicked.connect(self.info_clicked)
 
+        self.cursor_column = None
         self.updater = WalletTransactionsUpdater(self)
         self.updater.start()
+
+    def mouseMoveEvent(self, e):
+        super().mouseMoveEvent(e)
+        column = self.columnAt(e.x())
+        if self.cursor_column != column:
+            if column == 5:
+                self.setCursor(QCursor(Qt.PointingHandCursor))
+            elif self.cursor_column == 5:
+                self.setCursor(QCursor(Qt.ArrowCursor))
+            self.cursor_column = column
+
+    def reset_cursor(self):
+        self.cursor_column = False
+        self.setCursor(QCursor(Qt.ArrowCursor))
 
     def info_clicked(self, index):
         if index.column() == 5:
@@ -412,3 +430,10 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                     self.num_unconfirmed_processed += 1
 
         return processed_transactions
+
+
+class WalletHistoryHeader(QHeaderView):
+    on_enter = pyqtSignal()
+
+    def enterEvent(self, e):
+        self.on_enter.emit()

@@ -137,7 +137,7 @@ class TransactionTableView(QTableView):
             self.cursor_column = column
 
     def reset_cursor(self):
-        self.cursor_column = False
+        self.cursor_column = None
         self.setCursor(QCursor(Qt.ArrowCursor))
 
     def info_clicked(self, index):

@@ -145,16 +145,12 @@ class PermissionModel(QAbstractTableModel):
         self.beginResetModel()
         self.load_data()
         self.endResetModel()
-        self.parent().create_table_buttons()
+        self.parent().create_table_buttons(self.parent().balance_is_zero)
 
 
 class ButtonDelegate(QStyledItemDelegate):
-    def __init__(self, parent):
+    def __init__(self, parent, balance_is_zero):
         QStyledItemDelegate.__init__(self, parent)
-        self.balance_is_zero = True
-        signals.on_balance_status_changed.connect(self.on_balance_status_changed)
-
-    def on_balance_status_changed(self, balance_is_zero):
         self.balance_is_zero = balance_is_zero
 
     def createEditor(self, parent, option, idx):
@@ -174,6 +170,7 @@ class ButtonDelegate(QStyledItemDelegate):
         if already_voted:
             btn.setStyleSheet(
                 "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+        print("set disabled", already_voted, self.balance_is_zero)
         btn.setDisabled(already_voted or self.balance_is_zero)
         if self.balance_is_zero:
             btn.setToolTip("You need coins to vote.")
@@ -266,10 +263,19 @@ class CommunityTableView(QTableView):
         self.setCornerButtonEnabled(True)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.openCustomMenu)
-        self.create_table_buttons()
+        self.balance_is_zero = True
+        self.create_table_buttons(self.balance_is_zero)
+        signals.on_balance_status_changed.connect(self.on_balance_status_changed)
 
-    def create_table_buttons(self):
-        self.setItemDelegateForColumn(5, ButtonDelegate(self))
+    def on_balance_status_changed(self, balance_is_zero):
+        print("given balance", balance_is_zero)
+        self.table_model.beginResetModel()
+        self.balance_is_zero = balance_is_zero
+        self.table_model.endResetModel()
+        self.create_table_buttons(balance_is_zero)
+
+    def create_table_buttons(self, balance_is_zero):
+        self.setItemDelegateForColumn(5, ButtonDelegate(self, balance_is_zero))
         for row in range(0, self.table_model.rowCount()):
             self.openPersistentEditor(self.table_model.index(row, 5))
         # TODO find a better way to fix button sizes collapsing on update

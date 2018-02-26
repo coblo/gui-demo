@@ -170,7 +170,6 @@ class ButtonDelegate(QStyledItemDelegate):
         if already_voted:
             btn.setStyleSheet(
                 "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
-        print("set disabled", already_voted, self.balance_is_zero)
         btn.setDisabled(already_voted or self.balance_is_zero)
         if self.balance_is_zero:
             btn.setToolTip("You need coins to vote.")
@@ -268,7 +267,6 @@ class CommunityTableView(QTableView):
         signals.on_balance_status_changed.connect(self.on_balance_status_changed)
 
     def on_balance_status_changed(self, balance_is_zero):
-        print("given balance", balance_is_zero)
         self.table_model.beginResetModel()
         self.balance_is_zero = balance_is_zero
         self.table_model.endResetModel()

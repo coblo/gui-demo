@@ -4,7 +4,7 @@ import logging
 import math
 
 import timeago
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
 from PyQt5.QtGui import QCursor, QFont
@@ -13,13 +13,9 @@ from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget, QMe
 
 from app import enums
 from app.backend.rpc import get_active_rpc_client
-from app.models import Alias
-from app.models import MiningReward
-from app.models import Permission, Profile, PendingVote, Block, Vote
+from app.models import Alias, MiningReward, Permission, Profile, PendingVote, Vote
 from app.models.db import data_session_scope, profile_session_scope
 from app.signals import signals
-
-from peewee import fn
 
 from app import ADMIN_CONSENUS_MINE, ADMIN_CONSENUS_ADMIN
 
@@ -192,15 +188,11 @@ class ButtonDelegate(QStyledItemDelegate):
             QApplication.setOverrideCursor(Qt.WaitCursor)
             client = get_active_rpc_client()
             try:
-                response = client.revoke(address, perm_type)
-                if response['error'] is not None:
-                    err_msg = response['error']['message']
-                    raise RuntimeError(err_msg)
-                else:
-                    sender.setDisabled(True)
-                    sender.setStyleSheet(
-                        "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
-                    signals.new_unconfirmed.emit('vote')
+                client.revoke(address, perm_type)
+                sender.setDisabled(True)
+                sender.setStyleSheet(
+                    "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                signals.new_unconfirmed.emit('vote')
                 QApplication.restoreOverrideCursor()
             except Exception as e:
                 err_msg = str(e)

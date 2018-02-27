@@ -101,16 +101,8 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         client = get_active_rpc_client()
         try:
-            response = client.send(
-                address=self.edit_address.text(),
-                amount=Decimal(self.edit_amount.text()),
-                comment=self.edit_description.text()
-            )
-            if response['error'] is not None:
-                err_msg = response['error']['message']
-                raise RuntimeError(err_msg)
-            else:
-                signals.new_unconfirmed.emit('transfer')
+            client.send(self.edit_address.text(), float(self.edit_amount.text()), self.edit_description.text())
+            signals.new_unconfirmed.emit('transfer')
             self.on_cancel_clicked()
             QApplication.restoreOverrideCursor()
         except Exception as e:

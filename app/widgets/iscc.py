@@ -83,14 +83,8 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         data = dict(title=self.edit_title.text())
         serialized = ubjson.dumpb(data)
         data_hex = hexlify(serialized).decode('utf-8')
-        error = None
         try:
-            response = client.publish('testiscc', self.iscc, data_hex)
-            if response['error'] is not None:
-                error = response['error']
-        except Exception as e:
-            error = e
-        if error is None:
+            client.publish('testiscc', self.iscc, data_hex)
             self.edit_title.clear()
             self.label_qr.clear()
             self.label_iscc.clear()
@@ -104,8 +98,8 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.label_title_conflicts.setHidden(True)
             self.table_conflicts.setHidden(True)
             signals.new_unconfirmed.emit('ISCC registration')
-        else:
-            QMessageBox.warning(QMessageBox(), 'Error while publishing', str(error), QMessageBox.Close,
+        except Exception as e:
+            QMessageBox.warning(QMessageBox(), 'Error while publishing', str(e), QMessageBox.Close,
                                 QMessageBox.Close)
 
     def update_conflicts(self):

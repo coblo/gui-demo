@@ -5,6 +5,7 @@ from binascii import unhexlify
 from datetime import datetime
 
 import ubjson
+from decimal import Decimal
 
 from app import enums
 from app.backend.rpc import get_active_rpc_client
@@ -29,10 +30,10 @@ def getinfo():
     with profile_session_scope() as session:
         profile = Profile.get_active(session)
         try:
-            result = client.getinfo()['result']
-            signals.getinfo.emit(Getinfo(**result))
-            if result['balance'] != profile.balance:
-                profile.balance = result['balance']
+            info = client.getinfo()
+            signals.getinfo.emit(Getinfo(**info))
+            if info['balance'] != profile.balance:
+                profile.balance = Decimal(info['balance'])
         except Exception as e:
             log.debug(e)
 
@@ -41,10 +42,10 @@ def getblockchaininfo():
     """Emit headers and blocks (block sync status)"""
     client = get_active_rpc_client()
     try:
-        result = client.getblockchaininfo()['result']
+        info = client.getblockchaininfo()
         # Todo: Maybe track headers/blocks on Profile db model
-        signals.getblockchaininfo.emit(Getblockchaininfo(**result))
-        return result
+        signals.getblockchaininfo.emit(Getblockchaininfo(**info))
+        return info
     except Exception as e:
         log.debug(e)
         return
@@ -55,10 +56,10 @@ def getruntimeparams():
     client = get_active_rpc_client()
     with profile_session_scope() as session:
         profile = Profile.get_active(session)
-        result = client.getruntimeparams()['result']
+        params = client.getruntimeparams()
 
-        if result['handshakelocal'] != profile.address:
-            profile.address = result['handshakelocal']
+        if params['handshakelocal'] != profile.address:
+            profile.address = params['handshakelocal']
 
 
 def process_blocks():
@@ -79,7 +80,7 @@ def process_blocks():
             if not latest_block:
                 break
             try:
-                block_from_chain = client.getblock(hash_or_height='{}'.format(latest_block.height))['result']
+                block_from_chain = client.getblock('{}'.format(latest_block.height))
             except Exception as e:
                 log.debug(e)
                 return
@@ -89,23 +90,18 @@ def process_blocks():
             else:
                 session.delete(latest_block)
 
-    blockchain_params = client.getblockchainparams()['result']
+    blockchain_params = client.getblockchainparams()
     pubkeyhash_version = blockchain_params['address-pubkeyhash-version']
     checksum_value = blockchain_params['address-checksum-value']
 
-    block_count_node = client.getblockcount()['result']
+    block_count_node = client.getblockcount()
 
     with data_session_scope() as session:
         # height is 0 indexed,
         for batch in batchwise(range(last_valid_height + 1, block_count_node), 100):
             try:
                 with data_session_scope() as session:
-                    answer = client.listblocks(batch)
-                    if answer['error'] is None:
-                        new_blocks = answer['result']
-                    else:
-                        log.debug(answer['error'])
-                        return
+                    new_blocks = client.listblocks(batch)
 
                     for block in new_blocks:
                         block_obj = Block(
@@ -136,7 +132,7 @@ def process_transactions(data_db, block_height, pubkeyhash_version, checksum_val
     client = get_active_rpc_client()
 
     try:
-        block = client.getblock(hash_or_height='{}'.format(block_height), verbose=4)['result']
+        block = client.getblock('{}'.format(block_height), 4)
     except Exception as e:
         log.debug(e)
         return
@@ -256,7 +252,7 @@ def process_permissions():
     client = get_active_rpc_client()
 
     try:
-        perms = client.listpermissions()['result']
+        perms = client.listpermissions("*", "*", True)
     except Exception as e:
         log.debug(e)
         return

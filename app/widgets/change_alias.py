@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QDialogButtonBox
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtWidgets import QWidget
-from peewee import fn
+from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QDialog
 
 from app.backend.rpc import get_active_rpc_client
-from app.models import Address, Alias, data_db
 from app.ui.dialog_change_alias import Ui_dialog_change_alias
-from app.models import Profile
+from app.models import Alias, Profile
 from app.signals import signals
 from app.tools.validators import username_regex
 
@@ -62,20 +57,8 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
     def save(self):
         client = get_active_rpc_client()
         try:
-            response = client.publish(
-                stream='alias',
-                key=self.edit_alias.text(),
-                hex_data=''
-            )
-            if response['error'] is not None:
-                err_msg = response['error']['message']
-                raise RuntimeError(err_msg)
-            else:
-                signals.new_unconfirmed.emit('alias change')
-                # QMessageBox.information(QWidget(), 'Changing alias successful',
-                #                         'The transaction to change your alias was sent successful. It may take some'
-                #                         ' minutes to validate your transaction. After validation your alias will be'
-                #                         ' changed.', QMessageBox.Ok, QMessageBox.Ok)
+            client.publish('alias', self.edit_alias.text(), '')
+            signals.new_unconfirmed.emit('alias change')
         except Exception as e:
             err_msg = str(e)
             error_dialog = QMessageBox()

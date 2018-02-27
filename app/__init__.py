@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Global constants and pre-app initialization stuff."""
-from os.path import abspath, dirname, join, exists
+from os.path import abspath, dirname, join
 import sys
 import appdirs
 

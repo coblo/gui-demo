@@ -58,19 +58,18 @@ class InviteDialog(QDialog, Ui_dlg_invite):
             comment = ''
         log.debug('granting %s to %s - reason: %s' % (perms, address, comment))
         client = get_active_rpc_client()
-        response = client.grantwithdata(address, perms, data_hex=comment)
-        if response['error']:
-            return QMessageBox.critical(self, 'Error sending invitation', response['error']['message'])
-        if response['result']:
+        try:
+            client.grantwithdata(address, perms, comment)
+
             self.edit_candidate_address.clear()
             self.edit_candidate_address.setStyleSheet('QLineEdit { background-color: #fff }')
             self.edit_public_comment.clear()
             self.cbox_grant_validator_skills.setChecked(True)
             self.cbox_grant_guardian_skills.setChecked(False)
 
-            # msg = 'Your invitation has been sent. The Transaction id is: \n%s' % response['result']
-            # return QMessageBox.information(self, 'Charm - Invitation Sent', msg)
             signals.new_unconfirmed.emit('vote')
+        except Exception as e:
+            return QMessageBox.critical(self, 'Error sending invitation', "{}".format(e))
 
     @pyqtSlot(str)
     def on_textChanged(self, text):

@@ -32,7 +32,8 @@ def getinfo():
         try:
             info = client.getinfo()
             signals.getinfo.emit(Getinfo(**info))
-            if info['balance'] != profile.balance:
+            new_balance = Decimal(str(info['balance']))
+            if new_balance != profile.balance:
                 profile.balance = Decimal(info['balance'])
         except Exception as e:
             log.debug(e)

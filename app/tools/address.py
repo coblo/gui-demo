@@ -160,7 +160,7 @@ def public_key_to_address(public_key: str, pkhv, cv):
     return base58.b58encode(address_bin)
 
 
-def address_valid(address, checksum_value="d8a558e6"):
+def address_valid(address, checksum_value="00000000"):
     """Validate a chain specific address.
 
     :param str address: chain specific address or wif encoded private key

@@ -290,6 +290,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if len(self.raw_txs) == 0:
             self.beginResetModel()
             self.raw_txs = transactions
+            self.num_unconfirmed_processed = 0
+            self.num_unconfirmed_raw = 0
             self.txs = self.process_wallet_transactions(transactions)
             self.endResetModel()
             self.sort(self.sort_index, self.sort_order)
@@ -300,8 +302,6 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 self.raw_txs = self.raw_txs[:len(self.raw_txs)-self.num_unconfirmed_raw]
                 self.txs = self.txs[self.num_unconfirmed_processed:]
                 self.endRemoveRows()
-                self.num_unconfirmed_processed = 0
-                self.num_unconfirmed_raw= 0
             # insert new transactions
             latest_tx_id = self.raw_txs[-1]["txid"]
             new_txs = []
@@ -310,8 +310,11 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                     new_txs = [tx] + new_txs
                 else:
                     break
+
+            self.num_unconfirmed_processed = 0
+            self.num_unconfirmed_raw = 0
             processed_txs = self.process_wallet_transactions(new_txs)
-            self.beginInsertRows(QModelIndex(), 0, 0)
+            self.beginInsertRows(QModelIndex(), 0, len(new_txs))
             self.raw_txs += new_txs
             self.txs = processed_txs + self.txs
             self.endInsertRows()
@@ -339,6 +342,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if profile.balance != self.balance:
             self.balance_changed(profile.balance)
             self.beginResetModel()
+            self.num_unconfirmed_processed = 0
+            self.num_unconfirmed_raw = 0
             self.txs = self.process_wallet_transactions(self.raw_txs)
             self.endResetModel()
             self.sort(self.sort_index, self.sort_order)

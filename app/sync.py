@@ -168,7 +168,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
             public_key = vin['scriptSig']['asm'].split(' ')[1]
             signers.append(public_key_to_address(public_key, pubkeyhash_version, checksum_value))
     for i, vout in enumerate(raw_transaction["vout"]):
-        for item in vout["items"]:
+        for item in vout.get("items", []):
             # stream item
             if item["type"] == "stream":
                 publishers = item["publishers"]
@@ -227,7 +227,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                     # flush for the primary key
                     data_db.flush()
         # vote
-        for perm in vout['permissions']:
+        for perm in vout.get('permissions', []):
             relevant = True
             for perm_type, changed in perm.items():
                 if changed and perm_type in permission_candidates:

@@ -47,7 +47,7 @@ class WalletTransactionsUpdater(QThread):
                 # This triggers Network Info widget update that we always want
                 blockchain_info = client.getblockchaininfo()
                 # The node is downloading blocks if it has more headers than blocks
-                if blockchain_info['blocks'] != blockchain_info['headers']:
+                if blockchain_info.blocks != blockchain_info.headers:
                     log.debug('blockchain syncing - skip expensive rpc calls')
                     self.sleep(self.UPDATE_INTERVALL)
                     continue

@@ -44,7 +44,7 @@ def getblockchaininfo():
     try:
         info = client.getblockchaininfo()
         # Todo: Maybe track headers/blocks on Profile db model
-        signals.getblockchaininfo.emit(Getblockchaininfo(**info))
+        signals.getblockchaininfo.emit(info)
         return info
     except Exception as e:
         log.debug(e)

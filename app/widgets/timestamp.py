@@ -291,6 +291,7 @@ class TimestampTableModel(QAbstractTableModel):
         super().__init__(parent)
         with profile_session_scope() as session:
             self.profile = Profile.get_active(session)
+        signals.profile_changed.connect(self.on_profile_changed)
         self.data = []
 
         self.header = ["Time", "Hash", "Comment"]
@@ -304,6 +305,10 @@ class TimestampTableModel(QAbstractTableModel):
         self.beginResetModel()
         self.data = self.load_data()
         self.endResetModel()
+
+    @pyqtSlot(Profile)
+    def on_profile_changed(self, new_profile):
+        self.profile = new_profile
 
     def rowCount(self, parent=None, *args, **kwargs):
         return len(self.data)

@@ -14,7 +14,6 @@ from app.models import Address, Permission, Transaction, PendingVote, Block, Pro
     Timestamp, Vote
 from app.models import ISCC
 from app.models.db import profile_session_scope, data_session_scope
-from app.responses import Getblockchaininfo, Getinfo
 from app.signals import signals
 from app.tools.address import public_key_to_address
 from app.tools.validators import is_valid_username
@@ -31,10 +30,10 @@ def getinfo():
         profile = Profile.get_active(session)
         try:
             info = client.getinfo()
-            signals.getinfo.emit(Getinfo(**info))
-            new_balance = Decimal(str(info['balance']))
+            signals.getinfo.emit(info)
+            new_balance = Decimal(str(info.balance))
             if new_balance != profile.balance:
-                profile.balance = Decimal(info['balance'])
+                profile.balance = Decimal(info.balance)
         except Exception as e:
             log.debug(e)
 
@@ -59,8 +58,8 @@ def getruntimeparams():
         profile = Profile.get_active(session)
         params = client.getruntimeparams()
 
-        if params['handshakelocal'] != profile.address:
-            profile.address = params['handshakelocal']
+        if params.handshakelocal != profile.address:
+            profile.address = params.handshakelocal
 
 
 def process_blocks():

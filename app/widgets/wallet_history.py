@@ -384,7 +384,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 processed_transactions.append((
                     self.PUBLISH,
                     timestamp,
-                    'Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
+                    'Stream:"{}" , Keys: "{}"'.format(item['name'], "-".join(item['keys'])),
                     amount,
                     balance,
                     txid,

@@ -177,21 +177,21 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                 if item["name"] == "timestamp":
                     relevant = True
                     comment = ''
-                    for entry in raw_transaction['data']:
-                        data = ubjson.loadb(unhexlify(entry))
+                    if item['data']:
+                        data = ubjson.loadb(unhexlify(item['data']))
                         if 'comment' in data:
                             comment += data.get('comment', '')
                     data_db.add(Timestamp(
                         txid=txid,
                         pos_in_tx=i,
-                        hash=item["key"],
+                        hash=item["keys"][0],
                         comment=comment,
                         address=publishers[0]
                     ))
                     # flush for the primary key
                     data_db.flush()
                 elif item['name'] == "alias":
-                    alias = item["key"]
+                    alias = item["keys"][0]
                     # Sanity checks
                     if item["data"] or not is_valid_username(alias) or len(publishers) != 1:
                         continue
@@ -205,7 +205,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                     # flush for the primary key
                     data_db.flush()
                 elif item['name'] == "testiscc":
-                    iscc = item["key"].split('-')
+                    iscc = item["keys"][0].split('-')
                     if len(iscc) != 4:
                         continue
                     meta_id, content_id, data_id, instance_id = iscc

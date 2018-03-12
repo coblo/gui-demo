@@ -303,7 +303,9 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 self.txs = self.txs[self.num_unconfirmed_processed:]
                 self.endRemoveRows()
             # insert new transactions
-            latest_tx_id = self.raw_txs[-1]["txid"]
+            latest_tx_id = ''
+            if len(self.raw_txs) > 0:
+                latest_tx_id = self.raw_txs[-1]["txid"]
             new_txs = []
             for tx in reversed(transactions):
                 if tx["txid"] != latest_tx_id:

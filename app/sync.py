@@ -204,13 +204,13 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                     # flush for the primary key
                     data_db.flush()
                 elif item['name'] == "testiscc":
-                    iscc = item["keys"][0].split('-')
+                    iscc = item["keys"]
                     if len(iscc) != 4:
                         continue
                     meta_id, content_id, data_id, instance_id = iscc
                     if ISCC.already_exists(data_db, meta_id, content_id, data_id, instance_id):
                         continue
-                    data = ubjson.loadb(unhexlify(raw_transaction['data'][0]))
+                    data = ubjson.loadb(unhexlify(item['data']))
                     if 'title' not in data:
                         continue
                     relevant = True

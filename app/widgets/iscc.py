@@ -84,7 +84,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         serialized = ubjson.dumpb(data)
         data_hex = hexlify(serialized).decode('utf-8')
         try:
-            client.publish('testiscc', self.iscc, data_hex)
+            client.publish('testiscc', [self.meta_id, self.content_id, self.data_id, self.instance_id], data_hex)
             self.edit_title.clear()
             self.label_qr.clear()
             self.label_iscc.clear()

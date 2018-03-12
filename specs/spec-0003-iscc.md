@@ -102,19 +102,19 @@ With custom inline Metadata:
 
 ```json
 {
-    "title": "The Neverending Story",
+		"title": "The Neverending Story",
     "metadata": [
-    	{
-			"schema": "schema.org"
-              "mediatype": "application/ld+json",
-    		 "data": {
-				"@context": "http://schema.org",
-                   "@type": "Movie",
-                   "name": "The Neverending Story",
-                   "dateCreated": "6 April, 1984",
-                   "director": "Wolfgang Petersen",
-                   "actors": ["Noah Hathaway", "Barret Oliver", "Tami Stronach"],
-                   "duration": "1:42:00"
+				{
+						"schema": "schema.org",
+            "mediatype": "application/ld+json",
+    		    "data": {
+								"@context": "http://schema.org",
+                    "@type": "Movie",
+                    "name": "The Neverending Story",
+                    "dateCreated": "6 April, 1984",
+                    "director": "Wolfgang Petersen",
+                    "actors": ["Noah Hathaway", "Barret Oliver", "Tami Stronach"],
+                    "duration": "1:42:00"
     		}
     	}
     ]
@@ -125,7 +125,7 @@ With application specific custom field:
 
 ```json
 {
-    "title": "The Neverending Story",
-    "_productionCompany": "Bavaria Studios"
+		"title": "The Neverending Story",
+		"_productionCompany": "Bavaria Studios"
 }
 ```

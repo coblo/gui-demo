@@ -277,7 +277,7 @@ class SetupWizard(QWizard, Ui_SetupWizard):
             self.button_test_connection.setDisabled(True)
             self.gbox_connect.setEnabled(False)
             self._connection_tested = True
-            self._address = response['handshakelocal']
+            self._address = response.handshakelocal
             self.page3_connect.completeChanged.emit()
         except Exception as e:
             log.exception(e)

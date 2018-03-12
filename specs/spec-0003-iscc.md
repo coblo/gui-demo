@@ -56,7 +56,7 @@ Minimal **ISCC** registry entry value:
 
 ```json
 {
-    "title": "The Neverending Story"
+  "title": "The Neverending Story"
 }
 ```
 
@@ -64,8 +64,8 @@ With extra field:
 
 ```json
 {
-    "title": "The Neverending Story",
-    "extra": "1984 fantasy film based on novel"
+  "title": "The Neverending Story",
+  "extra": "1984 fantasy film based on novel"
 }
 ```
 
@@ -73,28 +73,29 @@ With extended **ISCC** tails:
 
 ```json
 {
-    "title": "The Neverending Story",
-    "tails":
-    	{
-    		"meta": "6e5ef0c142805ffc66c721394a66236b57aba8f9aee000dd",
-    		"content": "5e3d5f623691d0e948cdc906f5c68602744934234fefdfa6",
-    		"data": "c0b07d2bbcc2c6fb97739c24c7a65964c042808c3885bcd3",
-    		"instance": "50859ea4550a2a27045c5c5dad39f8d198717486dc8fef79"
-    	}
+  "title": "The Neverending Story",
+  "tails":
+  {
+    "meta": "6e5ef0c142805ffc66c721394a66236b57aba8f9aee000dd",
+    "content": "5e3d5f623691d0e948cdc906f5c68602744934234fefdfa6",
+    "data": "c0b07d2bbcc2c6fb97739c24c7a65964c042808c3885bcd3",
+    "instance": "50859ea4550a2a27045c5c5dad39f8d198717486dc8fef79"
+  }
 }
 ```
 With linked Metadata:
 
 ```json
 {
-    "title": "Ubu: A face-to-face connector app for Hubud members",
-    "metadata": [
-        {
-            "schema": "xmp",
-            "mediatype": "application/rdf+xml",
-            "url": "http://camwebb.info/blog/2014-11-19/ubu.xmp"
-        }
-    ]
+  "title": "Ubu: A face-to-face connector app for Hubud members",
+  "metadata": 
+  [
+    {
+      "schema": "xmp",
+      "mediatype": "application/rdf+xml",
+      "url": "http://camwebb.info/blog/2014-11-19/ubu.xmp"
+    }
+  ]
 }
 ```
 
@@ -102,22 +103,23 @@ With custom inline Metadata:
 
 ```json
 {
-		"title": "The Neverending Story",
-    "metadata": [
-				{
-						"schema": "schema.org",
-            "mediatype": "application/ld+json",
-    		    "data": {
-								"@context": "http://schema.org",
-                    "@type": "Movie",
-                    "name": "The Neverending Story",
-                    "dateCreated": "6 April, 1984",
-                    "director": "Wolfgang Petersen",
-                    "actors": ["Noah Hathaway", "Barret Oliver", "Tami Stronach"],
-                    "duration": "1:42:00"
-    		}
+  "title": "The Neverending Story",
+  "metadata": 
+  [
+	  {
+		  "schema": "schema.org",
+      "mediatype": "application/ld+json",
+    	"data": {
+			"@context": "http://schema.org",
+      "@type": "Movie",
+      "name": "The Neverending Story",
+      "dateCreated": "6 April, 1984",
+      "director": "Wolfgang Petersen",
+      "actors": ["Noah Hathaway", "Barret Oliver", "Tami Stronach"],
+      "duration": "1:42:00"
     	}
-    ]
+    }
+   ]
 }
 ```
 
@@ -125,7 +127,7 @@ With application specific custom field:
 
 ```json
 {
-		"title": "The Neverending Story",
-		"_productionCompany": "Bavaria Studios"
+  "title": "The Neverending Story",
+  "_productionCompany": "Bavaria Studios"
 }
 ```

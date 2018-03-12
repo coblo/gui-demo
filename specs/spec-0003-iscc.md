@@ -11,7 +11,7 @@ License: BSD-2-Clause
 
 ## Purpose
 
-An open an public registry for (ISCC)[http://iscc.codes/] content identifiers. This documents specifies an open stream named `iscc` that can be used to register ISCC content codes and optionally associated metadata.
+An open an public registry for [ISCC](http://iscc.codes/) content identifiers. This documents specifies an open stream named `iscc` that can be used to register ISCC content codes and optionally associated metadata.
 
 ## Schema
 

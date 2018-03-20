@@ -425,10 +425,17 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 if unconfirmed:
                     self.num_unconfirmed_processed += 1
             if is_payment:
+                comment = ''
+                if tx.get("comment"):
+                    comment = tx.get("comment")
+                elif tx.get("data"):
+                    for data_item in tx.get("data"):
+                        if "json" in data_item and "comment" in data_item["json"]:
+                            comment = data_item["json"]["comment"]
                 processed_transactions.append((
                     self.PAYMENT,
                     timestamp,
-                    '' if tx.get("comment") is None else tx.get("comment"),
+                    comment,
                     amount,
                     balance,
                     txid,

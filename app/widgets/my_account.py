@@ -43,7 +43,7 @@ class MyAccount(QWidget, Ui_MyAccount):
         self.lbl_wallet_balance_postdecimal.setText("{}".format(postdecimal))
         self.lbl_wallet_balance_predecimal.setText("{0:n}{1}".format(predecimal, spacer))
         self.lbl_wallet_balance_currency.setText(CURRENCY_CODE)
-        self.gbox_wallet_my_balance.setToolTip("{0:.8} {1}".format(balance, CURRENCY_CODE))
+        self.gbox_wallet_my_balance.setToolTip("{0:.8f} {1}".format(balance, CURRENCY_CODE))
 
 
 if __name__ == '__main__':

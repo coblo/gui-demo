@@ -272,19 +272,17 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         )
         try:
             response = client.getruntimeparams()
-            assert response['error'] is None
+            msg = 'Successfully connected to %s' % self.edit_rpc_host.text()
+            self.label_test_connection.setText(msg)
+            self.button_test_connection.setDisabled(True)
+            self.gbox_connect.setEnabled(False)
+            self._connection_tested = True
+            self._address = response['handshakelocal']
+            self.page3_connect.completeChanged.emit()
         except Exception as e:
             log.exception(e)
             self.label_test_connection.setText('Connection error')
-            return
 
-        msg = 'Successfully connected to %s' % self.edit_rpc_host.text()
-        self.label_test_connection.setText(msg)
-        self.button_test_connection.setDisabled(True)
-        self.gbox_connect.setEnabled(False)
-        self._connection_tested = True
-        self._address = response['result']['handshakelocal']
-        self.page3_connect.completeChanged.emit()
 
     @pyqtSlot()
     def reset_connection_form(self):

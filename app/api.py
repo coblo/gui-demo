@@ -37,19 +37,19 @@ def put_timestamp(hexhash: str, comment: str='', stream='timestamp') -> Optional
 
     client = get_active_rpc_client()
 
-    if comment:
-        data = dict(comment=comment)
-        serialized = ubjson.dumpb(data)
-        data_hex = hexlify(serialized).decode('utf-8')
-        response = client.publish(stream, hexhash, data_hex)
-    else:
-        response = client.publish(stream, hexhash)
+    try:
+        if comment:
+            data = dict(comment=comment)
+            serialized = ubjson.dumpb(data)
+            data_hex = hexlify(serialized).decode('utf-8')
+            response = client.publish(stream, hexhash, data_hex)
+        else:
+            response = client.publish(stream, hexhash, "")
+        return TxId(response)
 
-    if response['error'] is not None:
-        raise RpcResponseError(response['error']['message'])
-
-    return TxId(response['result'])
-
+    except Exception as e:
+        log.debug(e)
+        raise RpcResponseError(str(e))
 
 
 if __name__ == '__main__':

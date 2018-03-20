@@ -45,13 +45,13 @@ class WalletTransactionsUpdater(QThread):
             log.debug('check for new local wallet updates')
             try:
                 # This triggers Network Info widget update that we always want
-                blockchain_info = client.getblockchaininfo()['result']
+                blockchain_info = client.getblockchaininfo()
                 # The node is downloading blocks if it has more headers than blocks
-                if blockchain_info['blocks'] != blockchain_info['headers']:
+                if blockchain_info.blocks != blockchain_info.headers:
                     log.debug('blockchain syncing - skip expensive rpc calls')
                     self.sleep(self.UPDATE_INTERVALL)
                     continue
-                wallet_transactions = client.listwallettransactions(count=100)["result"]
+                wallet_transactions = client.listwallettransactions(100)
                 latest_tx_hash = wallet_transactions[-1]["txid"]
                 latest_confirmed_wallet_tx = ''
                 for tx in reversed(wallet_transactions):
@@ -67,9 +67,9 @@ class WalletTransactionsUpdater(QThread):
                 log.debug('syncing new wallet transactions')
 
                 try:
-                    balance_before = client.getbalance()["result"]
-                    wallet_transactions = client.listwallettransactions(count=100, verbose=True)["result"]
-                    balance_after = client.getbalance()["result"]
+                    balance_before = client.getbalance()
+                    wallet_transactions = client.listwallettransactions(100, 0, False, True)
+                    balance_after = client.getbalance()
                     if balance_before != balance_after:
                         log.debug("Balance changed while updating")
                         continue
@@ -230,7 +230,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 amount = tx[col]
                 if amount == 0:
                     amount = 0
-                display = "{0:n}".format(amount)
+                display = "{0:.8f}".format(amount)
                 return '+' + display if amount > 0 else display
             if col == self.BALANCE:
                 if tx[col] is None:
@@ -321,7 +321,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         client = get_active_rpc_client()
         new_txs = []
         try:
-            new_txs = client.listwallettransactions(count=100, skip=len(self.raw_txs), verbose=True)["result"]
+            new_txs = client.listwallettransactions(100, len(self.raw_txs), False, True)
             if len(new_txs) < 100:
                 self.wallet_transactions_left = False
         except Exception as e:
@@ -352,7 +352,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             txid = tx["txid"]
             amount = tx["balance"]["amount"]
             is_payment = True
-            balance = Decimal(total_balance) - sum_transaction_above
+            balance = Decimal(total_balance) - Decimal(sum_transaction_above)
             sum_transaction_above += amount
             unconfirmed = not tx.get("blocktime")
             if unconfirmed:

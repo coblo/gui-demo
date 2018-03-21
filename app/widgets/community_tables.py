@@ -163,7 +163,7 @@ class ButtonDelegate(QStyledItemDelegate):
         btn.setObjectName(address)
         btn.clicked.connect(self.on_revoke_clicked)
         btn.setCursor(QCursor(Qt.PointingHandCursor))
-        if already_voted:
+        if already_voted or self.balance_is_zero:
             btn.setStyleSheet(
                 "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
         btn.setDisabled(already_voted or self.balance_is_zero)
@@ -259,10 +259,11 @@ class CommunityTableView(QTableView):
         signals.on_balance_status_changed.connect(self.on_balance_status_changed)
 
     def on_balance_status_changed(self, balance_is_zero):
-        self.table_model.beginResetModel()
-        self.balance_is_zero = balance_is_zero
-        self.table_model.endResetModel()
-        self.create_table_buttons(balance_is_zero)
+        if balance_is_zero != self.balance_is_zero:
+            self.table_model.beginResetModel()
+            self.balance_is_zero = balance_is_zero
+            self.table_model.endResetModel()
+            self.create_table_buttons(balance_is_zero)
 
     def create_table_buttons(self, balance_is_zero):
         self.setItemDelegateForColumn(5, ButtonDelegate(self, balance_is_zero))

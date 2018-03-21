@@ -297,6 +297,7 @@ def process_permissions():
                         end_block=end_block
                     )
                     session.add(vote_obj)
+                    signals.votes_changed.emit()
 
     with profile_session_scope() as profile_db:
         profile = Profile.get_active(profile_db)

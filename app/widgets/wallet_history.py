@@ -256,6 +256,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 return '_' if tx[col] is None else "{0:n}".format(tx[col])
             elif col == self.TXTYPE and tx[col] in self.transaction_type_to_text:
                 return self.transaction_type_to_text[tx[col]]
+            elif col == self.COMMENT:
+                return tx[col]
             elif col == self.INFO:
                 return self.info_icon
             else:

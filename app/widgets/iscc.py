@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import base64
 import logging
 import os
 from binascii import hexlify
 import qrcode
 import ubjson
 from PyQt5.QtCore import QThread
-from PyQt5.QtCore import pyqtSignal
+import iscc
 
 from PyQt5.QtCore import pyqtSlot, QDir, QEvent, QMimeData, QObject, QUrl
 from PyQt5.QtGui import QDragLeaveEvent, QDropEvent, QPixmap, QDragEnterEvent
@@ -17,7 +16,6 @@ from app.backend.rpc import get_active_rpc_client
 from app.models.db import data_session_scope
 from app.ui.iscc import Ui_Widget_ISCC
 from app.models import ISCC
-from app.tools import iscc as iscc_lib
 from app.widgets.iscc_table import ISCCTableView
 from app.widgets.iscc_conflicts_table import ConflictTableView
 from app.signals import signals
@@ -111,14 +109,14 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         if self.conflict_in_meta:
             extra = self.edit_extra.text()
         if extra:
-            self.meta_id = iscc_lib.generate_meta_id(title=title, extra=extra)
+            self.meta_id = iscc.meta_id(title=title, extra=extra)[0]
         else:
-            self.meta_id = iscc_lib.generate_meta_id(title=title)
+            self.meta_id = iscc.meta_id(title=title)[0]
         if self.content_id:
             self.show_conflicts()
 
     def extra_changed(self, extra):
-        self.meta_id = iscc_lib.generate_meta_id(title=self.edit_title.text(), extra=extra)
+        self.meta_id = iscc.meta_id(title=self.edit_title.text(), extra=extra)[0]
         if self.content_id:
             self.show_conflicts()
 
@@ -224,12 +222,12 @@ class ISCCGEnerator(QThread):
 
     def run(self):
         with open(self.file_path, 'rb') as infile:
-            self.parent.instance_id = iscc_lib.generate_instance_id(infile)
+            self.parent.instance_id = iscc.instance_id(infile)[0]
         if self.file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:
-            self.parent.content_id = iscc_lib.generate_image_hash(self.file_path)
+            self.parent.content_id = iscc.content_id_image(self.file_path)
         else:
-            self.parent.content_id = base64.b32encode(b'\x10' +  os.urandom(7)).rstrip(b'=').decode('ascii') # todo
+            self.parent.content_id = iscc.content_id_text(self.file_path)
         with open(self.file_path, 'rb') as infile:
-            self.parent.data_id = iscc_lib.generate_data_id(infile)
+            self.parent.data_id = iscc.data_id(infile)
         if self.parent.meta_id:
             self.parent.show_conflicts()

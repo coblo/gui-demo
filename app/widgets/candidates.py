@@ -147,15 +147,11 @@ class ButtonDelegate(QStyledItemDelegate):
             QApplication.setOverrideCursor(Qt.WaitCursor)
             client = get_active_rpc_client()
             try:
-                response = client.grant(address, skill)
-                if response['error'] is not None:
-                    err_msg = response['error']['message']
-                    raise RuntimeError(err_msg)
-                else:
-                    sender.setDisabled(True)
-                    sender.setStyleSheet(
-                        "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
-                    signals.new_unconfirmed.emit('vote')
+                client.grant(address, skill)
+                sender.setDisabled(True)
+                sender.setStyleSheet(
+                    "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                signals.new_unconfirmed.emit('vote')
                 QApplication.restoreOverrideCursor()
             except Exception as e:
                 err_msg = str(e)

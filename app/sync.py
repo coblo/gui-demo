@@ -5,6 +5,7 @@ from binascii import unhexlify
 from datetime import datetime
 
 import ubjson
+from decimal import Decimal
 
 from app import enums
 from app.backend.rpc import get_active_rpc_client
@@ -13,7 +14,6 @@ from app.models import Address, Permission, Transaction, PendingVote, Block, Pro
     Timestamp, Vote
 from app.models import ISCC
 from app.models.db import profile_session_scope, data_session_scope
-from app.responses import Getblockchaininfo, Getinfo
 from app.signals import signals
 from app.tools.address import public_key_to_address
 from app.tools.validators import is_valid_username
@@ -29,10 +29,11 @@ def getinfo():
     with profile_session_scope() as session:
         profile = Profile.get_active(session)
         try:
-            result = client.getinfo()['result']
-            signals.getinfo.emit(Getinfo(**result))
-            if result['balance'] != profile.balance:
-                profile.balance = result['balance']
+            info = client.getinfo()
+            signals.getinfo.emit(info)
+            new_balance = Decimal(str(info.balance))
+            if new_balance != profile.balance:
+                profile.balance = Decimal(info.balance)
         except Exception as e:
             log.debug(e)
 
@@ -41,10 +42,10 @@ def getblockchaininfo():
     """Emit headers and blocks (block sync status)"""
     client = get_active_rpc_client()
     try:
-        result = client.getblockchaininfo()['result']
+        info = client.getblockchaininfo()
         # Todo: Maybe track headers/blocks on Profile db model
-        signals.getblockchaininfo.emit(Getblockchaininfo(**result))
-        return result
+        signals.getblockchaininfo.emit(info)
+        return info
     except Exception as e:
         log.debug(e)
         return
@@ -55,10 +56,10 @@ def getruntimeparams():
     client = get_active_rpc_client()
     with profile_session_scope() as session:
         profile = Profile.get_active(session)
-        result = client.getruntimeparams()['result']
+        params = client.getruntimeparams()
 
-        if result['handshakelocal'] != profile.address:
-            profile.address = result['handshakelocal']
+        if params.handshakelocal != profile.address:
+            profile.address = params.handshakelocal
 
 
 def process_blocks():
@@ -79,7 +80,7 @@ def process_blocks():
             if not latest_block:
                 break
             try:
-                block_from_chain = client.getblock(hash_or_height='{}'.format(latest_block.height))['result']
+                block_from_chain = client.getblock('{}'.format(latest_block.height))
             except Exception as e:
                 log.debug(e)
                 return
@@ -89,23 +90,18 @@ def process_blocks():
             else:
                 session.delete(latest_block)
 
-    blockchain_params = client.getblockchainparams()['result']
+    blockchain_params = client.getblockchainparams()
     pubkeyhash_version = blockchain_params['address-pubkeyhash-version']
     checksum_value = blockchain_params['address-checksum-value']
 
-    block_count_node = client.getblockcount()['result']
+    block_count_node = client.getblockcount()
 
     with data_session_scope() as session:
         # height is 0 indexed,
         for batch in batchwise(range(last_valid_height + 1, block_count_node), 100):
             try:
                 with data_session_scope() as session:
-                    answer = client.listblocks(batch)
-                    if answer['error'] is None:
-                        new_blocks = answer['result']
-                    else:
-                        log.debug(answer['error'])
-                        return
+                    new_blocks = client.listblocks(batch)
 
                     for block in new_blocks:
                         block_obj = Block(
@@ -136,7 +132,7 @@ def process_transactions(data_db, block_height, pubkeyhash_version, checksum_val
     client = get_active_rpc_client()
 
     try:
-        block = client.getblock(hash_or_height='{}'.format(block_height), verbose=4)['result']
+        block = client.getblock('{}'.format(block_height), 4)
     except Exception as e:
         log.debug(e)
         return
@@ -171,7 +167,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
             public_key = vin['scriptSig']['asm'].split(' ')[1]
             signers.append(public_key_to_address(public_key, pubkeyhash_version, checksum_value))
     for i, vout in enumerate(raw_transaction["vout"]):
-        for item in vout["items"]:
+        for item in vout.get("items", []):
             # stream item
             if item["type"] == "stream":
                 publishers = item["publishers"]
@@ -180,21 +176,21 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                 if item["name"] == "timestamp":
                     relevant = True
                     comment = ''
-                    for entry in raw_transaction['data']:
-                        data = ubjson.loadb(unhexlify(entry))
+                    if item['data']:
+                        data = ubjson.loadb(unhexlify(item['data']))
                         if 'comment' in data:
                             comment += data.get('comment', '')
                     data_db.add(Timestamp(
                         txid=txid,
                         pos_in_tx=i,
-                        hash=item["key"],
+                        hash=item["keys"][0],
                         comment=comment,
                         address=publishers[0]
                     ))
                     # flush for the primary key
                     data_db.flush()
                 elif item['name'] == "alias":
-                    alias = item["key"]
+                    alias = item["keys"][0]
                     # Sanity checks
                     if item["data"] or not is_valid_username(alias) or len(publishers) != 1:
                         continue
@@ -208,13 +204,13 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                     # flush for the primary key
                     data_db.flush()
                 elif item['name'] == "testiscc":
-                    iscc = item["key"].split('-')
+                    iscc = item["keys"]
                     if len(iscc) != 4:
                         continue
                     meta_id, content_id, data_id, instance_id = iscc
                     if ISCC.already_exists(data_db, meta_id, content_id, data_id, instance_id):
                         continue
-                    data = ubjson.loadb(unhexlify(raw_transaction['data'][0]))
+                    data = ubjson.loadb(unhexlify(item['data']))
                     if 'title' not in data:
                         continue
                     relevant = True
@@ -230,7 +226,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                     # flush for the primary key
                     data_db.flush()
         # vote
-        for perm in vout['permissions']:
+        for perm in vout.get('permissions', []):
             relevant = True
             for perm_type, changed in perm.items():
                 if changed and perm_type in permission_candidates:
@@ -256,7 +252,7 @@ def process_permissions():
     client = get_active_rpc_client()
 
     try:
-        perms = client.listpermissions()['result']
+        perms = client.listpermissions("*", "*", True)
     except Exception as e:
         log.debug(e)
         return
@@ -301,6 +297,7 @@ def process_permissions():
                         end_block=end_block
                     )
                     session.add(vote_obj)
+                    signals.votes_changed.emit()
 
     with profile_session_scope() as profile_db:
         profile = Profile.get_active(profile_db)

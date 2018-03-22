@@ -45,14 +45,16 @@ class WalletTransactionsUpdater(QThread):
             log.debug('check for new local wallet updates')
             try:
                 # This triggers Network Info widget update that we always want
-                blockchain_info = client.getblockchaininfo()['result']
+                blockchain_info = client.getblockchaininfo()
                 # The node is downloading blocks if it has more headers than blocks
-                if blockchain_info['blocks'] != blockchain_info['headers']:
+                if blockchain_info.blocks != blockchain_info.headers:
                     log.debug('blockchain syncing - skip expensive rpc calls')
                     self.sleep(self.UPDATE_INTERVALL)
                     continue
-                wallet_transactions = client.listwallettransactions(count=100)["result"]
-                latest_tx_hash = wallet_transactions[-1]["txid"]
+                wallet_transactions = client.listwallettransactions(100)
+                latest_tx_hash = ''
+                if len(wallet_transactions) > 0:
+                    latest_tx_hash = wallet_transactions[-1]["txid"]
                 latest_confirmed_wallet_tx = ''
                 for tx in reversed(wallet_transactions):
                     if tx.get("blocktime"):
@@ -67,9 +69,9 @@ class WalletTransactionsUpdater(QThread):
                 log.debug('syncing new wallet transactions')
 
                 try:
-                    balance_before = client.getbalance()["result"]
-                    wallet_transactions = client.listwallettransactions(count=100, verbose=True)["result"]
-                    balance_after = client.getbalance()["result"]
+                    balance_before = client.getbalance()
+                    wallet_transactions = client.listwallettransactions(100, 0, False, True)
+                    balance_after = client.getbalance()
                     if balance_before != balance_after:
                         log.debug("Balance changed while updating")
                         continue
@@ -230,7 +232,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 amount = tx[col]
                 if amount == 0:
                     amount = 0
-                display = "{0:n}".format(amount)
+                display = "{0:.8f}".format(amount)
                 return '+' + display if amount > 0 else display
             if col == self.BALANCE:
                 if tx[col] is None:
@@ -254,6 +256,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 return '_' if tx[col] is None else "{0:n}".format(tx[col])
             elif col == self.TXTYPE and tx[col] in self.transaction_type_to_text:
                 return self.transaction_type_to_text[tx[col]]
+            elif col == self.COMMENT:
+                return tx[col]
             elif col == self.INFO:
                 return self.info_icon
             else:
@@ -288,6 +292,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if len(self.raw_txs) == 0:
             self.beginResetModel()
             self.raw_txs = transactions
+            self.num_unconfirmed_processed = 0
+            self.num_unconfirmed_raw = 0
             self.txs = self.process_wallet_transactions(transactions)
             self.endResetModel()
             self.sort(self.sort_index, self.sort_order)
@@ -298,18 +304,21 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 self.raw_txs = self.raw_txs[:len(self.raw_txs)-self.num_unconfirmed_raw]
                 self.txs = self.txs[self.num_unconfirmed_processed:]
                 self.endRemoveRows()
-                self.num_unconfirmed_processed = 0
-                self.num_unconfirmed_raw= 0
             # insert new transactions
-            latest_tx_id = self.raw_txs[-1]["txid"]
+            latest_tx_id = ''
+            if len(self.raw_txs) > 0:
+                latest_tx_id = self.raw_txs[-1]["txid"]
             new_txs = []
             for tx in reversed(transactions):
                 if tx["txid"] != latest_tx_id:
                     new_txs = [tx] + new_txs
                 else:
                     break
+
+            self.num_unconfirmed_processed = 0
+            self.num_unconfirmed_raw = 0
             processed_txs = self.process_wallet_transactions(new_txs)
-            self.beginInsertRows(QModelIndex(), 0, 0)
+            self.beginInsertRows(QModelIndex(), 0, len(new_txs))
             self.raw_txs += new_txs
             self.txs = processed_txs + self.txs
             self.endInsertRows()
@@ -321,7 +330,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         client = get_active_rpc_client()
         new_txs = []
         try:
-            new_txs = client.listwallettransactions(count=100, skip=len(self.raw_txs), verbose=True)["result"]
+            new_txs = client.listwallettransactions(100, len(self.raw_txs), False, True)
             if len(new_txs) < 100:
                 self.wallet_transactions_left = False
         except Exception as e:
@@ -337,6 +346,8 @@ class TransactionHistoryTableModel(QAbstractTableModel):
         if profile.balance != self.balance:
             self.balance_changed(profile.balance)
             self.beginResetModel()
+            self.num_unconfirmed_processed = 0
+            self.num_unconfirmed_raw = 0
             self.txs = self.process_wallet_transactions(self.raw_txs)
             self.endResetModel()
             self.sort(self.sort_index, self.sort_order)
@@ -352,7 +363,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
             txid = tx["txid"]
             amount = tx["balance"]["amount"]
             is_payment = True
-            balance = Decimal(total_balance) - sum_transaction_above
+            balance = Decimal(total_balance) - Decimal(sum_transaction_above)
             sum_transaction_above += amount
             unconfirmed = not tx.get("blocktime")
             if unconfirmed:
@@ -377,7 +388,7 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 processed_transactions.append((
                     self.PUBLISH,
                     timestamp,
-                    'Stream:"' + item['name'] + '", Key: "' + item['key'] + '"',
+                    'Stream:"{}" , Keys: "{}"'.format(item['name'], "-".join(item['keys'])),
                     amount,
                     balance,
                     txid,
@@ -416,10 +427,17 @@ class TransactionHistoryTableModel(QAbstractTableModel):
                 if unconfirmed:
                     self.num_unconfirmed_processed += 1
             if is_payment:
+                comment = ''
+                if tx.get("comment"):
+                    comment = tx.get("comment")
+                elif tx.get("data"):
+                    for data_item in tx.get("data"):
+                        if "json" in data_item and "comment" in data_item["json"]:
+                            comment = data_item["json"]["comment"]
                 processed_transactions.append((
                     self.PAYMENT,
                     timestamp,
-                    '' if tx.get("comment") is None else tx.get("comment"),
+                    comment,
                     amount,
                     balance,
                     txid,

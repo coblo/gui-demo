@@ -29,6 +29,7 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.edit_address.setValidator(AddressValidator())
         self.edit_address.textChanged.connect(self.on_address_edit)
         self.edit_address.textChanged.connect(self.check_state)
+        self.cb_comment_type.currentIndexChanged.connect(self.on_comment_type_changed)
 
         self.btn_send_cancel.clicked.connect(self.on_cancel_clicked)
         self.btn_send_send.setDisabled(True)
@@ -78,6 +79,13 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.amount_valid = not (amount > self.window().profile.balance or abs(amount.as_tuple().exponent) > 8)
         self.btn_send_send.setDisabled(not (self.amount_valid and self.address_valid))
 
+    def on_comment_type_changed(self, new_type):
+        self.edit_description.setPlaceholderText(
+            "Optional payment reference information (only visible to you)"
+            if new_type == 0
+            else "Optional payment reference information (visible for everyone)"
+        )
+
     def check_state(self, *args, **kwargs):
         sender = self.sender()
         validator = sender.validator()
@@ -100,17 +108,18 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
     def on_send_clicked(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         client = get_active_rpc_client()
+        address = self.edit_address.text()
+        amount = float(self.edit_amount.text())
+        comment = self.edit_description.text()
         try:
-            response = client.send(
-                address=self.edit_address.text(),
-                amount=Decimal(self.edit_amount.text()),
-                comment=self.edit_description.text()
-            )
-            if response['error'] is not None:
-                err_msg = response['error']['message']
-                raise RuntimeError(err_msg)
-            else:
-                signals.new_unconfirmed.emit('transfer')
+            if self.cb_comment_type.currentIndex() == 0 or len(comment) == 0:  # private comment
+                client.send(address, amount, comment)
+            else: # public comment
+                comment_object = {
+                    "json": {"comment": comment}
+                }
+                client.sendwithdata(address, amount, comment_object)
+            signals.new_unconfirmed.emit('transfer')
             self.on_cancel_clicked()
             QApplication.restoreOverrideCursor()
         except Exception as e:

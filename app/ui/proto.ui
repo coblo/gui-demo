@@ -1268,7 +1268,7 @@ QLabel[enabled=&quot;true&quot;] {
        </font>
       </property>
       <property name="styleSheet">
-       <string notr="true">border-radius: 6%; background: red; color: #fff; padding: 5px, 2px, 5px, 2px;</string>
+       <string notr="true">border-radius: 6%; background: #16BBEF; color: #fff; padding: 5px, 2px, 5px, 2px;</string>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,0,0,0">
        <property name="leftMargin">

@@ -13,4 +13,4 @@ Pillow==4.3.0
 SQLAlchemy==1.2.0b1
 protobuf==3.5.1
 mcrpc==0.2.5
-iscc==0.9.0
+iscc==0.9.1

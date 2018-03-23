@@ -78,7 +78,9 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
 
     def register(self):
         client = get_active_rpc_client()
-        data = dict(title=self.edit_title.text())
+        data = dict(title=self.title_formatted, hash=self.instance_hash)
+        if self.extra_formatted:
+            data['extra'] = self.extra_formatted
         serialized = ubjson.dumpb(data)
         data_hex = hexlify(serialized).decode('utf-8')
         try:
@@ -91,6 +93,9 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.data_id = None
             self.instance_id = None
             self.iscc = None
+            self.title_formatted = None
+            self.extra_formatted = None
+            self.instance_hash = None
             self.widget_generated_iscc.setHidden(True)
             self.button_dropzone.setText('Drop your image or text file here or click to choose.')
             self.label_title_conflicts.setHidden(True)
@@ -109,9 +114,9 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         if self.conflict_in_meta:
             extra = self.edit_extra.text()
         if extra:
-            self.meta_id = iscc.meta_id(title=title, extra=extra)[0]
+            self.meta_id, self.title_formatted, self.extra_formatted = iscc.meta_id(title=title, extra=extra)
         else:
-            self.meta_id = iscc.meta_id(title=title)[0]
+            self.meta_id, self.title_formatted, self.extra_formatted = iscc.meta_id(title=title)
         if self.content_id:
             self.show_conflicts()
 
@@ -222,7 +227,7 @@ class ISCCGEnerator(QThread):
 
     def run(self):
         with open(self.file_path, 'rb') as infile:
-            self.parent.instance_id = iscc.instance_id(infile)[0]
+            self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile)
         if self.file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:
             self.parent.content_id = iscc.content_id_image(self.file_path)
         else:

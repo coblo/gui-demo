@@ -8,7 +8,7 @@ options = {
     'build_exe':
         {
             'includes': 'atexit',
-            'packages': ['requests', 'idna', 'timeago'],
+            'packages': ['requests', 'idna', 'timeago', 'sqlalchemy'],
             'excludes': [],
             'include_msvcr': True,
         },

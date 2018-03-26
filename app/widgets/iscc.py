@@ -228,8 +228,12 @@ class ISCCGEnerator(QThread):
     def run(self):
         with open(self.file_path, 'rb') as infile:
             self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile)
-        if self.file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:
+        file_ending = self.file_path.split('.')[-1]
+        if file_ending in ['jpg', 'png', 'jpeg']:
             self.parent.content_id = iscc.content_id_image(self.file_path)
+        elif file_ending == 'txt':
+            with open(self.file_path, 'r') as infile:
+                self.parent.content_id = iscc.content_id_text(infile.read())
         else:
             self.parent.content_id = iscc.content_id_text(self.file_path)
         with open(self.file_path, 'rb') as infile:

@@ -22,6 +22,40 @@ options = {
             'applications_shortcut': True,
             'volume_label': 'ContentBlockchainProject Demo',
         },
+    'bdist_msi':
+        {
+            'data':
+                {
+                    'Shortcut': [
+                        ("DesktopShortcut",     # Shortcut
+                        "DesktopFolder",        # Directory_
+                        "Content Blockchain",   # Name
+                        "TARGETDIR",            # Component_
+                        "[TARGETDIR]coblo.exe", # Target
+                        None,                   # Arguments
+                        None,                   # Description
+                        None,                   # Hotkey
+                        None,                   # Icon
+                        None,                   # IconIndex
+                        None,                   # ShowCmd
+                        'TARGETDIR'             # WkDir
+                        ),
+                        ("StartupShortcut",     # Shortcut
+                        "StartupFolder",        # Directory_
+                        "Content Blockchain",   # Name
+                        "TARGETDIR",            # Component_
+                        "[TARGETDIR]coblo.exe", # Target
+                        None,                   # Arguments
+                        None,                   # Description
+                        None,                   # Hotkey
+                        None,                   # Icon
+                        None,                   # IconIndex
+                        None,                   # ShowCmd
+                        'TARGETDIR'             # WkDir
+                        ),
+                    ]
+                }
+        }
 }
 
 executables = [

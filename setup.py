@@ -33,13 +33,13 @@ executables = [
         targetName='coblo.exe',
         shortcutName='Content Blockchain',
         shortcutDir='DesktopFolder',
-        copyright='Copyright (C) 2017 The Content Blockchain Project',
+        copyright='Copyright (C) 2018 The Content Blockchain Project',
     )
 ]
 
 setup(
     name='Coblo',
-    version='0.2.3',
+    version='0.3.0',
     description='Content Blockchain Demo',
     options=options,
     executables=executables

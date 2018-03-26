@@ -35,6 +35,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.instance_id = None
         self.iscc = None
         self.conflict_in_meta = False
+        self.invalid_file_type = False
 
         # Intercept drag & drop events from button
         self.button_dropzone.installEventFilter(self)
@@ -137,7 +138,10 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
     @pyqtSlot()
     def hash_thread_finished(self):
         self.button_dropzone.setDisabled(False)
-        self.button_dropzone.setText(self.current_filepath.split("/")[-1])
+        if self.invalid_file_type:
+            self.button_dropzone.setText("File type not supported.")
+        else:
+            self.button_dropzone.setText(self.current_filepath.split("/")[-1])
 
     @pyqtSlot()
     def file_select_dialog(self):
@@ -226,16 +230,19 @@ class ISCCGEnerator(QThread):
         self.parent = parent
 
     def run(self):
-        with open(self.file_path, 'rb') as infile:
-            self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile)
         file_ending = self.file_path.split('.')[-1]
+        self.parent.invalid_file_type = False
+        # todo: use mimedata
         if file_ending in ['jpg', 'png', 'jpeg']:
             self.parent.content_id = iscc.content_id_image(self.file_path)
         elif file_ending == 'txt':
             with open(self.file_path, 'r') as infile:
                 self.parent.content_id = iscc.content_id_text(infile.read())
         else:
-            self.parent.content_id = iscc.content_id_text(self.file_path)
+            self.parent.invalid_file_type = True
+            return
+        with open(self.file_path, 'rb') as infile:
+            self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile)
         with open(self.file_path, 'rb') as infile:
             self.parent.data_id = iscc.data_id(infile)
         if self.parent.meta_id:

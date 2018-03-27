@@ -1,6 +1,7 @@
 # Content Blockchain GUI Prototype
 
-**OLD TESTNET 1 BACKUP BRANCH**
+[![Build status](https://ci.appveyor.com/api/projects/status/oue3ndgwshvc9l4e/branch/develop?svg=true)](https://ci.appveyor.com/project/alemenke/gui-demo/branch/develop)
+
 
 A proof of concept GUI Application for the 
 [Content Blockchain](https://content-blockchain.org).

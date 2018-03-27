@@ -5,6 +5,7 @@ branches:
   only:
   - develop
   - master
+  - winci
 
 environment:
   global:
@@ -55,9 +56,9 @@ build_script:
   - ps: "$INUSE = Get-ChildItem app -Filter *.py -Recurse | Select-String -Pattern '^from PyQt5.(Qt[^ ]*)' -AllMatches | % { $_.Matches } | % { $_.Value.split('.')[1] } | ? {$_.trim() -ne '' } | Group-Object -AsHashTable -AsString ; Get-ChildItem build\\exe.*\\lib\\PyQt5 -Filter Qt* -Recurse | ? { ! $INUSE.ContainsKey($(Split-Path $_ -leaf).split('.')[0]) } | Remove-Item -Recurse"
   # Build msi
   - "python setup.py bdist_msi"
-  - cd build
-  - ps: "& 7z a -r guidemo-$env:APPVEYOR_REPO_BRANCH-win$env:PYTHON_ARCH-$env:APPVEYOR_BUILD_VERSION.zip exe.*"
+  #- cd build
+  #- ps: "& 7z a -r guidemo-$env:APPVEYOR_REPO_BRANCH-win$env:PYTHON_ARCH-$env:APPVEYOR_BUILD_VERSION.zip exe.*"
 
-artifacts:
-  - path: build/guidemo-$(APPVEYOR_REPO_BRANCH)-win$(PYTHON_ARCH)-$(APPVEYOR_BUILD_VERSION).zip
-  - path: dist/Coblo-*.msi
+#artifacts:
+#  - path: build/guidemo-$(APPVEYOR_REPO_BRANCH)-win$(PYTHON_ARCH)-$(APPVEYOR_BUILD_VERSION).zip
+#  - path: dist/Coblo-*.msi

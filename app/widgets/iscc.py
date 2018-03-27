@@ -23,7 +23,7 @@ from app.signals import signals
 
 log = logging.getLogger(__name__)
 
-ACCEPTED_FILE_TYPES = ['txt', 'docx', 'png', 'jpg', 'jpeg']
+ACCEPTED_FILE_TYPES = ['txt', 'docx', 'png', 'jpg', 'jpeg', 'gif']
 
 
 class WidgetISCC(QWidget, Ui_Widget_ISCC):
@@ -239,7 +239,7 @@ class ISCCGEnerator(QThread):
 
     def run(self):
         file_ending = self.file_path.split('.')[-1]
-        if file_ending in ['jpg', 'png', 'jpeg']:
+        if file_ending in ['jpg', 'png', 'jpeg', 'gif']:
             self.parent.content_id = iscc.content_id_image(self.file_path)
         elif file_ending == 'txt':
             with open(self.file_path, 'r') as infile:

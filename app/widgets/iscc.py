@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import base64
 import logging
 import os
 from binascii import hexlify
 import qrcode
 import ubjson
 from PyQt5.QtCore import QThread
-from PyQt5.QtCore import pyqtSignal
+import iscc
 
 from PyQt5.QtCore import pyqtSlot, QDir, QEvent, QMimeData, QObject, QUrl
 from PyQt5.QtGui import QDragLeaveEvent, QDropEvent, QPixmap, QDragEnterEvent
@@ -17,12 +16,13 @@ from app.backend.rpc import get_active_rpc_client
 from app.models.db import data_session_scope
 from app.ui.iscc import Ui_Widget_ISCC
 from app.models import ISCC
-from app.tools import iscc as iscc_lib
 from app.widgets.iscc_table import ISCCTableView
 from app.widgets.iscc_conflicts_table import ConflictTableView
 from app.signals import signals
 
 log = logging.getLogger(__name__)
+
+ACCEPTED_FILE_TYPES = ['txt', 'png', 'jpg', 'png']
 
 
 class WidgetISCC(QWidget, Ui_Widget_ISCC):
@@ -80,7 +80,9 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
 
     def register(self):
         client = get_active_rpc_client()
-        data = dict(title=self.edit_title.text())
+        data = dict(title=self.title_formatted, hash=self.instance_hash)
+        if self.extra_formatted:
+            data['extra'] = self.extra_formatted
         serialized = ubjson.dumpb(data)
         data_hex = hexlify(serialized).decode('utf-8')
         try:
@@ -93,6 +95,9 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
             self.data_id = None
             self.instance_id = None
             self.iscc = None
+            self.title_formatted = None
+            self.extra_formatted = None
+            self.instance_hash = None
             self.widget_generated_iscc.setHidden(True)
             self.button_dropzone.setText('Drop your image or text file here or click to choose.')
             self.label_title_conflicts.setHidden(True)
@@ -111,14 +116,14 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         if self.conflict_in_meta:
             extra = self.edit_extra.text()
         if extra:
-            self.meta_id = iscc_lib.generate_meta_id(title=title, extra=extra)
+            self.meta_id, self.title_formatted, self.extra_formatted = iscc.meta_id(title=title, extra=extra)
         else:
-            self.meta_id = iscc_lib.generate_meta_id(title=title)
+            self.meta_id, self.title_formatted, self.extra_formatted = iscc.meta_id(title=title)
         if self.content_id:
             self.show_conflicts()
 
     def extra_changed(self, extra):
-        self.meta_id = iscc_lib.generate_meta_id(title=self.edit_title.text(), extra=extra)
+        self.meta_id = iscc.meta_id(title=self.edit_title.text(), extra=extra)[0]
         if self.content_id:
             self.show_conflicts()
 
@@ -138,8 +143,10 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
 
     @pyqtSlot()
     def file_select_dialog(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir().homePath())
+        filter = "Text files and Images (*." + " *.".join(ACCEPTED_FILE_TYPES) + ")"
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir().homePath(), filter)
         if file_path:
+            self.button_dropzone.setStyleSheet('QPushButton:enabled {background-color: #0183ea; color: white;}')
             self.process_file(file_path)
 
     def eventFilter(self, obj: QObject, event: QEvent):
@@ -170,11 +177,11 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
                 return self.reject_drag(event, 'Only local files are supported. Try again!')
             if os.path.isdir(url.toLocalFile()):
                 return self.reject_drag(event, 'Directories not supported. Try again!')
+            if url.fileName().split('.')[-1] not in ACCEPTED_FILE_TYPES:
+                return self.reject_drag(event, 'Filetype not supported. Try again!')
 
             event.accept()
-            self.button_dropzone.setStyleSheet(
-                'QPushButton:enabled {background-color: #0183ea; color: white;}'
-            )
+            self.button_dropzone.setStyleSheet('QPushButton:enabled {background-color: #0183ea; color: white;}')
             self.button_dropzone.setText('Just drop it :)')
 
     def on_drag_leave(self, obj: QObject, event: QDragLeaveEvent):
@@ -184,6 +191,11 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
     def on_drop(self, obj: QObject, event: QDropEvent):
         file_path = event.mimeData().urls()[0].toLocalFile()
         self.process_file(file_path)
+
+    def reject_drag(self, event, message):
+        self.button_dropzone.setText(message)
+        self.button_dropzone.setStyleSheet('QPushButton:enabled {background-color: red; color: white;}')
+        event.ignore()
 
     def show_conflicts(self):
         self.widget_generated_iscc.setHidden(False)
@@ -223,13 +235,15 @@ class ISCCGEnerator(QThread):
         self.parent = parent
 
     def run(self):
+        file_ending = self.file_path.split('.')[-1]
+        if file_ending in ['jpg', 'png', 'jpeg']:
+            self.parent.content_id = iscc.content_id_image(self.file_path)
+        elif file_ending == 'txt':
+            with open(self.file_path, 'r') as infile:
+                self.parent.content_id = iscc.content_id_text(infile.read())
         with open(self.file_path, 'rb') as infile:
-            self.parent.instance_id = iscc_lib.generate_instance_id(infile)
-        if self.file_path.split('.')[-1] in ['jpg', 'png', 'jpeg']:
-            self.parent.content_id = iscc_lib.generate_image_hash(self.file_path)
-        else:
-            self.parent.content_id = base64.b32encode(b'\x10' +  os.urandom(7)).rstrip(b'=').decode('ascii') # todo
+            self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile)
         with open(self.file_path, 'rb') as infile:
-            self.parent.data_id = iscc_lib.generate_data_id(infile)
+            self.parent.data_id = iscc.data_id(infile)
         if self.parent.meta_id:
             self.parent.show_conflicts()

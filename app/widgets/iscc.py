@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from binascii import hexlify
 import qrcode
 import ubjson
-from PyQt5.QtCore import QThread
 import iscc
+import docx2txt
+from binascii import hexlify
+from PyQt5.QtCore import QThread
 
 from PyQt5.QtCore import pyqtSlot, QDir, QEvent, QMimeData, QObject, QUrl
 from PyQt5.QtGui import QDragLeaveEvent, QDropEvent, QPixmap, QDragEnterEvent
@@ -22,7 +23,7 @@ from app.signals import signals
 
 log = logging.getLogger(__name__)
 
-ACCEPTED_FILE_TYPES = ['txt', 'png', 'jpg', 'png']
+ACCEPTED_FILE_TYPES = ['txt', 'docx', 'png', 'jpg', 'jpeg']
 
 
 class WidgetISCC(QWidget, Ui_Widget_ISCC):
@@ -37,6 +38,8 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.instance_id = None
         self.iscc = None
         self.conflict_in_meta = False
+
+        self.lbl_supported_types.setText("Supported file types: " + ", ".join(ACCEPTED_FILE_TYPES))
 
         # Intercept drag & drop events from button
         self.button_dropzone.installEventFilter(self)
@@ -224,8 +227,8 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
                 self.table_conflicts.setHidden(True)
             self.label_title_extra.setHidden(not self.conflict_in_meta)
 
-class ISCCGEnerator(QThread):
 
+class ISCCGEnerator(QThread):
     #: emits num bytes processed
 
     def __init__(self, file_path, parent, *args, **kwargs):
@@ -241,6 +244,8 @@ class ISCCGEnerator(QThread):
         elif file_ending == 'txt':
             with open(self.file_path, 'r') as infile:
                 self.parent.content_id = iscc.content_id_text(infile.read())
+        elif file_ending == 'docx':
+            self.parent.content_id = iscc.content_id_text(docx2txt.process(self.file_path))
         with open(self.file_path, 'rb') as infile:
             self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile)
         with open(self.file_path, 'rb') as infile:

@@ -222,6 +222,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_info_action.setText("See transaction log for confirmation.")
         self.btn_info_action.clicked.connect(self.change_to_wallet)
         self.label_info_text.setText('Your {} has been submitted to the blockchain.'.format(type))
+        self.widget_information.setStyleSheet("border-radius: 6%; background: #16BBEF; color: #fff; padding: 5px, 2px, 5px, 2px;")
         self.information_type = TRANSACTION_INFORMATION
         QTimer().singleShot(5000, self.hide_information)
 
@@ -236,6 +237,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_info_action.setText("Get some coins here.")
         self.btn_info_action.clicked.connect(lambda: webbrowser.open(app.GET_COINS_URL))
         self.label_info_text.setText("You have no coins. Every transaction needs coins.")
+        self.widget_information.setStyleSheet("border-radius: 6%; background: #FF8D00; color: #fff; padding: 5px, 2px, 5px, 2px;")
         self.information_type = BALANCE_INFORMATION
 
     @pyqtSlot(object)

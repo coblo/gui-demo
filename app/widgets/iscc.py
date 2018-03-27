@@ -22,6 +22,8 @@ from app.signals import signals
 
 log = logging.getLogger(__name__)
 
+ACCEPTED_FILE_TYPES = ['txt', 'png', 'jpg', 'png']
+
 
 class WidgetISCC(QWidget, Ui_Widget_ISCC):
     def __init__(self, *args, **kwargs):
@@ -35,7 +37,6 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.instance_id = None
         self.iscc = None
         self.conflict_in_meta = False
-        self.invalid_file_type = False
 
         # Intercept drag & drop events from button
         self.button_dropzone.installEventFilter(self)
@@ -138,15 +139,14 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
     @pyqtSlot()
     def hash_thread_finished(self):
         self.button_dropzone.setDisabled(False)
-        if self.invalid_file_type:
-            self.button_dropzone.setText("File type not supported.")
-        else:
-            self.button_dropzone.setText(self.current_filepath.split("/")[-1])
+        self.button_dropzone.setText(self.current_filepath.split("/")[-1])
 
     @pyqtSlot()
     def file_select_dialog(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir().homePath())
+        filter = "Text files and Images (*." + " *.".join(ACCEPTED_FILE_TYPES) + ")"
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', QDir().homePath(), filter)
         if file_path:
+            self.button_dropzone.setStyleSheet('QPushButton:enabled {background-color: #0183ea; color: white;}')
             self.process_file(file_path)
 
     def eventFilter(self, obj: QObject, event: QEvent):
@@ -177,11 +177,11 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
                 return self.reject_drag(event, 'Only local files are supported. Try again!')
             if os.path.isdir(url.toLocalFile()):
                 return self.reject_drag(event, 'Directories not supported. Try again!')
+            if url.fileName().split('.')[-1] not in ACCEPTED_FILE_TYPES:
+                return self.reject_drag(event, 'Filetype not supported. Try again!')
 
             event.accept()
-            self.button_dropzone.setStyleSheet(
-                'QPushButton:enabled {background-color: #0183ea; color: white;}'
-            )
+            self.button_dropzone.setStyleSheet('QPushButton:enabled {background-color: #0183ea; color: white;}')
             self.button_dropzone.setText('Just drop it :)')
 
     def on_drag_leave(self, obj: QObject, event: QDragLeaveEvent):
@@ -191,6 +191,11 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
     def on_drop(self, obj: QObject, event: QDropEvent):
         file_path = event.mimeData().urls()[0].toLocalFile()
         self.process_file(file_path)
+
+    def reject_drag(self, event, message):
+        self.button_dropzone.setText(message)
+        self.button_dropzone.setStyleSheet('QPushButton:enabled {background-color: red; color: white;}')
+        event.ignore()
 
     def show_conflicts(self):
         self.widget_generated_iscc.setHidden(False)
@@ -231,16 +236,11 @@ class ISCCGEnerator(QThread):
 
     def run(self):
         file_ending = self.file_path.split('.')[-1]
-        self.parent.invalid_file_type = False
-        # todo: use mimedata
         if file_ending in ['jpg', 'png', 'jpeg']:
             self.parent.content_id = iscc.content_id_image(self.file_path)
         elif file_ending == 'txt':
             with open(self.file_path, 'r') as infile:
                 self.parent.content_id = iscc.content_id_text(infile.read())
-        else:
-            self.parent.invalid_file_type = True
-            return
         with open(self.file_path, 'rb') as infile:
             self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile)
         with open(self.file_path, 'rb') as infile:

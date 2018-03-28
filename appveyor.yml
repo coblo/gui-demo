@@ -23,6 +23,9 @@ environment:
       MCBIN_URL: "https://www.multichain.com/download/"
       MCBIN_FILE: "multichain-windows-2.0-alpha-2.zip"
 
+  github_token:
+    secure: KURsz+V0HfTZBKeLoFyD2uZtmd6d+fqNHEEesjr7H/Vj8NXEtX3+/xg47aOHj5Mo
+
 platform:
   -x64
 
@@ -41,7 +44,7 @@ install:
   - "pip install %PIP_DEPENDENCIES%"
 
 build_script:
-  - cd /D %APPVEYOR_BUILD_FOLDER%
+  - "cd /D %APPVEYOR_BUILD_FOLDER%"
   - "curl %MCBIN_URL%%MCBIN_FILE% -O -J -L"
   - "7z x %MCBIN_FILE%"
   - "xcopy /F /Y /I multichaind.exe app\\bin\\"
@@ -58,6 +61,8 @@ build_script:
   - "python setup.py bdist_msi"
   #- cd build
   #- ps: "& 7z a -r guidemo-$env:APPVEYOR_REPO_BRANCH-win$env:PYTHON_ARCH-$env:APPVEYOR_BUILD_VERSION.zip exe.*"
+  - ps: "Get-ChildItem dist -Filter Coblo-*.msi | % {Rename-Item -Path $_.fullname -NewName Coblo-$env:APPVEYOR_REPO_BRANCH-$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_REPO_COMMIT.msi}"
+  - "powershell dist\\ci_github_release.ps1 -token %github_token% -tag ci-%APPVEYOR_REPO_BRANCH% -name 'CI Draft %APPVEYOR_REPO_BRANCH%' -descr '' -user 'coblo' -project 'gui-demo' -file dist\\Coblo-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_VERSION-%APPVEYOR_REPO_COMMIT%.msi"
 
 #artifacts:
 #  - path: build/guidemo-$(APPVEYOR_REPO_BRANCH)-win$(PYTHON_ARCH)-$(APPVEYOR_BUILD_VERSION).zip

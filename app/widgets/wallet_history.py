@@ -146,7 +146,7 @@ class TransactionTableView(QTableView):
         if index.column() == 5:
             db = self.table_model.txs
             txid = db[index.row()][self.table_model.INFO]
-            link = 'https://explorer.content-blockchain.org/Content%20Blockchain%20Project%20(Testnet)/tx/'
+            link = 'https://explorer.coblo.net/tx/'
             link += txid
             webbrowser.open(link)
 

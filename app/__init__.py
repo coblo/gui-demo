@@ -39,7 +39,7 @@ ADMIN_CONSENUS_ADMIN = 0.51
 
 NODE_BOOTSTRAP = 'coblo2@85.197.78.51:9719'
 
-CURRENCY_CODE = 'CHM'
+CURRENCY_CODE = 'CBL'
 
 # From current chain params.dat needed for address generation.
 TESTNET_ADDRESS_PUBKEYHASH_VERSION = '0046e454'

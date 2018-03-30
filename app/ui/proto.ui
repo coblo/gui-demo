@@ -102,6 +102,9 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="toolTipDuration">
+          <number>4</number>
+         </property>
          <layout class="QVBoxLayout" name="verticalLayout_7">
           <property name="spacing">
            <number>6</number>
@@ -283,6 +286,42 @@
               <width>18</width>
               <height>18</height>
              </size>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>true</bool>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btn_grp_nav</string>
+            </attribute>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_nav_token">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Roboto Light</family>
+              <pointsize>10</pointsize>
+              <stylestrategy>PreferDefault</stylestrategy>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton {text-align: left; padding: 6 10 6 10;}</string>
+            </property>
+            <property name="text">
+             <string>Smart Licenses</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/images/resources/vote_hammer_black.svg</normaloff>:/images/resources/vote_hammer_black.svg</iconset>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -580,7 +619,7 @@ QLabel[enabled=&quot;true&quot;] {
           <string/>
          </property>
          <property name="currentIndex">
-          <number>4</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="wgt_page_wallet">
           <layout class="QVBoxLayout" name="lout_page_wallet_v">
@@ -813,6 +852,16 @@ QLabel[enabled=&quot;true&quot;] {
          </widget>
          <widget class="QWidget" name="wgt_page_timestamp">
           <layout class="QVBoxLayout" name="lout_page_timestamp_v">
+           <property name="spacing">
+            <number>9</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="wgt_page_token">
+          <layout class="QVBoxLayout" name="lout_page_token_v">
            <property name="spacing">
             <number>9</number>
            </property>

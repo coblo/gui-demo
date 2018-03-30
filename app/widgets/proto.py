@@ -21,6 +21,7 @@ from app.widgets.community_tables import CommunityTableView
 from app.widgets.invite import InviteDialog
 from app.widgets.iscc import WidgetISCC
 from app.widgets.timestamp import WidgetTimestamping
+from app.widgets.token import WidgetToken
 from app.widgets.wallet_history import WalletHistory
 from app.widgets.wallet_send import WalletSend
 
@@ -68,8 +69,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_grp_nav.setId(self.btn_nav_wallet, 0)
         self.btn_grp_nav.setId(self.btn_nav_iscc, 1)
         self.btn_grp_nav.setId(self.btn_nav_timestamp, 2)
-        self.btn_grp_nav.setId(self.btn_nav_community, 3)
-        self.btn_grp_nav.setId(self.btn_nav_settings, 4)
+        self.btn_grp_nav.setId(self.btn_nav_token, 3)
+        self.btn_grp_nav.setId(self.btn_nav_community, 4)
+        self.btn_grp_nav.setId(self.btn_nav_settings, 5)
         self.btn_nav_wallet.setChecked(True)
         self.wgt_content.setCurrentIndex(0)
 
@@ -90,6 +92,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         widget_timestamp = WidgetTimestamping(self)
         self.lout_page_timestamp_v.addWidget(widget_timestamp)
+
+        widget_token = WidgetToken(self)
+        self.lout_page_token_v.addWidget(widget_token)
 
         self.table_validators.setParent(None)
         table_validators = CommunityTableView(self, perm_type=enums.MINE)

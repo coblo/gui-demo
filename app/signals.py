@@ -40,6 +40,7 @@ class Signals(QObject):
 
     block_sync_changed = pyqtSignal(dict)
     transactions_changed = pyqtSignal(list)
+    wallet_tokens_changed = pyqtSignal(list)
 
     is_admin_changed = pyqtSignal(bool)
     is_miner_changed = pyqtSignal(bool)

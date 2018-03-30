@@ -1,14 +1,24 @@
 import logging
+import re
 import webbrowser
 
 from PyQt5.QtCore import QAbstractTableModel, Qt, QThread
 from PyQt5.QtCore import QVariant
 from PyQt5.QtGui import QColor
 from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QValidator
 from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QWidget, QTableView
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QCompleter
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QStyledItemDelegate
 
 from app.backend.rpc import get_active_rpc_client
+from app.models import Address
+from app.models import Alias
+from app.models.db import data_session_scope
 from app.signals import signals
+from app.tools.validators import AddressValidator
 from app.ui.token import Ui_WidgetToken
 
 log = logging.getLogger(__name__)
@@ -19,7 +29,108 @@ class WidgetToken(QWidget, Ui_WidgetToken):
         super().__init__(parent)
         self.setupUi(self)
         table = TokenTableView(self)
-        self.layout().insertWidget(0, table)
+        self.layout().insertWidget(2, table)
+
+        self.licenses = []
+
+        # Connect signals
+        signals.wallet_tokens_changed.connect(self.tokens_changed)
+        signals.alias_list_changed.connect(self.edit_completer)
+        signals.new_address.connect(self.edit_completer)
+
+        self.edit_resale_to.setValidator(AddressValidator())
+        self.edit_resale_to.textChanged.connect(self.on_address_edit)
+        self.edit_resale_to.textChanged.connect(self.check_state)
+
+        self.btn_send.clicked.connect(self.send)
+
+        self.edit_completer()
+
+    def tokens_changed(self, tokens):
+        new_licenses = []
+        for token in tokens:
+            new_licenses.append(token[4])
+        if new_licenses != self.licenses:
+            self.licenses = new_licenses
+            self.licenses_changed()
+
+    def licenses_changed(self):
+        for license in self.licenses:
+            self.cb_smart_license.addItem(license)
+
+    def on_address_edit(self, text):
+        address_with_alias_re = re.compile('^.* \(.*\)$')
+        if address_with_alias_re.match(text):
+            address = text[text.find("(")+1:text.find(")")]
+            self.edit_resale_to.setText(address)
+
+    def check_state(self, *args, **kwargs):
+        sender = self.sender()
+        validator = sender.validator()
+        state = validator.validate(sender.text(), 0)[0]
+        if state == QValidator.Acceptable:
+            color = '#c4df9b'  # green
+        elif state == QValidator.Intermediate:
+            color = '#fff79a'  # yellow
+        else:
+            color = '#f6989d'  # red
+        self.address_valid = state == QValidator.Acceptable
+        self.btn_send.setDisabled(not self.address_valid)
+        sender.setStyleSheet('QLineEdit { background-color: %s }' % color)
+
+    def edit_completer(self):
+        address_list = []
+        with data_session_scope() as session:
+            for address, alias in Alias.get_aliases(session).items():
+                address_list.append("{} ({})".format(alias, address))
+            for address in session.query(Address).all():
+                address_list.append(address.address)
+        completer = QCompleter(address_list, self.edit_resale_to)
+        completer_delegate = QStyledItemDelegate(completer)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.popup().setItemDelegate(completer_delegate)
+        completer.popup().setStyleSheet(
+            """
+            QAbstractItemView {
+                font: 10pt "Roboto Light";
+                border: 1px solid #41ADFF;
+                border-top: 0px;
+                background-color: #FFF79A;
+                border-radius: 2px;
+            }
+            QAbstractItemView::item  {
+                margin-top: 3px;
+            }
+            """
+        )
+        self.edit_resale_to.setCompleter(completer)
+
+    def send(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        client = get_active_rpc_client()
+        address = self.edit_resale_to.text()
+        amount = float(self.edit_amount.text())
+        token = self.cb_smart_license.currentText()
+        comment = self.edit_comment.text()
+        try:
+            if comment:
+                client.sendasset(address, token, amount, 0.1, comment)
+            else:
+                client.sendasset(address, token, amount)
+            signals.new_unconfirmed.emit('transfer')
+            self.edit_comment.setText('')
+            self.edit_resale_to.setText('')
+            self.edit_resale_to.setStyleSheet('QLineEdit { background-color: #fff }')
+            self.edit_amount.setValue(1)
+            QApplication.restoreOverrideCursor()
+        except Exception as e:
+            err_msg = str(e)
+            error_dialog = QMessageBox()
+            error_dialog.setWindowTitle('Error while sending token')
+            error_dialog.setText(err_msg)
+            error_dialog.setIcon(QMessageBox.Warning)
+            QApplication.restoreOverrideCursor()
+            error_dialog.exec_()
 
 
 class TokensUpdater(QThread):
@@ -140,7 +251,6 @@ class TokenTableModel(QAbstractTableModel):
         self.sort_order = Qt.DescendingOrder
 
         self.tokens = []
-
         signals.wallet_tokens_changed.connect(self.tokens_changed)
 
     def rowCount(self, parent=None, *args, **kwargs):

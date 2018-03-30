@@ -73,7 +73,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_grp_nav.setId(self.btn_nav_community, 4)
         self.btn_grp_nav.setId(self.btn_nav_settings, 5)
         self.btn_nav_wallet.setChecked(True)
-        self.wgt_content.setCurrentIndex(3)
+        self.wgt_content.setCurrentIndex(0)
 
         # Patch custom widgets
         self.tab_widget_cummunity.setStyleSheet('QPushButton {padding: 5 12 5 12; font: 10pt "Roboto Light"}')

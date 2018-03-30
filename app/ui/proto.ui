@@ -321,7 +321,7 @@
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
-              <normaloff>:/images/resources/floppy_black.svg</normaloff>:/images/resources/floppy_black.svg</iconset>
+              <normaloff>:/images/resources/vote_hammer_black.svg</normaloff>:/images/resources/vote_hammer_black.svg</iconset>
             </property>
             <property name="checkable">
              <bool>true</bool>

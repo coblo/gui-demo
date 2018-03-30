@@ -193,7 +193,7 @@
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
-              <normaloff>:/images/resources/money_black.svg</normaloff>:/images/resources/money_black.svg</iconset>
+              <normaloff>:/images/resources/wallet_black.svg</normaloff>:/images/resources/wallet_black.svg</iconset>
             </property>
             <property name="iconSize">
              <size>

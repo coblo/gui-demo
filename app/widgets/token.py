@@ -32,6 +32,7 @@ class WidgetToken(QWidget, Ui_WidgetToken):
         self.layout().insertWidget(2, table)
 
         self.licenses = []
+        self.info ={}
 
         # Connect signals
         signals.wallet_tokens_changed.connect(self.tokens_changed)
@@ -48,16 +49,19 @@ class WidgetToken(QWidget, Ui_WidgetToken):
 
     def tokens_changed(self, tokens):
         new_licenses = []
+        new_info = {}
         for token in tokens:
             new_licenses.append(token[4])
+            new_info[token[4]] = token[0]
         if new_licenses != self.licenses:
             self.licenses = new_licenses
+            self.info = new_info
             self.licenses_changed()
 
     def licenses_changed(self):
         self.cb_smart_license.clear()
         for license in self.licenses:
-            self.cb_smart_license.addItem(license)
+            self.cb_smart_license.addItem(license + ' (' + self.info[license] + ')')
 
     def on_address_edit(self, text):
         address_with_alias_re = re.compile('^.* \(.*\)$')
@@ -111,7 +115,7 @@ class WidgetToken(QWidget, Ui_WidgetToken):
         client = get_active_rpc_client()
         address = self.edit_resale_to.text()
         amount = float(self.edit_amount.text())
-        token = self.cb_smart_license.currentText()
+        token = self.licenses[self.cb_smart_license.currentIndex()]
         comment = self.edit_comment.text()
         try:
             if comment:

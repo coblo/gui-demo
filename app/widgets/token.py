@@ -55,6 +55,7 @@ class WidgetToken(QWidget, Ui_WidgetToken):
             self.licenses_changed()
 
     def licenses_changed(self):
+        self.cb_smart_license.clear()
         for license in self.licenses:
             self.cb_smart_license.addItem(license)
 

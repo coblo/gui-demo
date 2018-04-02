@@ -210,8 +210,8 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                     meta_id, content_id, data_id, instance_id = iscc
                     if ISCC.already_exists(data_db, meta_id, content_id, data_id, instance_id):
                         continue
-                    data = ubjson.loadb(unhexlify(item['data']))
-                    if 'title' not in data:
+                    data = item['data']
+                    if 'json' not in data or 'title' not in data['json']:
                         continue
                     relevant = True
                     data_db.add(ISCC(
@@ -221,7 +221,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                         content_id=content_id,
                         data_id=data_id,
                         instance_id=instance_id,
-                        title=data['title']
+                        title=data['json']['title']
                     ))
                     # flush for the primary key
                     data_db.flush()

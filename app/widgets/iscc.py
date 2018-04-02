@@ -84,13 +84,16 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
 
     def register(self):
         client = get_active_rpc_client()
-        data = dict(title=self.title_formatted, hash=self.instance_hash)
+        data = {
+            'json': {
+                'title': self.title_formatted,
+                'tophash': self.instance_hash
+            }
+        }
         if self.extra_formatted:
-            data['extra'] = self.extra_formatted
-        serialized = ubjson.dumpb(data)
-        data_hex = hexlify(serialized).decode('utf-8')
+            data['json']['extra'] = self.extra_formatted
         try:
-            client.publish(app.STREAM_ISCC, [self.meta_id, self.content_id, self.data_id, self.instance_id], data_hex)
+            client.publish(app.STREAM_ISCC, [self.meta_id, self.content_id, self.data_id, self.instance_id], data)
             self.edit_title.clear()
             self.label_qr.clear()
             self.label_iscc.clear()

@@ -1,6 +1,6 @@
-# Content Blockchain GUI Prototype v0.9.0
+# Content Blockchain GUI Prototype v1.0.0
 
-[![Build status](https://ci.appveyor.com/api/projects/status/oue3ndgwshvc9l4e/branch/develop?svg=true)](https://ci.appveyor.com/project/alemenke/gui-demo/branch/develop)
+[![Build status](https://ci.appveyor.com/api/projects/status/oue3ndgwshvc9l4e/branch/master?svg=true)](https://ci.appveyor.com/project/alemenke/gui-demo/branch/master)
 
 
 A proof of concept GUI Application for the 
@@ -22,7 +22,7 @@ and participate in testing the plattform. It allows you to:
 - send and receive smart license tokens
 
 An installable version is currently available for 64-Bit Windows.
-You can download it [here](https://github.com/coblo/gui-demo/releases/download/v0.2.1/Coblo-0.2.1-win.msi).
+You can download it [here](https://github.com/coblo/gui-demo/releases/download/v1.0.0/Coblo-1.0.0-win.msi).
 If you need help or have questions you can reach us via Telegram:
 [https://t.me/ContentBlockchainBeta](https://t.me/ContentBlockchainBeta)
 

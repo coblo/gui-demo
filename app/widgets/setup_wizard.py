@@ -14,7 +14,7 @@ import app
 from app.backend.rpc import RpcClient
 from app.helpers import init_data_dir
 from app.models import Profile, init_data_db
-from app.models.db import profile_session_scope
+from app.models.db import profile_session_scope, data_session_scope
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.tools.address import main_address_from_mnemonic, main_wif_from_mnemonic
@@ -243,6 +243,11 @@ class SetupWizard(QWizard, Ui_SetupWizard):
 
         self.log('Initialize node-sync database')
         init_data_db()
+
+        # This fixes our problem with the locked database
+        # We have no idea why, but we shouldn't delete this code until we have a better solution
+        with data_session_scope() as session:
+            session.query('DELETE FROM mining_reward')
 
         if self._manage_node:
             self.node.start(initprivkey=main_wif_from_mnemonic(self._mnemonic))

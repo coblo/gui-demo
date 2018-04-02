@@ -5,6 +5,7 @@ import ubjson
 from binascii import hexlify, unhexlify
 from typing import Optional, NewType, List
 
+import app
 from app.backend.rpc import get_active_rpc_client
 from app.exceptions import RpcResponseError
 
@@ -33,7 +34,7 @@ Form = NewType('Form', dict)
 # timestamp api
 
 
-def put_timestamp(hexhash: str, comment: str='', stream='timestamp') -> Optional[TxId]:
+def put_timestamp(hexhash: str, comment: str='', stream=app.STREAM_TIMESTAMP) -> Optional[TxId]:
 
     client = get_active_rpc_client()
 

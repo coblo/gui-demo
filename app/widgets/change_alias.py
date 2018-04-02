@@ -3,7 +3,7 @@ import logging
 
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QDialog
-
+import app
 from app.backend.rpc import get_active_rpc_client
 from app.ui.dialog_change_alias import Ui_dialog_change_alias
 from app.models import Alias, Profile
@@ -57,7 +57,7 @@ class ChangeAlias(QDialog, Ui_dialog_change_alias):
     def save(self):
         client = get_active_rpc_client()
         try:
-            client.publish('alias', self.edit_alias.text(), '')
+            client.publish(app.STREAM_ALIAS, self.edit_alias.text(), '')
             signals.new_unconfirmed.emit('alias change')
         except Exception as e:
             err_msg = str(e)

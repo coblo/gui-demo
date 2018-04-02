@@ -6,7 +6,7 @@ from datetime import datetime
 
 import ubjson
 from decimal import Decimal
-
+import app
 from app import enums
 from app.backend.rpc import get_active_rpc_client
 from app.helpers import batchwise
@@ -173,7 +173,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                 publishers = item["publishers"]
                 for publisher in publishers:
                     Address.create_if_not_exists(data_db, publisher)
-                if item["name"] == "timestamp":
+                if item["name"] == app.STREAM_TIMESTAMP:
                     relevant = True
                     comment = ''
                     if item['data']:
@@ -189,7 +189,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                     ))
                     # flush for the primary key
                     data_db.flush()
-                elif item['name'] == "alias":
+                elif item['name'] == app.STREAM_ALIAS:
                     alias = item["keys"][0]
                     # Sanity checks
                     if item["data"] or not is_valid_username(alias) or len(publishers) != 1:
@@ -203,7 +203,7 @@ def process_inputs_and_outputs(data_db, raw_transaction, pubkeyhash_version,
                     ))
                     # flush for the primary key
                     data_db.flush()
-                elif item['name'] == "testiscc":
+                elif item['name'] == app.STREAM_ISCC:
                     iscc = item["keys"]
                     if len(iscc) != 4:
                         continue

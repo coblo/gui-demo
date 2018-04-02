@@ -12,8 +12,8 @@ ORG_NAME = 'Content-Blockchain'
 ORG_DOMAIN = 'content-blockchain.org'
 APP_NAME = 'Coblo'
 MAJOR = 0
-MINOR = 2
-PATCH = 3
+MINOR = 9
+PATCH = 0
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
 
@@ -53,6 +53,10 @@ TESTNET2_ADDRESS_CHECKSUM_VALUE = '00000000'
 TESTNET2_PRIVATE_KEY_VERSION = 'cc'
 
 GET_COINS_URL = 'https://t.me/ContentBlockchainBeta'
+
+STREAM_ALIAS = 'alias'
+STREAM_ISCC = 'testiscc'
+STREAM_TIMESTAMP = 'timestamp'
 
 
 def init():

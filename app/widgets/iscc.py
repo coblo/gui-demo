@@ -2,10 +2,10 @@
 import logging
 import os
 import qrcode
-import ubjson
 import iscc
 import docx2txt
-from binascii import hexlify
+
+from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import QThread
 
 from PyQt5.QtCore import pyqtSlot, QDir, QEvent, QMimeData, QObject, QUrl
@@ -209,8 +209,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.iscc = self.meta_id + '-' + self.content_id + '-' + self.data_id + '-' + self.instance_id
         self.label_iscc.setText(self.iscc)
         img = qrcode.make(self.meta_id + self.content_id + self.data_id + self.instance_id)
-        img.save('tmp.png')
-        pixmap = QPixmap('tmp.png')
+        pixmap = QPixmap.fromImage(ImageQt(img))
         pixmap = pixmap.scaledToWidth(128)
         pixmap = pixmap.scaledToHeight(128)
         self.label_qr.setPixmap(pixmap)

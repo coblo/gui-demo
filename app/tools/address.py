@@ -40,8 +40,8 @@ def main_wif_from_mnemonic(words: str) -> str:
     priv_key = ecdsa_pk_from_mnemonic(words)
     return create_wif(
         priv_key,
-        app.TESTNET_PRIVATE_KEY_VERSION,
-        app.TESTNET_ADDRESS_CHECKSUM_VALUE,
+        app.TESTNET2_PRIVATE_KEY_VERSION,
+        app.TESTNET2_ADDRESS_CHECKSUM_VALUE,
     )
 
 

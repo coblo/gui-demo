@@ -55,7 +55,7 @@ TESTNET2_PRIVATE_KEY_VERSION = 'cc'
 GET_COINS_URL = 'https://t.me/ContentBlockchainBeta'
 
 STREAM_ALIAS = 'alias'
-STREAM_ISCC = 'testiscc'
+STREAM_ISCC = 'iscc'
 STREAM_TIMESTAMP = 'timestamp'
 
 

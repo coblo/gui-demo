@@ -2,7 +2,8 @@ import sys
 from cx_Freeze import Executable, setup
 
 
-base = 'Win32GUI' if sys.platform == 'win32' else None
+# base = 'Win32GUI' if sys.platform == 'win32' else None
+base = None
 
 options = {
     'build_exe':

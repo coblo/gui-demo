@@ -60,7 +60,7 @@ def init_profile_db():
             session.add(Profile(
                 name=profile.name if 'name' in profile else '',
                 rpc_host=profile.rpc_host if 'rpc_host' in profile else '127.0.0.1',
-                rpc_port=profile.rpc_port if 'rpc_port' in profile else '8374',
+                rpc_port=profile.rpc_port if 'rpc_port' in profile else '9719',
                 rpc_user=profile.rpc_user if 'rpc_user' in profile else 'multichainrpc',
                 rpc_password=profile.rpc_password if 'rpc_password' in profile else '',
                 rpc_use_ssl=profile.rpc_use_ssl if 'rpc_use_ssl' in profile else 0,

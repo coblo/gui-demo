@@ -1,4 +1,4 @@
-# Content Blockchain GUI Prototype
+# Content Blockchain GUI Prototype v0.9.0
 
 [![Build status](https://ci.appveyor.com/api/projects/status/oue3ndgwshvc9l4e/branch/develop?svg=true)](https://ci.appveyor.com/project/alemenke/gui-demo/branch/develop)
 
@@ -18,6 +18,8 @@ and participate in testing the plattform. It allows you to:
 - test the experimental voting based consensus
 - send and receive native blockchain coins
 - timestamp content on the blockchain
+- search, create and register ISCC content identifiers
+- send and receive smart license tokens
 
 An installable version is currently available for 64-Bit Windows.
 You can download it [here](https://github.com/coblo/gui-demo/releases/download/v0.2.1/Coblo-0.2.1-win.msi).
@@ -33,18 +35,37 @@ Please report any issues at [https://github.com/coblo/gui-demo/issues](https://g
 **Wallet**
 
 Content is registered via transactions that are replicated and stored on the
-blockchain. Infrastructure providers are rewarded with tokens for their 
-services. The wallet screen shows your token balance and transaction history.
-You may exchange tokens with other participants.
+blockchain. Infrastructure providers are rewarded with native currency (CBL) 
+for their services. The wallet screen shows your balance and transaction 
+history. You may exchange CBL with other participants.
+
+<img align="left" width="150" src="docs/screenshot_iscc.jpg?raw=true">
+
+**ISCC**
+
+The [ISCC](http://iscc.codes) is an open and decentralized digital media 
+identifier. You can search for content registered with an ISCC and 
+generate/register new ISCCs for text  and image content. When generating a new 
+ISCC you will also see if your content or similar content has been registered 
+before.
+
+<img align="left" width="150" src="docs/screenshot_smart_license.jpg?raw=true">
+
+**Smart Licenses**
+
+Here you can send an recieve smart license tokens. These are custom tokens
+that allow you to own and resell a license as if it were a physical object.
+Smart Licenses and corresponding tokens can be generated with our 
+[Smart License Web Demo](https://smartlicense.coblo.net/).
+
 
 <img align="left" width="150" src="docs/screenshot_timestamp.jpg?raw=true">
 
 **Timestamping**
 
-A minimal demonstration of content timestamping. Here you can create, search
-and optionally register a unique fingerprint (SHA256 hash) of any document or
-file. This will be extended to demonstrate content registration with 
-[ISCC codes](http://iscc.codes/ "International Standard Content Code")
+A minimal demonstration of simple content timestamping. Here you can create, 
+search and optionally register a unique cryptographic fingerprint (SHA256 hash)
+of any document or file.
 
 
 <img align="left" width="150" src="docs/screenshot_community.jpg?raw=true">

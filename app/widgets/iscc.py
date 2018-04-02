@@ -246,7 +246,7 @@ class ISCCGEnerator(QThread):
         if file_ending in ['jpg', 'png', 'jpeg', 'gif']:
             self.parent.content_id = iscc.content_id_image(self.file_path)
         elif file_ending == 'txt':
-            with open(self.file_path, 'r') as infile:
+            with open(self.file_path, encoding='utf-8') as infile:
                 self.parent.content_id = iscc.content_id_text(infile.read())
         elif file_ending == 'docx':
             self.parent.content_id = iscc.content_id_text(docx2txt.process(self.file_path))

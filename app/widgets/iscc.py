@@ -251,8 +251,8 @@ class ISCCGEnerator(QThread):
         elif file_ending == 'docx':
             self.parent.content_id = iscc.content_id_text(docx2txt.process(self.file_path))
         with open(self.file_path, 'rb') as infile:
-            self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile)
+            self.parent.instance_id, self.parent.instance_hash = iscc.instance_id(infile.read())
         with open(self.file_path, 'rb') as infile:
-            self.parent.data_id = iscc.data_id(infile)
+            self.parent.data_id = iscc.data_id(infile.read())
         if self.parent.meta_id:
             self.parent.show_conflicts()

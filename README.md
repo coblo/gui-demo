@@ -58,15 +58,14 @@ that allow you to own and resell a license as if it were a physical object.
 Smart Licenses and corresponding tokens can be generated with our 
 [Smart License Web Demo](https://smartlicense.coblo.net/).
 
-
 <img align="left" width="150" src="docs/screenshot_timestamp.jpg?raw=true">
 
 **Timestamping**
 
 A minimal demonstration of simple content timestamping. Here you can create, 
 search and optionally register a unique cryptographic fingerprint (SHA256 hash)
-of any document or file.
-
+of any document or file. You may also add a short comment to your timestamp
+entry on the blockchain.
 
 <img align="left" width="150" src="docs/screenshot_community.jpg?raw=true">
 

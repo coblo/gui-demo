@@ -2,8 +2,7 @@ import sys
 from cx_Freeze import Executable, setup
 
 
-# base = 'Win32GUI' if sys.platform == 'win32' else None
-base = None
+base = 'Win32GUI' if sys.platform == 'win32' else None
 
 options = {
     'build_exe':
@@ -74,7 +73,7 @@ executables = [
 
 setup(
     name='Coblo',
-    version='0.9.0',
+    version='1.0.0',
     description='Content Blockchain Demo',
     options=options,
     executables=executables

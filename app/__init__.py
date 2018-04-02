@@ -11,8 +11,8 @@ environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = "1"
 ORG_NAME = 'Content-Blockchain'
 ORG_DOMAIN = 'content-blockchain.org'
 APP_NAME = 'Coblo'
-MAJOR = 0
-MINOR = 9
+MAJOR = 1
+MINOR = 0
 PATCH = 0
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 

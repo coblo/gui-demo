@@ -9,7 +9,12 @@
     <file>resources/Oswald-SemiBold.ttf</file>
   </qresource>
   <qresource prefix="images">
+    <file>resources/fingerprint_black.svg</file>
     <file>resources/wizard_logo.png</file>
+    <file>resources/wallet_black.svg</file>
+    <file>resources/mining_reward.svg</file>
+    <file>resources/paper_plane_black.svg</file>
+    <file>resources/vote_hammer_black.svg</file>
     <file>resources/wizard_banner.png</file>
     <file>resources/undo_black.svg</file>
     <file>resources/undo_white.svg</file>
@@ -24,5 +29,6 @@
     <file>resources/money_black.svg</file>
     <file>resources/certificate_black.svg</file>
     <file>resources/certificate_white.svg</file>
+    <file>resources/info_circle.svg</file>
   </qresource>
 </RCC>

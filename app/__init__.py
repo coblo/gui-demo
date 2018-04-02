@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """Global constants and pre-app initialization stuff."""
-from os.path import abspath, dirname, join, exists
+from os import environ
+from os.path import abspath, dirname, join
 import sys
 import appdirs
 
+# Enable QT High-Dpi Support
+environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = "1"
 
 ORG_NAME = 'Content-Blockchain'
 ORG_DOMAIN = 'content-blockchain.org'
 APP_NAME = 'Coblo'
 MAJOR = 0
-MINOR = 1
+MINOR = 9
 PATCH = 0
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
@@ -34,9 +37,9 @@ DEFAULT_RPC_PORT = 8374
 ADMIN_CONSENUS_MINE = 0.17724500
 ADMIN_CONSENUS_ADMIN = 0.51
 
-NODE_BOOTSTRAP = 'coblo@85.197.78.50:8375'
+NODE_BOOTSTRAP = 'coblo2@85.197.78.51:9719'
 
-CURRENCY_CODE = 'CHM'
+CURRENCY_CODE = 'CBL'
 
 # From current chain params.dat needed for address generation.
 TESTNET_ADDRESS_PUBKEYHASH_VERSION = '0046e454'
@@ -44,7 +47,16 @@ TESTNET_ADDRESS_SCRIPTHASH_VERSION = '054b9e59'
 TESTNET_ADDRESS_CHECKSUM_VALUE = 'd8a558e6'
 TESTNET_PRIVATE_KEY_VERSION = '807c3b9f'
 
+TESTNET2_ADDRESS_PUBKEYHASH_VERSION = 'ca'
+TESTNET2_ADDRESS_SCRIPTHASH_VERSION = 'cb'
+TESTNET2_ADDRESS_CHECKSUM_VALUE = '00000000'
+TESTNET2_PRIVATE_KEY_VERSION = 'cc'
+
 GET_COINS_URL = 'https://t.me/ContentBlockchainBeta'
+
+STREAM_ALIAS = 'alias'
+STREAM_ISCC = 'iscc'
+STREAM_TIMESTAMP = 'timestamp'
 
 
 def init():
@@ -59,9 +71,10 @@ def init():
     models.init_data_db()
 
 
-def is_first_start():
+def is_first_start(profile_db):
+    from app.models.profile import Profile
     """Check if the applications needs to be configured"""
-    if not exists(PROFILE_DB_FILEPATH):
+    if not Profile.get_active(profile_db):
         return True
     else:
         return False

@@ -9,6 +9,9 @@ from decimal import Decimal
 
 from app.backend.rpc import get_active_rpc_client
 from app.models import Address
+from app.models import Alias
+from app.models.db import data_session_scope
+from app.signals import signals
 from app.tools.validators import AddressValidator
 from app.ui.wallet_send import Ui_widget_wallet_send
 
@@ -26,8 +29,7 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.edit_address.setValidator(AddressValidator())
         self.edit_address.textChanged.connect(self.on_address_edit)
         self.edit_address.textChanged.connect(self.check_state)
-
-        self.edit_description.setStyleSheet('QLineEdit:focus {background-color: #fff79a}')
+        self.cb_comment_type.currentIndexChanged.connect(self.on_comment_type_changed)
 
         self.btn_send_cancel.clicked.connect(self.on_cancel_clicked)
         self.btn_send_send.setDisabled(True)
@@ -35,30 +37,11 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.address_valid = False
         self.btn_send_send.clicked.connect(self.on_send_clicked)
 
-        address_list =[]
-        for address in Address.select().order_by(Address.address.desc()):
-            if address.alias is not None:
-                address_list.append("{} ({})".format(address.alias, address.address))
-            address_list.append(address.address)
-        completer = QCompleter(address_list, self.edit_address)
-        completer_delegate = QStyledItemDelegate(completer)
-        completer.setCaseSensitivity(Qt.CaseInsensitive)
-        completer.popup().setItemDelegate(completer_delegate)
-        completer.popup().setStyleSheet(
-            """
-            QAbstractItemView {
-                font: 10pt "Roboto Light";
-                border: 1px solid #41ADFF;
-                border-top: 0px;
-                background-color: #FFF79A;
-                border-radius: 2px;
-            }
-            QAbstractItemView::item  {
-                margin-top: 3px;
-            }           
-            """
-        )
-        self.edit_address.setCompleter(completer)
+        self.edit_completer()
+
+        # Connect signals
+        signals.alias_list_changed.connect(self.edit_completer)
+        signals.new_address.connect(self.edit_completer)
 
     def on_address_edit(self, text):
         address_with_alias_re = re.compile('^.* \(.*\)$')
@@ -96,6 +79,13 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.amount_valid = not (amount > self.window().profile.balance or abs(amount.as_tuple().exponent) > 8)
         self.btn_send_send.setDisabled(not (self.amount_valid and self.address_valid))
 
+    def on_comment_type_changed(self, new_type):
+        self.edit_description.setPlaceholderText(
+            "Optional payment reference information (only visible to you)"
+            if new_type == 0
+            else "Optional payment reference information (visible for everyone)"
+        )
+
     def check_state(self, *args, **kwargs):
         sender = self.sender()
         validator = sender.validator()
@@ -118,15 +108,18 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
     def on_send_clicked(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         client = get_active_rpc_client()
+        address = self.edit_address.text()
+        amount = float(self.edit_amount.text())
+        comment = self.edit_description.text()
         try:
-            response = client.send(
-                address=self.edit_address.text(),
-                amount=Decimal(self.edit_amount.text()),
-                comment=self.edit_description.text()
-            )
-            if response['error'] is not None:
-                err_msg = response['error']['message']
-                raise RuntimeError(err_msg)
+            if self.cb_comment_type.currentIndex() == 0 or len(comment) == 0:  # private comment
+                client.send(address, amount, comment)
+            else: # public comment
+                comment_object = {
+                    "json": {"comment": comment}
+                }
+                client.sendwithdata(address, amount, comment_object)
+            signals.new_unconfirmed.emit('transfer')
             self.on_cancel_clicked()
             QApplication.restoreOverrideCursor()
         except Exception as e:
@@ -138,3 +131,29 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
             QApplication.restoreOverrideCursor()
             error_dialog.exec_()
 
+    def edit_completer(self):
+        address_list = []
+        with data_session_scope() as session:
+            for address, alias in Alias.get_aliases(session).items():
+                address_list.append("{} ({})".format(alias, address))
+            for address in session.query(Address).all():
+                address_list.append(address.address)
+        completer = QCompleter(address_list, self.edit_address)
+        completer_delegate = QStyledItemDelegate(completer)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        completer.popup().setItemDelegate(completer_delegate)
+        completer.popup().setStyleSheet(
+            """
+            QAbstractItemView {
+                font: 10pt "Roboto Light";
+                border: 1px solid #41ADFF;
+                border-top: 0px;
+                background-color: #FFF79A;
+                border-radius: 2px;
+            }
+            QAbstractItemView::item  {
+                margin-top: 3px;
+            }
+            """
+        )
+        self.edit_address.setCompleter(completer)

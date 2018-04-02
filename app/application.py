@@ -1,19 +1,20 @@
-import sys
-import traceback
 import locale
 import logging
+import sys
+import traceback
+
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
 
 import app
 from app import helpers
+from app.models import init_profile_db, init_data_db
 from app.node import Node
+from app.signals import signals
 from app.updater import Updater
 from app.widgets.proto import MainWindow
 from app.widgets.setup_wizard import SetupWizard
-from app.signals import signals
-
 
 helpers.init_logging()
 log = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ class Application(QtWidgets.QApplication):
 
         # Initialize application metadata
         locale.setlocale(locale.LC_ALL, '')
+        log.debug('user locale is {}'.format(locale.getlocale(locale.LC_ALL)))
         self.setOrganizationName(app.ORG_NAME)
         self.setOrganizationDomain(app.ORG_DOMAIN)
         self.setApplicationDisplayName(app.APP_NAME)
@@ -43,6 +45,7 @@ class Application(QtWidgets.QApplication):
         font_db = QtGui.QFontDatabase()
         font_db.addApplicationFont(':/fonts/resources/Roboto-Light.ttf')
         font_db.addApplicationFont(':/fonts/resources/RobotoCondensed-Regular.ttf')
+        font_db.addApplicationFont(':/fonts/resources/RobotoCondensed-Light.ttf')
         font_db.addApplicationFont(':/fonts/resources/Oswald-Regular.ttf')
         font_db.addApplicationFont(':/fonts/resources/Oswald-SemiBold.ttf')
         app_font = QtGui.QFont("Roboto Light")
@@ -58,18 +61,26 @@ class Application(QtWidgets.QApplication):
 
         self.ui = None
         self.tray_icon = None
+        helpers.init_data_dir()
         signals.application_start.connect(self.on_application_start)
 
     def on_application_start(self):
+        init_profile_db()
         self.updater = Updater(self)
         self.node = Node(self)
         self.aboutToQuit.connect(self.cleanup)
 
-        if app.is_first_start():
+        from app.models.db import profile_session_scope
+        with profile_session_scope() as session:
+            is_first_start = app.is_first_start(session)
+
+        if is_first_start:
             wizard = SetupWizard()
             if wizard.exec() == SetupWizard.Rejected:
                 QtWidgets.qApp.quit()
                 return
+        else:
+            init_data_db()
 
         # Initialize main window
         self.ui = self.main_widget()
@@ -106,16 +117,12 @@ class Application(QtWidgets.QApplication):
 
         if self.node is not None:
             try:
-                log.debug('attempt gracefull node shuttdown via rpc')
+                log.debug('attempt graceful node shuttdown via rpc')
                 rpc_result = self.node.stop()
                 log.debug('rpc stop returned: %s' % rpc_result)
             except Exception as e:
                 log.exception('failed rpc shutdown - try to kill node process')
                 self.node.kill()
-
-        if self.ui is not None:
-            self.ui.data_db.close()
-            self.ui.profile_db.close()
 
         if self.tray_icon is not None:
             self.tray_icon.deleteLater()

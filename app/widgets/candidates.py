@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 import logging
 from functools import partial
-
 import math
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from collections import OrderedDict
-from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView
-from PyQt5.QtWidgets import QWidget
 
-from app.models import Profile, Address, CurrentVote, Permission
+from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot
+from PyQt5.QtGui import QFont, QCursor
+from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView, QWidget, QMessageBox, QMenu, \
+    QPushButton, QStyledItemDelegate
+
+from app import enums
+from app.models import Alias
+from app.models import Profile, PendingVote, Permission
+from app.models.db import data_session_scope, profile_session_scope
 from app.signals import signals
 from app import ADMIN_CONSENUS_ADMIN, ADMIN_CONSENUS_MINE
 
@@ -25,41 +24,26 @@ MAX_END_BLOCK = 4294967295
 class CandidateModel(QAbstractTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.db = OrderedDict()
+        self.candidates = []
+        self.aliases = []
+        self.already_granted = []
+        self.num_guardians = 0
         self.update_data()
         self.headers = ('Alias', 'Address', 'Skill', 'Grants', 'Action')
 
         signals.votes_changed.connect(self.votes_changed)
+        signals.permissions_changed.connect(self.update_num_guardians)
 
     def update_data(self):
-        old_keys = set(self.db.keys())
-        new_keys = set()
-        for candidate in CurrentVote.get_candidates():
-            try:
-                alias = Address.select().where(Address.address == candidate.address).first().alias
-            except AttributeError:
-                alias = 'unknown'
-            if candidate.start_block == 0 and candidate.end_block == MAX_END_BLOCK:
-                vote_count = CurrentVote.select().where(
-                    CurrentVote.address == candidate.address,
-                    CurrentVote.start_block == 0,
-                    CurrentVote.end_block == MAX_END_BLOCK).count()
-                already_voted = CurrentVote.select().where(
-                    CurrentVote.address == candidate.address,
-                    CurrentVote.start_block == 0,
-                    CurrentVote.end_block == MAX_END_BLOCK,
-                    CurrentVote.given_from == Profile.get_active().address).count() > 0
-                if candidate.perm_type == Permission.ADMIN:
-                    required = math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_ADMIN)
-                else:
-                    required = math.ceil(Permission.num_guardians() * ADMIN_CONSENUS_MINE)
-                key = (candidate.address, candidate.perm_type)
-                new_keys.add(key)
-                self.db[key] = [alias, candidate.address.address, candidate.perm_type,
-                                "{} of {}".format(vote_count, required), already_voted]
-        deleted_keys = old_keys - new_keys
-        for key in deleted_keys:
-            del self.db[key]
+        with data_session_scope() as session:
+            self.candidates = PendingVote.get_candidates(session)
+            self.aliases = Alias.get_aliases(session)
+            self.already_granted = PendingVote.already_granted(session)
+            self.num_guardians = Permission.num_guardians(session)
+
+    def update_num_guardians(self):
+        with data_session_scope() as session:
+            self.num_guardians = Permission.num_guardians(session)
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 1:
@@ -71,23 +55,41 @@ class CandidateModel(QAbstractTableModel):
             return self.headers[col]
 
     def rowCount(self, parent=None, *args, **kwargs):
-        return len(self.db)
+        return len(self.candidates)
 
     def columnCount(self, parent=None, *args, **kwargs):
         return len(self.headers)
 
     def data(self, idx: QModelIndex, role=None):
+        row = idx.row()
+        col = idx.column()
+        candidate = self.candidates[row]
         if not idx.isValid():
             return None
 
-        if role == Qt.TextAlignmentRole and idx.column() in (3, 4):
+        if role == Qt.TextAlignmentRole and col in (3, 4):
             return Qt.AlignCenter
 
-        if role == Qt.EditRole and idx.column() in (1, 4):
-            return self.db[list(self.db.keys())[idx.row()]][1]
+        if role == Qt.EditRole and col == 1:
+            return candidate.address_to
 
         if role == Qt.DisplayRole:
-            return self.db[list(self.db.keys())[idx.row()]][idx.column()]
+            if col == 0:
+                return self.aliases[candidate.address_to] if candidate.address_to in self.aliases else None
+            elif col == 1:
+                return candidate.address_to
+            elif idx.column() == 2:
+                return 'guardian' if candidate.perm_type.name == enums.ADMIN else 'validator'
+            elif idx.column() == 3:
+                return "{} of {}".format(
+                    candidate.grants,
+                    math.ceil(self.num_guardians * (ADMIN_CONSENUS_ADMIN if candidate.perm_type.name == enums.ADMIN else ADMIN_CONSENUS_MINE))
+                )
+            elif idx.column() == 4:
+                for vote in self.already_granted:
+                    if vote.address_to == candidate.address_to and vote.perm_type == candidate.perm_type:
+                        return True
+                return False
 
     @pyqtSlot()
     def votes_changed(self):
@@ -97,24 +99,35 @@ class CandidateModel(QAbstractTableModel):
         self.parent().create_table_buttons()
 
 
-class ButtonDelegate(QtWidgets.QStyledItemDelegate):
+class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent):
-        QtWidgets.QStyledItemDelegate.__init__(self, parent)
+        QStyledItemDelegate.__init__(self, parent)
+        self.balance_is_zero = True
+        signals.on_balance_status_changed.connect(self.on_balance_status_changed)
+
+    def on_balance_status_changed(self, balance_is_zero):
+        self.balance_is_zero = balance_is_zero
 
     def createEditor(self, parent, option, idx):
-        db = self.parent().table_model.db
-        db_entry = db[list(db.keys())[idx.row()]]
-        btn = QtWidgets.QPushButton('Grant', parent)
+        db = self.parent().table_model.candidates
+        candidate = db[idx.row()]
+        btn = QPushButton('Grant', parent)
         btn.setStyleSheet(
             "QPushButton {background-color: #0183ea; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
-        btn.setObjectName(db_entry[1])
-        btn.clicked.connect(partial(self.on_grant_clicked, db_entry[2]))
-        if db_entry[4]:
+        btn.setObjectName(candidate.address_to)
+        btn.clicked.connect(partial(self.on_grant_clicked, candidate.perm_type.name))
+        already_voted = False
+        for vote in self.parent().table_model.already_granted:
+            if vote.address_to == candidate.address_to and vote.perm_type == candidate.perm_type:
+                already_voted = True
+        if already_voted:
             btn.setStyleSheet(
                 "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
-            btn.setDisabled(db_entry[4])
         else:
             btn.setCursor(QCursor(Qt.PointingHandCursor))
+        btn.setDisabled(already_voted or self.balance_is_zero)
+        if self.balance_is_zero:
+            btn.setToolTip("You need coins to vote.")
         return btn
 
     def on_grant_clicked(self, skill):
@@ -134,14 +147,11 @@ class ButtonDelegate(QtWidgets.QStyledItemDelegate):
             QApplication.setOverrideCursor(Qt.WaitCursor)
             client = get_active_rpc_client()
             try:
-                response = client.grant(address, skill)
-                if response['error'] is not None:
-                    err_msg = response['error']['message']
-                    raise RuntimeError(err_msg)
-                else:
-                    sender.setDisabled(True)
-                    sender.setStyleSheet(
-                        "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                client.grant(address, skill)
+                sender.setDisabled(True)
+                sender.setStyleSheet(
+                    "QPushButton {background-color: #aeaeae; margin: 8 4 8 4; color: white; font-size: 8pt; width: 70px}")
+                signals.new_unconfirmed.emit('vote')
                 QApplication.restoreOverrideCursor()
             except Exception as e:
                 err_msg = str(e)
@@ -160,12 +170,9 @@ class CandidateTableView(QTableView):
         self.setModel(self.table_model)
         self.setMinimumWidth(400)
 
-        font = QtGui.QFont()
+        font = QFont()
         font.setFamily("Roboto Light")
         font.setPointSize(10)
-
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
 
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -180,19 +187,22 @@ class CandidateTableView(QTableView):
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setDefaultSectionSize(40)
 
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-
-        self.setColumnHidden(4, not Profile.get_active().is_admin)
+        with profile_session_scope() as session:
+            self.setColumnHidden(4, not Profile.get_active(session).is_admin)
 
         self.setFont(font)
         self.setAlternatingRowColors(True)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setShowGrid(False)
         # TODO implement candidates table sorting
         self.setSortingEnabled(False)
         self.setCornerButtonEnabled(True)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.openCustomMenu)
         self.create_table_buttons()
+
+        signals.is_admin_changed.connect(self.is_admin_changed)
 
     def create_table_buttons(self):
         self.setItemDelegateForColumn(4, ButtonDelegate(self))
@@ -200,8 +210,25 @@ class CandidateTableView(QTableView):
             self.openPersistentEditor(self.table_model.index(row, 4))
         # TODO find a better way to fix button sizes collapsing on update
         w, h = self.size().width(), self.size().height()
-        self.resize(w+1, h)
+        self.resize(w + 1, h)
         self.resize(w, h)
+
+    def openCustomMenu(self, QPoint):
+        menu = QMenu(self)
+        copy_address = menu.addAction("Copy Address")
+        copy_alias = menu.addAction("Copy Alias")
+        row = self.rowAt(QPoint.y())
+        action = menu.exec_(self.mapToGlobal(QPoint))
+        if action == copy_address:
+            index = self.table_model.index(row, 1)
+            QApplication.clipboard().setText(self.table_model.itemData(index)[0])
+        elif action == copy_alias:
+            index = self.table_model.index(row, 0)
+            QApplication.clipboard().setText(self.table_model.itemData(index)[0])
+
+    @pyqtSlot(bool)
+    def is_admin_changed(self, is_admin):
+        self.setColumnHidden(4, not is_admin)
 
 
 if __name__ == '__main__':

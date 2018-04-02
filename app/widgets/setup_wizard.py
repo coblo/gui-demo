@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
 import logging
-import qrcode
 import webbrowser
-from PIL.ImageQt import ImageQt
-from mnemonic import Mnemonic
+from os.path import exists
 
+import qrcode
+from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QPixmap, QTextCursor
-from os.path import exists
+from PyQt5.QtWidgets import QWizard, QLineEdit, QCheckBox, QApplication
+from mnemonic import Mnemonic
 
 import app
 from app.backend.rpc import RpcClient
 from app.helpers import init_data_dir
-from app.models import Profile, init_profile_db, init_data_db
+from app.models import Profile, init_data_db
+from app.models.db import profile_session_scope, data_session_scope
 from app.responses import Getblockchaininfo
 from app.signals import signals
 from app.tools.address import main_address_from_mnemonic, main_wif_from_mnemonic
 from app.ui.setup_wizard import Ui_SetupWizard
-from PyQt5.QtWidgets import QWizard, QLineEdit, QCheckBox, QApplication
-from app.ui import resources_rc
-
 
 log = logging.getLogger(__name__)
 
@@ -226,13 +225,12 @@ class SetupWizard(QWizard, Ui_SetupWizard):
 
         self.log('Initialize profile database at: %s' % app.PROFILE_DB_FILEPATH)
 
-        if self._manage_node:
-            init_profile_db(create_default_profile=True)
-        elif self._connection_tested:
-            init_profile_db(create_default_profile=False)
-            p_obj, created = Profile.get_or_create(
-                name=self.edit_rpc_host.text(),
-                defaults=dict(
+        with profile_session_scope() as session:
+            if self._manage_node:
+                Profile.create_default_profile(session)
+            elif self._connection_tested:
+                session.merge(Profile(
+                    name=self.edit_rpc_host.text(),
                     rpc_host=self.edit_rpc_host.text(),
                     rpc_port=self.edit_rpc_port.text(),
                     rpc_user=self.edit_rpc_user.text(),
@@ -241,11 +239,15 @@ class SetupWizard(QWizard, Ui_SetupWizard):
                     manage_node=False,
                     exit_on_close=True,
                     active=True,
-                )
-            )
+                ))
 
         self.log('Initialize node-sync database')
         init_data_db()
+
+        # This fixes our problem with the locked database
+        # We have no idea why, but we shouldn't delete this code until we have a better solution
+        with data_session_scope() as session:
+            session.query('DELETE FROM mining_reward')
 
         if self._manage_node:
             self.node.start(initprivkey=main_wif_from_mnemonic(self._mnemonic))
@@ -275,19 +277,17 @@ class SetupWizard(QWizard, Ui_SetupWizard):
         )
         try:
             response = client.getruntimeparams()
-            assert response['error'] is None
+            msg = 'Successfully connected to %s' % self.edit_rpc_host.text()
+            self.label_test_connection.setText(msg)
+            self.button_test_connection.setDisabled(True)
+            self.gbox_connect.setEnabled(False)
+            self._connection_tested = True
+            self._address = response.handshakelocal
+            self.page3_connect.completeChanged.emit()
         except Exception as e:
             log.exception(e)
             self.label_test_connection.setText('Connection error')
-            return
 
-        msg = 'Successfully connected to %s' % self.edit_rpc_host.text()
-        self.label_test_connection.setText(msg)
-        self.button_test_connection.setDisabled(True)
-        self.gbox_connect.setEnabled(False)
-        self._connection_tested = True
-        self._address = response['result']['handshakelocal']
-        self.page3_connect.completeChanged.emit()
 
     @pyqtSlot()
     def reset_connection_form(self):

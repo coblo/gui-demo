@@ -12,7 +12,7 @@ import app
 MAIN_BIP44_PATH_TESTNET = '44H/1H/0H/0/0'
 
 
-def main_address_from_mnemonic(words: str) -> str:
+def main_address_from_mnemonic(words: str, pkhv=app.TESTNET2_ADDRESS_PUBKEYHASH_VERSION, cv=app.TESTNET2_ADDRESS_CHECKSUM_VALUE) -> str:
     """Returns the main address from a 24 word mnemonic (Testnet only).
 
     The main address is the first address in the BIP44 derivation path.
@@ -23,8 +23,8 @@ def main_address_from_mnemonic(words: str) -> str:
     priv_key = ecdsa_pk_from_mnemonic(words)
     return create_address(
         priv_key,
-        app.TESTNET_ADDRESS_PUBKEYHASH_VERSION,
-        app.TESTNET_ADDRESS_CHECKSUM_VALUE,
+        pkhv,
+        cv,
     )
 
 
@@ -160,7 +160,7 @@ def public_key_to_address(public_key: str, pkhv, cv):
     return base58.b58encode(address_bin)
 
 
-def address_valid(address, checksum_value="d8a558e6"):
+def address_valid(address, checksum_value="00000000"):
     """Validate a chain specific address.
 
     :param str address: chain specific address or wif encoded private key

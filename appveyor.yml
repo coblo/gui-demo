@@ -1,0 +1,69 @@
+matrix:
+  fast_finish: true
+
+branches:
+  only:
+  - develop
+  - master
+  - winci
+
+environment:
+  global:
+    # Environment variables used by astropy helpers
+    PYTHON: "C:\\conda"
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
+    PYTHON_ARCH: "64"
+
+  matrix:
+    # PyQt5
+    - PYTHON_VERSION: "3.6"
+      USE_QT_API: "PyQt5"
+      CONDA_DEPENDENCIES: "qt=5.* pyqt=5.*"
+      PIP_DEPENDENCIES: "cx_Freeze==6.0b1"
+      MCBIN_URL: "https://www.multichain.com/download/"
+      MCBIN_FILE: "multichain-windows-2.0-alpha-2.zip"
+
+  github_token:
+    secure: KURsz+V0HfTZBKeLoFyD2uZtmd6d+fqNHEEesjr7H/Vj8NXEtX3+/xg47aOHj5Mo
+
+platform:
+  -x64
+
+install:
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+      https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+      Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+        throw "There are newer queued builds for this pull request, failing early." }
+  # Astropy ci-helpers. See https://github.com/astropy/ci-helpers
+  - "git clone git://github.com/astropy/ci-helpers.git"
+  - "powershell ci-helpers/appveyor/install-miniconda.ps1"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "activate test"
+  # Install pip dependencies.
+  - "pip install -r requirements.txt"
+  - "pip install %PIP_DEPENDENCIES%"
+
+build_script:
+  - "cd /D %APPVEYOR_BUILD_FOLDER%"
+  - "curl %MCBIN_URL%%MCBIN_FILE% -O -J -L"
+  - "7z x %MCBIN_FILE%"
+  - "xcopy /F /Y /I multichaind.exe app\\bin\\"
+  # Compile ui
+  - "python compile_ui.py"
+  # Build exe.* folder in preparation for the msi package
+  - "python setup.py build_exe"
+  # Do some cleanup before packaging the installer
+  - ps: "Remove-Item build\\exe.*\\lib\\PyQt5\\uic -Recurse -Force"
+  - ps: "Remove-Item build\\exe.*\\lib\\PyQt5\\Qt\\translations -Recurse -Force"
+  # Grep all PyQt5.* imports and remove Qt libs that aren't used
+  - ps: "$INUSE = Get-ChildItem app -Filter *.py -Recurse | Select-String -Pattern '^from PyQt5.(Qt[^ ]*)' -AllMatches | % { $_.Matches } | % { $_.Value.split('.')[1] } | ? {$_.trim() -ne '' } | Group-Object -AsHashTable -AsString ; Get-ChildItem build\\exe.*\\lib\\PyQt5 -Filter Qt* -Recurse | ? { ! $INUSE.ContainsKey($(Split-Path $_ -leaf).split('.')[0]) } | Remove-Item -Recurse"
+  # Build msi
+  - "python setup.py bdist_msi"
+  #- cd build
+  #- ps: "& 7z a -r guidemo-$env:APPVEYOR_REPO_BRANCH-win$env:PYTHON_ARCH-$env:APPVEYOR_BUILD_VERSION.zip exe.*"
+  - ps: "Get-ChildItem dist -Filter Coblo-*.msi | % {Rename-Item -Path $_.fullname -NewName Coblo-$env:APPVEYOR_REPO_BRANCH-$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_REPO_COMMIT.msi}"
+  - "powershell dist\\ci_github_release.ps1 -token %github_token% -tag ci-%APPVEYOR_REPO_BRANCH% -name 'CI Draft %APPVEYOR_REPO_BRANCH%' -descr '' -user 'coblo' -project 'gui-demo' -file dist\\Coblo-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_COMMIT%.msi"
+
+#artifacts:
+#  - path: build/guidemo-$(APPVEYOR_REPO_BRANCH)-win$(PYTHON_ARCH)-$(APPVEYOR_BUILD_VERSION).zip
+#  - path: dist/Coblo-*.msi

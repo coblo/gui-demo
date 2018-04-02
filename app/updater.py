@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 """Background Updater Thread"""
 import logging
-from PyQt5 import QtCore
-from app import sync
-from app.backend.rpc import get_active_rpc_client
-from app.signals import signals
 
+from PyQt5 import QtCore
+
+from app import sync
+from app.signals import signals
+from app.backend.rpc import get_active_rpc_client
+from app.models import Alias
+from app.models import Profile
+from app.models.db import profile_session_scope, data_session_scope
 
 log = logging.getLogger(__name__)
 
@@ -15,14 +19,9 @@ class Updater(QtCore.QThread):
     UPDATE_INTERVALL = 3
 
     sync_funcs = (
-        sync.getinfo,
         sync.getruntimeparams,
         sync.getblockchaininfo,
-        sync.listblocks,
-        sync.listwallettransactions,
-        sync.listpermissions,
-        sync.liststreamitems_alias,
-        sync.getblock,
+        sync.process_blocks,
     )
 
     def __init__(self, parent=None):
@@ -40,35 +39,32 @@ class Updater(QtCore.QThread):
     def run(self):
 
         synced_blockhash = ''
-        synced_txid = ''
-        blockchain_downloading = False
+
+        with profile_session_scope() as profile_session:
+            profile = Profile.get_active(profile_session)
+            with data_session_scope() as data_session:
+                profile.alias = Alias.get_alias_by_address(data_session, profile.address)
 
         while True:
 
-            log.debug('check for new block or new local wallet updates')
+            log.debug('check for new blocks')
             try:
-                # This triggers Network Info widget update that we allways want
+                # This triggers Network Info widget update that we always want
                 blockchain_info = sync.getblockchaininfo()
                 # The node is downloading blocks if it has more headers than blocks
-                blockchain_downloading = blockchain_info['blocks'] != blockchain_info['headers']
-                node_block_hash = blockchain_info['bestblockhash']
+                if blockchain_info.blocks != blockchain_info.headers or blockchain_info.reindex:
+                    log.debug('blockchain syncing - skip expensive rpc calls')
+                    self.sleep(self.UPDATE_INTERVALL)
+                    continue
+                node_block_hash = blockchain_info.bestblockhash
             except Exception as e:
                 log.exception('cannot get bestblock via rpc: %s' % e)
                 self.sleep(self.UPDATE_INTERVALL)
                 continue
 
-            if blockchain_downloading:
-                log.debug('blockchain syncing - skip expensive rpc calls')
-                self.sleep(self.UPDATE_INTERVALL)
-                continue
+            sync.getinfo()
 
-            try:
-                node_txid = self.client.listwallettransactions(1)['result'][0]['txid']
-            except (KeyError, IndexError):
-                log.debug('no wallet transactions found')
-                node_txid = ''
-
-            if node_block_hash != synced_blockhash or node_txid != synced_txid:
+            if node_block_hash != synced_blockhash:
                 log.debug('starting full sync round')
 
                 for sync_func in self.sync_funcs:
@@ -79,7 +75,6 @@ class Updater(QtCore.QThread):
                         log.exception(e)
 
                 synced_blockhash = node_block_hash
-                synced_txid = node_txid
                 signals.sync_cycle_finished.emit()
 
             self.sleep(self.UPDATE_INTERVALL)

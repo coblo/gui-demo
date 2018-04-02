@@ -1,29 +1,30 @@
 # -*- coding: utf-8 -*-
 import logging
-import peewee
-from app.models.db import data_db
+from binascii import unhexlify
 
-from .address import Address
+from sqlalchemy import LargeBinary, Column, DateTime, Integer, exists
 
+from app.models.db import data_db, data_base
 
 log = logging.getLogger(__name__)
 
 
-class Block(peewee.Model):
+class Block(data_base):
+
+    __tablename__ = "blocks"
     """Blocks"""
 
-    hash = peewee.BlobField(primary_key=True)
-    time = peewee.DateTimeField()
-    miner = peewee.ForeignKeyField(Address, related_name='mined_blocks')
-    txcount = peewee.IntegerField()
-    height = peewee.IntegerField()
+    hash = Column(LargeBinary, primary_key=True)
+    mining_time = Column(DateTime)
+    height = Column(Integer, index=True)
 
     class Meta:
         database = data_db
 
     def __repr__(self):
-        return "Block(h=%s, t=%s, txs=%s)" % (self.height, self.time, self.txcount)
+        return "Block(h=%s, t=%s)" % (self.height, self.mining_time)
 
-    @classmethod
-    def multi_tx_blocks(cls):
-        return cls.select().where(cls.txcount > 1)
+    @staticmethod
+    def block_exists(data_db, block_hash):
+        return data_db.query(exists().where(Block.hash == unhexlify(block_hash))).scalar()
+

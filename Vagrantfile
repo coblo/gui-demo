@@ -17,4 +17,9 @@ Vagrant.configure("2") do |config|
 	  win.ssh.password = "Passw0rd!"
   end
 
+	config.vm.define "win7" do |win7|
+	  win7.vm.box = "senglin/win-7-enterprise"
+    win7.vm.box_version = "1.0.0"
+	end
+
 end

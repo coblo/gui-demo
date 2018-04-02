@@ -36,7 +36,6 @@ class WalletTransactionsUpdater(QThread):
         return get_active_rpc_client()
 
     def run(self):
-        client = get_active_rpc_client()
         synced_wallet_tx = ''
         synced_confirmed_wallet_tx = ''
 
@@ -45,13 +44,13 @@ class WalletTransactionsUpdater(QThread):
             log.debug('check for new local wallet updates')
             try:
                 # This triggers Network Info widget update that we always want
-                blockchain_info = client.getblockchaininfo()
+                blockchain_info = self.client.getblockchaininfo()
                 # The node is downloading blocks if it has more headers than blocks
                 if blockchain_info.blocks != blockchain_info.headers:
                     log.debug('blockchain syncing - skip expensive rpc calls')
                     self.sleep(self.UPDATE_INTERVALL)
                     continue
-                wallet_transactions = client.listwallettransactions(100)
+                wallet_transactions = self.client.listwallettransactions(100)
                 latest_tx_hash = ''
                 if len(wallet_transactions) > 0:
                     latest_tx_hash = wallet_transactions[-1]["txid"]
@@ -69,9 +68,9 @@ class WalletTransactionsUpdater(QThread):
                 log.debug('syncing new wallet transactions')
 
                 try:
-                    balance_before = client.getbalance()
-                    wallet_transactions = client.listwallettransactions(100, 0, False, True)
-                    balance_after = client.getbalance()
+                    balance_before = self.client.getbalance()
+                    wallet_transactions = self.client.listwallettransactions(100, 0, False, True)
+                    balance_after = self.client.getbalance()
                     if balance_before != balance_after:
                         log.debug("Balance changed while updating")
                         continue

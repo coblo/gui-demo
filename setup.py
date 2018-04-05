@@ -29,9 +29,9 @@ options = {
                     'Shortcut': [
                         ("DesktopShortcut",     # Shortcut
                         "DesktopFolder",        # Directory_
-                        "Content Blockchain",   # Name
+                        "Content Blockchain 2",   # Name
                         "TARGETDIR",            # Component_
-                        "[TARGETDIR]coblo.exe", # Target
+                        "[TARGETDIR]coblo2.exe", # Target
                         None,                   # Arguments
                         None,                   # Description
                         None,                   # Hotkey
@@ -42,9 +42,9 @@ options = {
                         ),
                         ("StartupShortcut",     # Shortcut
                         "StartupFolder",        # Directory_
-                        "Content Blockchain",   # Name
+                        "Content Blockchain 2",   # Name
                         "TARGETDIR",            # Component_
-                        "[TARGETDIR]coblo.exe", # Target
+                        "[TARGETDIR]coblo2.exe", # Target
                         None,                   # Arguments
                         None,                   # Description
                         None,                   # Hotkey
@@ -64,17 +64,17 @@ executables = [
         base=base,
         initScript=None,
         icon='app.ico',
-        targetName='coblo.exe',
-        shortcutName='Content Blockchain',
+        targetName='coblo2.exe',
+        shortcutName='Content Blockchain 2',
         shortcutDir='DesktopFolder',
         copyright='Copyright (C) 2018 The Content Blockchain Project',
     )
 ]
 
 setup(
-    name='Coblo',
-    version='1.0.0',
-    description='Content Blockchain Demo',
+    name='Coblo2',
+    version='1.0.1',
+    description='Content Blockchain Demo 2',
     options=options,
     executables=executables
 )

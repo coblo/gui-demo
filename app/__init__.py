@@ -13,7 +13,7 @@ ORG_DOMAIN = 'content-blockchain.org'
 APP_NAME = 'Coblo'
 MAJOR = 1
 MINOR = 0
-PATCH = 0
+PATCH = 1
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
 
@@ -27,8 +27,8 @@ if is_frozen():
 else:
     APP_DIR = dirname(dirname(abspath(__file__)))
 
-DATA_DIR = appdirs.user_data_dir(APP_NAME, ORG_NAME)
-PROFILE_DB_FILENAME = 'profile.db'
+DATA_DIR = appdirs.user_data_dir(APP_NAME, ORG_NAME, APP_VERSION)
+PROFILE_DB_FILENAME = 'profile_{}.db'.format(APP_VERSION)
 PROFILE_DB_FILEPATH = join(DATA_DIR, PROFILE_DB_FILENAME)
 DEFAULT_PROFILE_NAME = 'default'
 DEFAULT_RPC_HOST = '127.0.0.1'

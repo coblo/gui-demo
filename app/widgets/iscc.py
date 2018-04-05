@@ -65,7 +65,7 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.table_conflicts.setParent(None)
         self.table_conflicts = ConflictTableView(self)
         self.table_conflicts.setHidden(True)
-        self.tab_register.layout().insertWidget(4, self.table_conflicts)
+        self.tab_register.layout().insertWidget(5, self.table_conflicts)
         self.label_title_extra.setHidden(True)
         self.widget_extra.setHidden(True)
         self.balance_is_zero = True

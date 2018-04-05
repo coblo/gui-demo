@@ -61,7 +61,7 @@ build_script:
   - "python setup.py bdist_msi"
   #- cd build
   #- ps: "& 7z a -r guidemo-$env:APPVEYOR_REPO_BRANCH-win$env:PYTHON_ARCH-$env:APPVEYOR_BUILD_VERSION.zip exe.*"
-  - ps: "Get-ChildItem dist -Filter Coblo-*.msi | % {Rename-Item -Path $_.fullname -NewName Coblo-$env:APPVEYOR_REPO_BRANCH-$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_REPO_COMMIT.msi}"
+  - ps: "Get-ChildItem dist -Filter Coblo2-*.msi | % {Rename-Item -Path $_.fullname -NewName Coblo-$env:APPVEYOR_REPO_BRANCH-$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_REPO_COMMIT.msi}"
   - "powershell dist\\ci_github_release.ps1 -token %github_token% -tag ci-%APPVEYOR_REPO_BRANCH% -name 'CI Draft %APPVEYOR_REPO_BRANCH%' -descr '' -user 'coblo' -project 'gui-demo' -file dist\\Coblo-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_COMMIT%.msi"
 
 #artifacts:

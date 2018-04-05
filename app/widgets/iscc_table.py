@@ -75,6 +75,7 @@ class ISCCTableView(QTableView):
         self.table_model = ISCCModel(self)
         self.setModel(self.table_model)
         self.setMinimumWidth(400)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         font = QFont()
         font.setFamily("Roboto Light")
@@ -83,7 +84,7 @@ class ISCCTableView(QTableView):
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.Interactive)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.Interactive)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.Interactive)
         header.setFont(font)
 

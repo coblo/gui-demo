@@ -5,6 +5,8 @@
   <qresource prefix="fonts">
     <file>resources/Roboto-Light.ttf</file>
     <file>resources/RobotoCondensed-Regular.ttf</file>
+    <file>resources/RobotoCondensed-Light.ttf</file>
+    <file>resources/RobotoMono-Light.ttf</file>
     <file>resources/Oswald-Regular.ttf</file>
     <file>resources/Oswald-SemiBold.ttf</file>
   </qresource>

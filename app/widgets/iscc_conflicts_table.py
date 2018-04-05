@@ -71,7 +71,7 @@ class ConflictModel(QAbstractTableModel):
                 return QVariant(QColor(Qt.red))
 
         elif role == Qt.FontRole and col in [0, 1, 2, 3]:
-            font = QFont("RobotoCondensed-Light", 8)
+            font = QFont("Roboto Mono Light", 8)
             return QVariant(font)
 
 
@@ -81,9 +81,10 @@ class ConflictTableView(QTableView):
         self.table_model = ConflictModel(self)
         self.setModel(self.table_model)
         self.setMinimumWidth(400)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         font = QFont()
-        font.setFamily("Roboto Condensed Light")
+        font.setFamily("Roboto Light")
         font.setPointSize(9)
 
         header = self.horizontalHeader()
@@ -91,7 +92,7 @@ class ConflictTableView(QTableView):
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QHeaderView.Interactive)
+        header.setSectionResizeMode(4, QHeaderView.Stretch)
         header.setSectionResizeMode(5, QHeaderView.Interactive)
         header.setFont(font)
 
@@ -100,7 +101,7 @@ class ConflictTableView(QTableView):
         # Row height
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
-        self.verticalHeader().setDefaultSectionSize(40)
+        self.verticalHeader().setDefaultSectionSize(30)
 
         self.setFont(font)
         self.setAlternatingRowColors(True)

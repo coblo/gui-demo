@@ -74,6 +74,7 @@ class ConflictModel(QAbstractTableModel):
             font = QFont("RobotoCondensed-Light", 8)
             return QVariant(font)
 
+
 class ConflictTableView(QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -82,16 +83,16 @@ class ConflictTableView(QTableView):
         self.setMinimumWidth(400)
 
         font = QFont()
-        font.setFamily("Roboto Light")
-        font.setPointSize(10)
+        font.setFamily("Roboto Condensed Light")
+        font.setPointSize(9)
 
         header = self.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.Interactive)
+        header.setSectionResizeMode(5, QHeaderView.Interactive)
         header.setFont(font)
 
         self.setWordWrap(False)

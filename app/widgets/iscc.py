@@ -37,8 +37,11 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.content_id = None
         self.data_id = None
         self.instance_id = None
+        self.instance_hash = None
         self.iscc = None
         self.conflict_in_meta = False
+        self.title_formatted = None
+        self.extra_formatted = None
 
         self.lbl_supported_types.setText("Supported file types: " + ", ".join(ACCEPTED_FILE_TYPES))
 
@@ -50,8 +53,8 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         self.btn_search_iscc.clicked.connect(self.search_iscc)
         self.edit_search_iscc.returnPressed.connect(self.search_iscc)
         self.btn_register.clicked.connect(self.register)
-        self.edit_title.textChanged.connect(self.title_changed)
-        self.edit_extra.textChanged.connect(self.extra_changed)
+        self.edit_title.textChanged.connect(self.meta_changed)
+        self.edit_extra.textChanged.connect(self.meta_changed)
 
         self.table_iscc.setParent(None)
         self.table_iscc = ISCCTableView(self)
@@ -118,19 +121,13 @@ class WidgetISCC(QWidget, Ui_Widget_ISCC):
         if self.iscc:
             self.show_conflicts()
 
-    def title_changed(self, title):
-        extra = ''
-        if self.conflict_in_meta:
-            extra = self.edit_extra.text()
-        if extra:
-            self.meta_id, self.title_formatted, self.extra_formatted = iscc.meta_id(title=title, extra=extra)
-        else:
-            self.meta_id, self.title_formatted, self.extra_formatted = iscc.meta_id(title=title)
-        if self.content_id:
-            self.show_conflicts()
-
-    def extra_changed(self, extra):
-        self.meta_id = iscc.meta_id(title=self.edit_title.text(), extra=extra)[0]
+    def meta_changed(self):
+        title = self.edit_title.text()
+        extra = self.edit_extra.text()
+        mid, tf, ef = iscc.meta_id(title=title, extra=extra)
+        self.meta_id = mid
+        self.title_formatted = tf
+        self.extra_formatted = ef
         if self.content_id:
             self.show_conflicts()
 

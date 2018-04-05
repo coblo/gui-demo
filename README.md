@@ -1,4 +1,4 @@
-# Content Blockchain GUI Prototype v1.0.0
+# Content Blockchain GUI Prototype v1.0.1
 
 [![Build status](https://ci.appveyor.com/api/projects/status/oue3ndgwshvc9l4e/branch/master?svg=true)](https://ci.appveyor.com/project/alemenke/gui-demo/branch/master)
 
@@ -22,7 +22,7 @@ and participate in testing the plattform. It allows you to:
 - send and receive smart license tokens
 
 An installable version is currently available for 64-Bit Windows.
-You can download it [here](https://github.com/coblo/gui-demo/releases/download/v1.0.0/Coblo-1.0.0-win.msi).
+You can download it [here](https://github.com/coblo/gui-demo/releases/download/v1.0.1/Coblo-1.0.1-win.msi).
 If you need help or have questions you can reach us via Telegram:
 [https://t.me/ContentBlockchainBeta](https://t.me/ContentBlockchainBeta)
 
@@ -87,7 +87,7 @@ These are the steps to get your hands dirty:
 - Checkout this repository to you machine
 - Optionaly create a virtual environment for the project
 - Install python dependencies with `pip install -r requirements.txt`
-- Download [multichaind binaries](https://www.multichain.com/download-install/) and place them in `/app/bin`
+- Download [multichaind binaries](https://www.multichain.com/developers/multichain-2-0-preview-releases/) and place them in `/app/bin`
 - Compile QT .ui files with `comile_ui.py`
 
 Now you should be able to run `main.py`. Launching the application will check

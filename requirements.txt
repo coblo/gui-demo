@@ -10,7 +10,7 @@ mnemonic==0.18
 pycoin==0.80
 qrcode==5.3
 Pillow==4.3.0
-SQLAlchemy==1.2.0b1git s
+SQLAlchemy==1.2.0b1
 mcrpc==0.2.5
 iscc==0.9.9
 docx2txt==0.7

@@ -102,7 +102,9 @@ ENV/
 
 # Project Specific
 /config.py
-/runchain.*
-/runchain2.*
+/runchain.bat
+/runchain2.bat
+/runchain23.bat
+/runchain24.bat
 /.idea
 .vagrant/

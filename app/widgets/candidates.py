@@ -3,7 +3,7 @@ import logging
 from functools import partial
 import math
 
-from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot
+from PyQt5.QtCore import QModelIndex, QAbstractTableModel, Qt, pyqtSlot, QThread
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtWidgets import QTableView, QApplication, QAbstractItemView, QHeaderView, QWidget, QMessageBox, QMenu, \
     QPushButton, QStyledItemDelegate
@@ -21,6 +21,18 @@ log = logging.getLogger(__name__)
 MAX_END_BLOCK = 4294967295
 
 
+class CandidateModelUpdater(QThread):
+    def __init__(self, parent=None):
+        QThread.__init__(self, parent)
+
+    def run(self):
+        with data_session_scope() as session:
+            self.parent().candidates = PendingVote.get_candidates(session)
+            self.parent().aliases = Alias.get_aliases(session)
+            self.parent().already_granted = PendingVote.already_granted(session)
+            self.parent().num_guardians = Permission.num_guardians(session)
+
+
 class CandidateModel(QAbstractTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -28,18 +40,13 @@ class CandidateModel(QAbstractTableModel):
         self.aliases = []
         self.already_granted = []
         self.num_guardians = 0
-        self.update_data()
+        self.update_thread = CandidateModelUpdater(self)
+        self.update_thread.finished.connect(self.update_finished)
+        self.update_thread.start()
         self.headers = ('Alias', 'Address', 'Skill', 'Grants', 'Action')
 
         signals.votes_changed.connect(self.votes_changed)
         signals.permissions_changed.connect(self.update_num_guardians)
-
-    def update_data(self):
-        with data_session_scope() as session:
-            self.candidates = PendingVote.get_candidates(session)
-            self.aliases = Alias.get_aliases(session)
-            self.already_granted = PendingVote.already_granted(session)
-            self.num_guardians = Permission.num_guardians(session)
 
     def update_num_guardians(self):
         with data_session_scope() as session:
@@ -94,7 +101,10 @@ class CandidateModel(QAbstractTableModel):
     @pyqtSlot()
     def votes_changed(self):
         self.beginResetModel()
-        self.update_data()
+        self.update_thread.start()
+
+    @pyqtSlot()
+    def update_finished(self):
         self.endResetModel()
         self.parent().create_table_buttons()
 

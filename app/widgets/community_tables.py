@@ -6,7 +6,7 @@ import math
 import timeago
 from datetime import datetime
 
-from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot
+from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, pyqtSlot, QThread
 from PyQt5.QtGui import QCursor, QFont
 from PyQt5.QtWidgets import QApplication, QHeaderView, QMessageBox, QWidget, QMenu, QAbstractItemView, QPushButton, \
     QStyledItemDelegate, QTableView
@@ -20,6 +20,38 @@ from app.signals import signals
 from app import ADMIN_CONSENUS_MINE, ADMIN_CONSENUS_ADMIN
 
 log = logging.getLogger(__name__)
+
+
+class PermissionModelUpdater(QThread):
+
+    def __init__(self, parent=None):
+        QThread.__init__(self, parent)
+
+    def run(self):
+        with data_session_scope() as session:
+            for reward in MiningReward.mined_last_24h(session):
+                self.parent().last_24_h_mine_count[reward.address] = reward.count
+            for reward in MiningReward.last_mined(session):
+                self.parent().last_mined[reward.address] = reward.last_mined
+            for vote in Vote.voted_last_24h(session):
+                self.parent().last_24_h_vote_count[vote.from_address] = vote.count
+            for vote in Vote.last_voted(session):
+                self.parent().last_voted[vote.from_address] = vote.last_voted
+            for pending_vote in PendingVote.num_revokes(
+                    session, self.parent()._perm_type):
+                self.parent().count_revokes[pending_vote.address_to] = pending_vote.count
+
+            self.parent().num_guardians = Permission.num_guardians(session)
+
+            if self.parent()._perm_type == enums.MINE:
+                self.parent()._data = list(Permission.validators(session))
+            elif self.parent()._perm_type == enums.ADMIN:
+                self.parent()._data = list(Permission.guardians(session))
+            self.parent()._alias_list = Alias.get_aliases(session)
+
+            self.parent().already_revoked = PendingVote.already_revoked(
+                session, self.parent()._perm_type
+            )
 
 
 class PermissionModel(QAbstractTableModel):
@@ -42,36 +74,13 @@ class PermissionModel(QAbstractTableModel):
         self._data = []
         self._alias_list = []
         self.already_revoked = []
-        self.load_data()
+        self.update_thread = PermissionModelUpdater(self)
+        self.update_thread.finished.connect(self.update_finished)
+        self.update_thread.start()
 
         signals.permissions_changed.connect(self.permissions_changed)
         signals.votes_changed.connect(self.permissions_changed)
         signals.alias_list_changed.connect(self.alias_list_changed)
-        self.fill_count_lists()
-
-    def load_data(self):
-        with data_session_scope() as session:
-            if self._perm_type == enums.MINE:
-                self._data = list(Permission.validators(session))
-            elif self._perm_type == enums.ADMIN:
-                self._data = list(Permission.guardians(session))
-            self._alias_list = Alias.get_aliases(session)
-        self.already_revoked = PendingVote.already_revoked(session, self._perm_type)
-
-    def fill_count_lists(self):
-        with data_session_scope() as session:
-            for reward in MiningReward.mined_last_24h(session):
-                self.last_24_h_mine_count[reward.address] = reward.count
-            for reward in MiningReward.last_mined(session):
-                self.last_mined[reward.address] = reward.last_mined
-            for vote in Vote.voted_last_24h(session):
-                self.last_24_h_vote_count[vote.from_address] = vote.count
-            for vote in Vote.last_voted(session):
-                self.last_voted[vote.from_address] = vote.last_voted
-            for pending_vote in PendingVote.num_revokes(session, self._perm_type):
-                self.count_revokes[pending_vote.address_to] = pending_vote.count
-
-            self.num_guardians = Permission.num_guardians(session)
 
     def headerData(self, col, orientation, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
@@ -137,9 +146,11 @@ class PermissionModel(QAbstractTableModel):
 
     @pyqtSlot()
     def permissions_changed(self):
-        self.fill_count_lists()
         self.beginResetModel()
-        self.load_data()
+        self.update_thread.start()
+
+    @pyqtSlot()
+    def update_finished(self):
         self.endResetModel()
         self.parent().create_table_buttons(self.parent().balance_is_zero)
 

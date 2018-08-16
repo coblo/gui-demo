@@ -13,7 +13,7 @@ ORG_DOMAIN = 'content-blockchain.org'
 APP_NAME = 'Coblo'
 MAJOR = 1
 MINOR = 0
-PATCH = 1
+PATCH = 2
 APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
 
 

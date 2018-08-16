@@ -1,4 +1,4 @@
-# Content Blockchain GUI Prototype v1.0.1
+# Content Blockchain GUI Prototype v1.0.2
 
 [![Build status](https://ci.appveyor.com/api/projects/status/oue3ndgwshvc9l4e/branch/master?svg=true)](https://ci.appveyor.com/project/alemenke/gui-demo/branch/master)
 

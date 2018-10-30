@@ -1,5 +1,4 @@
 PyQt5==5.9
-requests==2.18.4
 bitcoin==1.1.42
 appdirs==1.4.3
 timeago==1.0.7

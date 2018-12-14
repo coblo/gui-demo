@@ -22,7 +22,7 @@ and participate in testing the plattform. It allows you to:
 - send and receive smart license tokens
 
 An installable version is currently available for 64-Bit Windows.
-You can download it [here](https://github.com/coblo/gui-demo/releases/download/v1.0.1/Coblo-1.0.1-win.msi).
+You can download it [here](https://github.com/coblo/gui-demo/releases/download/v1.0.2/Coblo-1.0.2-win.msi).
 If you need help or have questions you can reach us via Telegram:
 [https://t.me/ContentBlockchainBeta](https://t.me/ContentBlockchainBeta)
 

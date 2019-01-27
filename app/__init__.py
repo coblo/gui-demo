@@ -6,7 +6,10 @@ import sys
 import appdirs
 
 # Enable QT High-Dpi Support
-environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = "1"
+if sys.platform == 'linux':
+    environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = "0"
+else:
+    environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = "1"
 
 ORG_NAME = 'Content-Blockchain'
 ORG_DOMAIN = 'content-blockchain.org'

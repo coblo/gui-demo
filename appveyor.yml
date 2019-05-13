@@ -50,6 +50,8 @@ build_script:
   - "xcopy /F /Y /I multichaind.exe app\\bin\\"
   # Compile ui
   - "python compile_ui.py"
+  # Workaround a cx_Freeze bug with sqlite3
+  - "copy /Y %PYTHON%\\envs\\test\\Library\\bin\\sqlite3.dll %PYTHON%\\envs\\test\\DLLs\\"
   # Build exe.* folder in preparation for the msi package
   - "python setup.py build_exe"
   # Do some cleanup before packaging the installer

@@ -116,7 +116,7 @@ def process_blocks():
                         ))
                         Address.create_if_not_exists(session, block['miner'])
                         if block['txcount'] > 1:
-                            process_transactions(session, block['height'], pubkeyhash_version, checksum_value)
+                            process_transactions(session, block['height'], pubkeyhash_version, checksum_value, client)
                         signals.database_blocks_updated.emit(block['height'], block_count_node)
                         signals.blockschanged.emit(session.query(Block).count())
             except Exception as e:
@@ -128,8 +128,9 @@ def process_blocks():
         process_permissions()
 
 
-def process_transactions(data_db, block_height, pubkeyhash_version, checksum_value):
-    client = get_active_rpc_client()
+def process_transactions(data_db, block_height, pubkeyhash_version, checksum_value, client = None):
+    if client == None:
+        client = get_active_rpc_client()
 
     try:
         block = client.getblock('{}'.format(block_height), 4)

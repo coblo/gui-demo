@@ -25,6 +25,7 @@ class WalletHistory(QWidget, Ui_widget_wallet_history):
 
 class WalletTransactionsUpdater(QThread):
     UPDATE_INTERVALL = 3
+    STARTUP_DELAY = 5
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -38,7 +39,8 @@ class WalletTransactionsUpdater(QThread):
     def run(self):
         synced_wallet_tx = ''
         synced_confirmed_wallet_tx = ''
-
+        log.debug('sleeping %i seconds before starting to sync wallet updates' % self.STARTUP_DELAY)
+        self.sleep(self.STARTUP_DELAY)
         while True:
 
             log.debug('check for new local wallet updates')

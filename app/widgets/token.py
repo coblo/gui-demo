@@ -140,6 +140,7 @@ class WidgetToken(QWidget, Ui_WidgetToken):
 
 class TokensUpdater(QThread):
     UPDATE_INTERVALL = 3
+    STARTUP_DELAY = 5
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -152,7 +153,8 @@ class TokensUpdater(QThread):
 
     def run(self):
         client = get_active_rpc_client()
-
+        log.debug('sleeping %i seconds before starting to sync token updates' % self.STARTUP_DELAY)
+        self.sleep(self.STARTUP_DELAY)
         while True:
 
             log.debug('check for new local token updates')

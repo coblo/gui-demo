@@ -36,6 +36,7 @@ def init_profile_db():
     engine = sqlalchemy.create_engine('sqlite:///{}'.format(fp))
 
     profile_db.configure(bind=engine)
+    engine.execute("PRAGMA journal_mode=WAL")
 
     log.debug("check {}-db schema".format(Profile.__table__.name))
     backup_profiles = []
@@ -88,6 +89,7 @@ def init_data_db():
     log.debug('init data db at: {}'.format(fp))
     engine = sqlalchemy.create_engine('sqlite:///{}'.format(fp))
     data_db.configure(bind=engine)
+    engine.execute("PRAGMA journal_mode=WAL")
 
     log.debug("check data-db schema")
     reset_blocks = False

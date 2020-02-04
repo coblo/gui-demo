@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QThread
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QAbstractItemView, QApplication, QHeaderView, QMenu, QTableView
 
@@ -11,25 +11,57 @@ from app.signals import signals
 
 log = logging.getLogger(__name__)
 
+class ISCCModelUpdater(QThread):
+    def __init__(self, search_term, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.aliases = []
+        self.isccs = []
+        self.search_term = search_term
+
+    def run(self):
+        with data_session_scope() as session:
+            self.aliases = Alias.get_aliases(session)
+            if self.search_term:
+                self.isccs = ISCC.filter_iscc(session, self.search_term)
+            else:
+                self.isccs = ISCC.get_all_iscc(session)
+
 
 class ISCCModel(QAbstractTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.isccs = []
         self.aliases = []
-        self.update_data()
+        self.updateWorker = None
+        self.requires_update = False
+        self.search_term = None
         self.headers = ('ISCC', 'Title', 'Date', 'Publisher')
+        self.update_data()
         signals.iscc_inserted.connect(self.update_data)
 
     def update_data(self, search_term=None):
-        self.beginResetModel()
-        with data_session_scope() as session:
-            self.aliases = Alias.get_aliases(session)
-            if search_term:
-                self.isccs = ISCC.filter_iscc(session, search_term)
-            else:
-                self.isccs = ISCC.get_all_iscc(session)
-        self.endResetModel()
+        self.search_term = search_term
+        if self.updateWorker and self.updateWorker.isRunning():
+            self.requires_update = True
+        else:
+            self.updateWorker = ISCCModelUpdater(self.search_term)
+            self.updateWorker.finished.connect(self.updater_finished)
+            self.requires_update = False
+            self.updateWorker.start()
+
+    def updater_finished(self):
+        # Update Model
+        if self.aliases != self.updateWorker.aliases or self.isccs != self.updateWorker.isccs:
+            self.beginResetModel()
+            self.aliases = self.updateWorker.aliases
+            self.isccs = self.updateWorker.isccs
+            self.endResetModel()
+
+        # Data has been modified in the meantime.. Update again
+        if self.requires_update:
+            self.requires_update = False
+            self.updateWorker = ISCCModelUpdater(self.search_term)
+            self.updateWorker.start()
 
     def flags(self, idx: QModelIndex):
         if idx.column() == 0:

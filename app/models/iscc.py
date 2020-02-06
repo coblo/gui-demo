@@ -46,6 +46,16 @@ class ISCC(data_base):
         return data_db.query(ISCC, Block.mining_time).join(Transaction, Block).order_by(Block.mining_time.desc()).all()
 
     @staticmethod
+    def get_all_iscc_paged(data_db, page = 0, page_size = None) -> []:
+        from app.models import Transaction, Block
+        query = data_db.query(ISCC, Block.mining_time).join(Transaction, Block).order_by(Block.mining_time.desc())
+        if page_size:
+            query = query.limit(page_size)
+        if page and page_size:
+            query = query.offset(page * page_size)
+        return query.all()
+
+    @staticmethod
     def filter_iscc(data_db, search_term) -> []:
         from app.models import Transaction, Block
         return data_db.query(ISCC, Block.mining_time).join(Transaction, Block)\
@@ -56,6 +66,23 @@ class ISCC(data_base):
                 ISCC.data_id.ilike(search_term + "%"),
                 ISCC.instance_id.ilike(search_term + "%")
             )).order_by(Block.mining_time.desc()).all()
+
+    @staticmethod
+    def filter_iscc_paged(data_db, search_term, page = 0, page_size = None) -> []:
+        from app.models import Transaction, Block
+        query = data_db.query(ISCC, Block.mining_time).join(Transaction, Block) \
+            .filter(or_(
+            ISCC.title.ilike("%" + search_term + "%"),
+            ISCC.meta_id.ilike(search_term + "%"),
+            ISCC.content_id.ilike(search_term + "%"),
+            ISCC.data_id.ilike(search_term + "%"),
+            ISCC.instance_id.ilike(search_term + "%")
+        )).order_by(Block.mining_time.desc())
+        if page_size:
+            query = query.limit(page_size)
+        if page and page_size:
+            query = query.offset(page * page_size)
+        return query.all()
 
 @listens_for(ISCC, "after_insert")
 def after_update(mapper, connection, alias):

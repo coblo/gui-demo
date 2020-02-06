@@ -22,9 +22,9 @@ class ISCCModelUpdater(QThread):
         with data_session_scope() as session:
             self.aliases = Alias.get_aliases(session)
             if self.search_term:
-                self.isccs = ISCC.filter_iscc(session, self.search_term)
+                self.isccs = ISCC.filter_iscc(session, self.search_term, page = 0, page_size = 1000)
             else:
-                self.isccs = ISCC.get_all_iscc(session)
+                self.isccs = ISCC.get_all_iscc_paged(session, page = 0, page_size = 1000)
 
 
 class ISCCModel(QAbstractTableModel):

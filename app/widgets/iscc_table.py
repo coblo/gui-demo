@@ -36,10 +36,19 @@ class ISCCModel(QAbstractTableModel):
         self.requires_update = False
         self.search_term = None
         self.headers = ('ISCC', 'Title', 'Date', 'Publisher')
+        self.update_data_update_enabled = True
         self.update_data()
+
         signals.iscc_inserted.connect(self.update_data)
+        signals.batch_gui_updates_allowed.connect(self.batch_gui_updates_allowed_changed)
+
+    def batch_gui_updates_allowed_changed(self, status):
+        self.update_data_update_enabled = status
 
     def update_data(self, search_term=None):
+        if self.update_data_update_enabled == False:
+            return
+
         self.search_term = search_term
         if self.updateWorker and self.updateWorker.isRunning():
             self.requires_update = True

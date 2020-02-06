@@ -37,11 +37,16 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
         self.address_valid = False
         self.btn_send_send.clicked.connect(self.on_send_clicked)
 
+        self.edit_completer_update_enabled = True
         self.edit_completer()
 
         # Connect signals
         signals.alias_list_changed.connect(self.edit_completer)
         signals.new_address.connect(self.edit_completer)
+        signals.batch_gui_updates_allowed.connect(self.batch_gui_updates_allowed_changed)
+
+    def batch_gui_updates_allowed_changed(self, status):
+        self.edit_completer_update_enabled = status
 
     def on_address_edit(self, text):
         address_with_alias_re = re.compile('^.* \(.*\)$')
@@ -132,6 +137,9 @@ class WalletSend(QWidget, Ui_widget_wallet_send):
             error_dialog.exec_()
 
     def edit_completer(self):
+        if self.edit_completer_update_enabled == False:
+            return
+
         address_list = []
         with data_session_scope() as session:
             for address, alias in Alias.get_aliases(session).items():

@@ -78,9 +78,15 @@ class PermissionModel(QAbstractTableModel):
         self.update_thread.finished.connect(self.update_finished)
         self.update_thread.start()
 
+        self.alias_list_changed_update_enabled = True
+
         signals.permissions_changed.connect(self.permissions_changed)
         signals.votes_changed.connect(self.permissions_changed)
         signals.alias_list_changed.connect(self.alias_list_changed)
+        signals.batch_gui_updates_allowed.connect(self.batch_gui_updates_allowed_changed)
+
+    def batch_gui_updates_allowed_changed(self, status):
+        self.alias_list_changed_update_enabled = status
 
     def headerData(self, col, orientation, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
@@ -139,6 +145,9 @@ class PermissionModel(QAbstractTableModel):
         return super().flags(idx)
 
     def alias_list_changed(self):
+        if self.alias_list_changed_update_enabled == False:
+            return
+
         self.beginResetModel()
         with data_session_scope() as session:
             self._alias_list = Alias.get_aliases(session)

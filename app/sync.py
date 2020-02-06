@@ -101,9 +101,15 @@ def process_blocks():
         for batch in batchwise(range(last_valid_height + 1, block_count_node), 100):
             try:
                 with data_session_scope() as session:
+                    signals.batch_gui_updates_allowed.emit(False)
                     new_blocks = client.listblocks(batch)
 
+                    first = True
                     for block in new_blocks:
+                        # Allow emitting certain GUI update signals for the first block in the batch
+                        # or if we're close to the current node block count
+                        if first or block_count_node - block['height'] < 16:
+                            signals.batch_gui_updates_allowed.emit(True)
                         block_obj = Block(
                             hash=unhexlify(block['hash']),
                             height=block['height'],
@@ -119,9 +125,16 @@ def process_blocks():
                             process_transactions(session, block['height'], pubkeyhash_version, checksum_value, client)
                         signals.database_blocks_updated.emit(block['height'], block_count_node)
                         signals.blockschanged.emit(session.query(Block).count())
+                        # Skip certain GUI update signals for the remainder of the batch
+                        if first:
+                            signals.batch_gui_updates_allowed.emit(False)
+                            first = False
             except Exception as e:
+                signals.batch_gui_updates_allowed.emit(True)
+                log.debug('Exception in process_blocks:')
                 log.debug(e)
                 return
+    signals.batch_gui_updates_allowed.emit(True)
 
     if last_valid_height != block_count_node:
         # permissions and votes tables are completely refreshed after each new block

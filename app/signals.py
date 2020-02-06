@@ -58,6 +58,9 @@ class Signals(QObject):
     # Signals standard output from managed node process
     node_message = pyqtSignal(str)
 
+    # Skip updating certain widgets while doing batch db updates
+    batch_gui_updates_allowed = pyqtSignal(bool)
+
 
 
 signals = Signals()

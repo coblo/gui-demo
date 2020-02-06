@@ -33,11 +33,13 @@ class WidgetToken(QWidget, Ui_WidgetToken):
 
         self.licenses = []
         self.info ={}
+        self.edit_completer_update_enabled = True
 
         # Connect signals
         signals.wallet_tokens_changed.connect(self.tokens_changed)
         signals.alias_list_changed.connect(self.edit_completer)
         signals.new_address.connect(self.edit_completer)
+        signals.batch_gui_updates_allowed.connect(self.batch_gui_updates_allowed_changed)
 
         self.edit_resale_to.setValidator(AddressValidator())
         self.edit_resale_to.textChanged.connect(self.on_address_edit)
@@ -46,6 +48,9 @@ class WidgetToken(QWidget, Ui_WidgetToken):
         self.btn_send.clicked.connect(self.send)
 
         self.edit_completer()
+
+    def batch_gui_updates_allowed_changed(self, status):
+        self.edit_completer_update_enabled = status
 
     def tokens_changed(self, tokens):
         new_licenses = []
@@ -84,6 +89,9 @@ class WidgetToken(QWidget, Ui_WidgetToken):
         sender.setStyleSheet('QLineEdit { background-color: %s }' % color)
 
     def edit_completer(self):
+        if self.edit_completer_update_enabled == False:
+            return
+
         address_list = []
         with data_session_scope() as session:
             for address, alias in Alias.get_aliases(session).items():

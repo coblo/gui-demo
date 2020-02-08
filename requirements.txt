@@ -10,5 +10,5 @@ qrcode==5.3
 Pillow==6.2.0
 SQLAlchemy==1.2.0b1
 mcrpc==0.2.5
-iscc==0.9.9
+iscc==1.0.5
 docx2txt==0.7
